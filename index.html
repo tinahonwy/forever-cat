@@ -42,7 +42,11 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .window span::before{left:50%;top:0;bottom:0;width:6px;transform:translateX(-50%)}.window span::after{top:50%;left:0;right:0;height:6px;transform:translateY(-50%)}
 .floor{position:absolute;left:0;right:0;bottom:0;height:30%;background:#efdcc2;border-top:10px solid #fbf6ee}
 .bed{position:absolute;bottom:7%;height:12%;background:#e5868e;border-radius:50%;box-shadow:inset 0 -10px 0 rgba(0,0,0,.08)}
-.homecat{position:absolute;left:0;transform-origin:50% 100%;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.homecat{position:absolute;left:0;transform-origin:50% 100%;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.homecat.petting{cursor:grabbing}
+.heart{position:absolute;color:#e5707b;font-size:22px;pointer-events:none;z-index:3;animation:floatUp 1.2s ease-out forwards}
+@keyframes floatUp{from{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}to{transform:translateY(-60px) scale(1.1);opacity:0}}
+@media (prefers-reduced-motion:reduce){.heart{animation:none}}
 .homecat:focus-visible{outline:2.5px solid #fff;outline-offset:4px;border-radius:12px}
 .catbox{position:relative;width:100%;aspect-ratio:1}
 .shadow{position:absolute;left:22%;width:56%;top:86%;height:8%;background:rgba(40,60,50,.16);border-radius:50%}
@@ -50,6 +54,8 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .viewpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:560px;width:100%;margin-inline:auto}
 .vhint{font-size:13px;color:var(--muted)}
 .homehint{text-align:center;color:var(--muted);font-size:14px;margin:12px 0 0}
+.homehint.small{font-size:12.5px;margin-top:4px}
+#homeStatus{color:var(--fg);font-size:15px}
 .stage{position:relative;width:100%;max-width:560px;aspect-ratio:1;background:var(--stage);border-radius:28px;overflow:hidden;margin-inline:auto}
 .wrap{position:absolute;inset:7%;transform-origin:50% 88%;transition:transform .25s ease}
 .layer{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -136,6 +142,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       <button class="tab" role="tab" data-tab="ears">耳朵</button>
       <button class="tab" role="tab" data-tab="body">毛與體型</button>
       <button class="tab" role="tab" data-tab="whisk">鬍鬚</button>
+      <button class="tab" role="tab" data-tab="persona">個性</button>
     </div>
 
     <div class="pane" data-pane="color">
@@ -192,6 +199,16 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       <div class="row" id="whRrow"><span class="lbl">右邊根數</span><div class="chips" id="c-whR"></div></div>
     </div>
 
+    <div class="pane" data-pane="persona">
+      <p class="hint">這些會影響牠在「貓咪的家」裡的反應：被摸、被抱、走動和睡覺。</p>
+      <div class="row"><span class="lbl">親人程度 <span id="affVal"></span></span><input type="range" id="affection" min="0" max="100" step="1"></div>
+      <div class="row"><span class="lbl">脾氣・傲嬌 <span id="tempVal"></span></span><input type="range" id="temper" min="0" max="100" step="1"></div>
+      <div class="row"><span class="lbl">活潑程度 <span id="enVal"></span></span><input type="range" id="energy" min="0" max="100" step="1"></div>
+      <div class="row"><span class="lbl">喜歡被摸的地方</span><div class="chips" id="c-likes"></div></div>
+      <div class="row"><span class="lbl">討厭被摸的地方</span><div class="chips" id="c-dislikes"></div></div>
+      <div class="row"><span class="lbl">抱抱</span><div class="chips" id="c-hug"></div></div>
+    </div>
+
     <div class="foot"><span id="saved">設定會自動存在這台裝置</span><button class="btn warn" id="resetAll">全部重來</button></div>
   </div>
 </div>
@@ -209,7 +226,8 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       </div>
     </div>
   </div>
-  <p class="homehint"><span id="homeStatus">牠在家裡</span>・點一下牠試試看</p>
+  <p class="homehint"><span id="homeStatus">牠在家裡</span></p>
+  <p class="homehint small">點一下打招呼・在牠身上來回滑動是摸摸・按住不放是抱抱</p>
 </section>
 
 <script type="module">
@@ -231,7 +249,8 @@ const firebaseConfig = {
 const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434',eyeLink:true,nose:'#e88a90',
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
-  brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,backEdited:false};
+  brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,backEdited:false,
+  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood'};
 const KEY='neko-maker-v1';
 let S={...DEF},tab='color',mview='front',booting=true;
 const $=id=>document.getElementById(id);
@@ -324,7 +343,8 @@ function featureParts(v='front',opt={}){
   const inner=(t,pre)=>{const e=EAR[t];if(!e)return'';
     if(t==='fold')return`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round" transform="${pre}"/>`;
     return`<path d="${e.d}" fill="#f6b3b8" stroke="#f6b3b8" stroke-width="3" stroke-linejoin="round" transform="${pre} translate(${e.a[0]},${e.a[1]}) scale(.45) translate(${-e.a[0]},${-e.a[1]})"/>`};
-  const eye=(cx,cy,col)=>opt.closed?`<path d="M${cx-r},${cy-1} q${r},${r} ${2*r},0" stroke="${ink}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`:`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>`;
+  const fc=opt.face||(opt.closed?'closed':'normal'),ln=d=>`<path d="${d}" stroke="${ink}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+  const eye=(cx,cy,col)=>fc==='closed'?ln(`M${cx-r},${cy-1} q${r},${r} ${2*r},0`):fc==='happy'?ln(`M${cx-r},${cy+2} q${r},${-r*1.3} ${2*r},0`):fc==='annoyed'?ln(`M${cx-r},${cy-(cx<150?2:-2)} L${cx+r},${cy+(cx<150?2:-2)}`):`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>`;
   if(v==='front'){
     F.head=inner(S.earL,'')+inner(S.earR,MIRROR);
     if(S.fur==='none')F.head+=`<path d="M132,72 q18,-7 36,0 M138,82 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
@@ -363,6 +383,8 @@ function render(){
   $('earRrow').hidden=S.earLink;$('earLlbl').textContent=S.earLink?'耳朵形狀':'左耳形狀';
   $('whRrow').hidden=S.whLink;$('whLlbl').textContent=S.whLink?'每邊根數':'左邊根數';
   $('bsVal').textContent=S.brushSize;$('sizeVal').textContent=Math.round(S.size*100)+'%';$('fatVal').textContent=S.fat<.92?'偏瘦':S.fat>1.15?'圓滾滾':S.fat>1.04?'微胖':'標準';
+  const w3=(v,a,b,c)=>v<30?a:v<70?b:c;
+  $('affVal').textContent=w3(S.affection,'怕生','普通','超親人');$('tempVal').textContent=w3(S.temper,'溫和','有點傲嬌','很有脾氣');$('enVal').textContent=w3(S.energy,'懶洋洋','普通','過動');
   refreshControls();save();
 }
 
@@ -399,6 +421,13 @@ chips('c-whCurl',[[false,'直的'],[true,'微捲']],'whCurl');
 chips('c-whLink',[[true,'兩邊一樣'],[false,'左右分開']],'whLink',v=>{if(v)S.whR=S.whL});
 const nums=[0,1,2,3,4,5].map(n=>[n,String(n)]);
 chips('c-whL',nums,'whL',v=>{if(S.whLink)S.whR=v});chips('c-whR',nums,'whR');
+const ZONES=[['head','頭'],['chin','下巴'],['cheek','臉頰'],['back','背'],['butt','屁股'],['belly','肚子'],['tail','尾巴'],['paw','腳掌']];
+function multi(id,key,other){const el=$(id);ZONES.forEach(([z,n])=>{const b=document.createElement('button');b.className='chip';b.textContent=n;
+  b.onclick=()=>{const cur=S[key]||[];S[key]=cur.includes(z)?cur.filter(x=>x!==z):[...cur,z];S[other]=(S[other]||[]).filter(x=>x!==z);render()};
+  el.appendChild(b);controls.push(()=>b.setAttribute('aria-pressed',(S[key]||[]).includes(z)))})}
+multi('c-likes','likes','dislikes');multi('c-dislikes','dislikes','likes');
+chips('c-hug',[['love','很愛抱抱'],['mood','看心情'],['hate','不喜歡被抱']],'hugPref');
+['affection','temper','energy'].forEach(k=>{const el=$(k);el.oninput=()=>{S[k]=+el.value;render()};controls.push(()=>{el.value=S[k]})});
 ['brushSize','size','fat'].forEach(k=>{const el=$(k);el.oninput=()=>{S[k]=+el.value;if(k==='fat')autoDerive();render()};controls.push(()=>{el.value=S[k]})});
 $('catName').oninput=e=>{S.name=e.target.value;save()};
 
@@ -557,14 +586,16 @@ function setupFirebase(){
 const room=$('room'),hc=$('homecat'),bubble=$('bubble'),bed=$('bed'),hCat=$('hCat');
 const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const BED=.8;
-const H={x:.3,target:.3,state:'sit',timer:2,t:0,hop:0,closed:false,goSleep:false,look:0,tilt:0,wag:0,px:0,pAt:-1e9,view:'front'};
+const H={x:.3,target:.3,state:'sit',timer:2,t:0,hop:0,face:'normal',goSleep:false,look:0,tilt:0,wag:0,px:0,pAt:-1e9,view:'front',
+  mood:.7,petAcc:0,petRecent:0,cooldown:0,faceT:0,swat:0,trap:0,hug:false,hugK:0,wriggle:0,lean:0,statusT:0,statusTxt:''};
 let HP={};
+const P01=k=>(S[k]??50)/100;
 function drawHomeCat(){
   let s='<defs>';
   VIEWS.forEach(v=>{s+=`<image id="hpat-${v}" href="${CV[v].toDataURL()}" x="0" y="0" width="300" height="300"/>`;
     const M=partShapes('#fff',v);ORDERS[v].forEach(k=>{s+=`<mask id="hm-${v}-${k}" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="300">${M[k]}</mask>`})});
   s+='</defs>';
-  VIEWS.forEach(v=>{const P=partShapes(S.base,v),F=featureParts(v,{closed:H.closed});
+  VIEWS.forEach(v=>{const P=partShapes(S.base,v),F=featureParts(v,{face:H.face});
     s+=`<g id="hv-${v}" display="${v===H.view?'inline':'none'}">`;
     ORDERS[v].forEach(k=>{s+=`<g id="hp-${v}-${k}">${P[k]}<use href="#hpat-${v}" mask="url(#hm-${v}-${k})"/>`;
       s+=k==='head'?F.head+`<g id="hp-${v}-face">${F.face}</g>`:(F[k]||'');s+='</g>'});
@@ -575,38 +606,48 @@ function drawHomeCat(){
 }
 const setT=(k,val)=>{const e=HP[H.view]&&HP[H.view][k];if(e)e.setAttribute('transform',val)};
 function setHView(v){if(H.view===v)return;H.view=v;VIEWS.forEach(k=>{const g=document.getElementById('hv-'+k);if(g)g.setAttribute('display',k===v?'inline':'none')})}
-function setClosed(c){if(H.closed!==c){H.closed=c;VIEWS.forEach(v=>{if(HP[v]&&HP[v].face)HP[v].face.innerHTML=featureParts(v,{closed:c}).face})}}
+function setFace(f,secs=0){H.faceT=secs;if(H.face!==f){H.face=f;VIEWS.forEach(v=>{if(HP[v]&&HP[v].face)HP[v].face.innerHTML=featureParts(v,{face:f}).face})}}
 function say(t,ms){bubble.textContent=t;bubble.hidden=false;clearTimeout(say.t);if(ms)say.t=setTimeout(()=>{bubble.hidden=true},ms)}
-function sitDown(){H.state='sit';H.timer=2.5+Math.random()*4;setHView(Math.random()<.3?'back':'front')}
-function wake(){sitDown();setHView('front');H.goSleep=false;setClosed(false);bubble.hidden=true}
-function startWalk(target,sleep){H.state='walk';H.target=target;H.goSleep=!!sleep;setHView('side')}
+function note(t,secs=2.5){H.statusTxt=t;H.statusT=secs}
+function heart(){const r=hCat.getBoundingClientRect(),rr=room.getBoundingClientRect(),el=document.createElement('span');
+  el.className='heart';el.textContent='♥';el.style.left=(r.left-rr.left+r.width*(.3+Math.random()*.4))+'px';el.style.top=(r.top-rr.top+r.height*.15)+'px';
+  room.appendChild(el);setTimeout(()=>el.remove(),1300)}
+function sitDown(view){H.state='sit';H.timer=(2.5+Math.random()*4)*(1.6-P01('energy'));setHView(view||(Math.random()<.3?'back':'front'))}
+function wake(){sitDown('front');H.goSleep=false;setFace('normal');bubble.hidden=true}
+function startWalk(target,sleep){H.state='walk';H.target=target;H.goSleep=!!sleep;setHView('side');if(H.face!=='normal')setFace('normal')}
+function walkAway(){let t=H.x>.5?H.x-.35-Math.random()*.2:H.x+.35+Math.random()*.2;startWalk(Math.min(.96,Math.max(.04,t)))}
 function step(dt){
   H.timer-=dt;if(H.hop>0)H.hop=Math.max(0,H.hop-dt);if(H.wag>0)H.wag-=dt;H.tilt*=Math.exp(-dt*2.5);
+  if(H.swat>0)H.swat-=dt;if(H.trap>0)H.trap-=dt;if(H.cooldown>0)H.cooldown-=dt;if(H.statusT>0)H.statusT-=dt;
+  H.petRecent*=Math.exp(-dt/5);H.lean*=Math.exp(-dt*2);
+  H.mood+=(.6-H.mood)*dt*.02;H.mood=Math.max(0,Math.min(1,H.mood));
+  if(H.faceT>0){H.faceT-=dt;if(H.faceT<=0&&!H.hug)setFace(H.state==='sleep'?'closed':'normal')}
+  H.hugK+=((H.hug?1:0)-H.hugK)*Math.min(1,dt*6);
+  if(H.wriggle>0){H.wriggle-=dt;if(H.wriggle<=0){H.hop=.55;walkAway();note(`${S.name||'牠'}逃走了`)}return}
+  if(H.hug){H.x+=(.5-H.x)*Math.min(1,dt*3);if(Math.random()<dt*1.5)heart();H.mood=Math.min(1,H.mood+dt*.05);return}
+  if(touch&&touch.mode==='pet')return;
   if(H.state==='walk'){
-    const d=H.target-H.x,sp=.1*dt;
+    const d=H.target-H.x,sp=(.07+.06*P01('energy'))*dt;
     if(Math.abs(d)<=sp){H.x=H.target;
-      if(H.goSleep){H.goSleep=false;H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setClosed(true);say('Zzz…')}
+      if(H.goSleep){H.goSleep=false;H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setFace('closed');say('Zzz…')}
       else sitDown()}
     else H.x+=Math.sign(d)*sp;
   }else if(H.state==='sit'&&H.timer<=0){
-    const r=Math.random();
-    if(r<.6){let t=.04+Math.random()*.92;if(Math.abs(t-H.x)<.12)t=H.x>.5?t-.3:t+.3;startWalk(Math.min(.96,Math.max(.04,t)))}
-    else if(r<.85&&Math.abs(H.x-BED)>.02)startWalk(BED,true);
+    const r=Math.random(),sleepy=.15+.25*(1-P01('energy'));
+    if(r<1-sleepy-.15){let t=.04+Math.random()*.92;if(Math.abs(t-H.x)<.12)t=H.x>.5?t-.3:t+.3;startWalk(Math.min(.96,Math.max(.04,t)))}
+    else if(r<1-.15&&Math.abs(H.x-BED)>.02)startWalk(BED,true);
     else{H.timer=2+Math.random()*3;if(Math.random()<.5)setHView(H.view==='back'?'front':'back')}
   }else if(H.state==='sleep'&&H.timer<=0)wake();
 }
 function apply(dt){
   const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w),t=H.t,v=H.view;
   const walking=H.state==='walk',sleeping=H.state==='sleep',dir=Math.sign(H.target-H.x)||1,ph=t*9,m=RM?0:1;
-  /* 頭看哪裡：手指或滑鼠附近 > 正前方 */
   let lt=0;
   if(!sleeping&&!walking&&performance.now()-H.pAt<2500)lt=Math.max(-1,Math.min(1,(H.px-(px+w/2))/(rw*.3)));
   H.look+=(lt-H.look)*Math.min(1,dt*5);
-  /* 尾巴 */
-  const amp=v==='back'?1.3:1;
-  const ta=amp*(sleeping?3*Math.sin(t*.8):H.wag>0?16*Math.sin(t*14):walking?12*Math.sin(t*5):8*Math.sin(t*1.7));
+  const amp=v==='back'?1.3:1,happy=H.face==='happy',cross=H.face==='annoyed';
+  const ta=amp*(sleeping?3*Math.sin(t*.8):cross?18*Math.sin(t*10):H.wag>0?16*Math.sin(t*14):happy?10*Math.sin(t*1.1):walking?12*Math.sin(t*5):8*Math.sin(t*1.7));
   const tp=TAIL_PIVOT[v];setT('tail',`rotate(${ta*m} ${tp[0]} ${tp[1]})`);
-  /* 腳（側面走路） */
   if(v==='side'){
     const a=walking?22*Math.sin(ph)*m:0;
     setT('legNF',`rotate(${a} 193 232)`);setT('legFB',`rotate(${a} 117 232)`);
@@ -614,36 +655,106 @@ function apply(dt){
     setT('head',`rotate(${walking?Math.sin(ph*2)*1.5*m:0} 200 180)`);
     setT('body',`translate(148 252) scale(1 ${1+(walking?0:.016*Math.sin(t*2.4)*m)}) translate(-148 -252)`);
   }else{
-    const tilt=v==='back'?H.look*5+H.tilt:H.look*6+H.tilt;
+    const tilt=(v==='back'?H.look*5:H.look*6)+H.tilt+H.lean*12;
     setT('head',`translate(0 ${sleeping?8:0}) rotate(${tilt} 150 190)`);
-    if(v==='front')setT('face',`translate(${H.look*10} ${Math.abs(H.look)*1.5})`);
-    const br=m*(sleeping?.014*Math.sin(t*1.6):.016*Math.sin(t*2.4));
+    if(v==='front'){
+      setT('face',`translate(${H.look*10} ${Math.abs(H.look)*1.5})`);
+      if(H.trap>0){setT('frontL','translate(0 -16) rotate(28 138 228)');setT('frontR','translate(0 -16) rotate(-28 162 228)')}
+      else if(H.swat>0){setT('frontL','');setT('frontR','translate(0 -18) rotate(-30 162 228)')}
+      else{setT('frontL','');setT('frontR','')}
+    }
+    const br=m*(sleeping?.014*Math.sin(t*1.6):H.hug?.02*Math.sin(t*1.8):.016*Math.sin(t*2.4));
     setT('body',`translate(150 262) scale(1 ${1+br}) translate(-150 -262)`);
   }
-  /* 整隻移動 */
-  let bob=0,y=0,sx=1,sy=1;
+  let bob=0,y=0,sx=1,sy=1,rot=0;
   if(walking)bob=Math.abs(Math.sin(ph))*w*.02*m;
   if(sleeping){sx=1.04;sy=.94}
   if(H.hop>0){const p=1-H.hop/.55;y=Math.sin(p*Math.PI)*w*.22}
+  if(H.wriggle>0)rot=Math.sin(t*28)*9*(m||.4);
+  const hk=H.hugK,sc=1+.42*hk;sx*=sc;sy*=sc;y+=w*.12*hk;
   hCat.style.transform=(v==='side'&&dir<0)?'scaleX(-1)':'';
   hc.style.bottom=(rh*.11-w*.107)+'px';
-  hc.style.transform=`translate(${px}px,${-(bob+y)}px) scale(${sx},${sy})`;
+  hc.style.transform=`translate(${px}px,${-(bob+y)}px) rotate(${rot}deg) scale(${sx},${sy})`;
+  hc.classList.toggle('held',H.hug);
   bed.style.left=(BED*(rw-w)+w*.04)+'px';bed.style.width=(w*.92)+'px';
-  const n=S.name||'牠',txt=walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
+  const n=S.name||'牠';
+  const txt=H.statusT>0?H.statusTxt:H.hug?`${n}讓你抱著`:walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
 }
-let raf=0,lastTs=0;
-function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
+
+/* ===== 觸摸：點一下、來回摸、按住抱抱 ===== */
+const ZONE_NAME={head:'頭',chin:'下巴',cheek:'臉頰',back:'背',butt:'屁股',belly:'肚子',tail:'尾巴',paw:'腳掌'};
+const inEll=(x,y,cx,cy,rx,ry)=>((x-cx)/rx)**2+((y-cy)/ry)**2<1;
+function zoneAt(e){
+  const r=hCat.getBoundingClientRect();let x=(e.clientX-r.left)/r.width*300;const y=(e.clientY-r.top)/r.height*300;
+  if(hCat.style.transform.includes('-1'))x=300-x;
+  const v=H.view,g=geo();
+  if(v==='side'){
+    if(inEll(x,y,220,140,64*g.hf+6,60))return x>250&&y>152?'chin':'head';
+    if(x<82&&y<215)return'tail';if(y>250)return'paw';if(x<104)return'butt';return y>215?'belly':'back';
+  }
+  if(inEll(x,y,150,122,88*g.hf+6,74)||y<100)return v==='back'?'head':(y<104?'head':(y>150&&Math.abs(x-150)<46)?'chin':'cheek');
+  if(v==='back'){if(x>150&&x<185&&y<240&&!inEll(x,y,150,208,g.brx*.8,46))return'tail';return y>236?'butt':'back'}
+  if(x>200&&y>165&&!inEll(x,y,150,208,g.brx,54))return'tail';
+  if(Math.abs(x-150)<44&&y>196)return y>246?'paw':'belly';
+  return'back';
+}
+function petTick(zone){
+  const n=S.name||'牠',liked=(S.likes||[]).includes(zone),hated=(S.dislikes||[]).includes(zone),temper=P01('temper'),aff=P01('affection');
+  if(H.state==='sleep'){
+    if(liked&&Math.random()<.8){say('呼嚕…',1200);note(`${n}睡夢中呼嚕呼嚕`);return}
+    wake();setFace(hated?'annoyed':'normal',1.5);say(hated?'喵！':'喵？',1300);return;
+  }
+  if(H.state==='walk'){sitDown('front')}
+  if(H.view==='back'&&Math.random()<.5)setHView('front');
+  H.timer=Math.max(H.timer,3);
+  if(H.cooldown>0||hated){
+    H.mood-=.1;setFace('annoyed',1.6);H.swat=.4;say(hated?(Math.random()<.5?'哈～！':'不要摸那裡'):'喵！夠了',1400);note(`${n}不喜歡被摸${ZONE_NAME[zone]}`);
+    if(H.mood<.35||temper>.6||Math.random()<.4){touchEnd(true);H.cooldown=6;setTimeout(()=>{if(H.state==='sit')walkAway()},500)}
+    return;
+  }
+  const limit=(1.5-temper)*(.6+aff)*1500;
+  if(H.petRecent>limit){H.cooldown=6;setFace('annoyed',1.6);H.swat=.4;say('咬！（輕輕的）',1500);note(`${n}被摸太久，不耐煩了`);touchEnd(true);setTimeout(()=>{if(H.state==='sit')walkAway()},600);return}
+  if(zone==='belly'&&!liked&&Math.random()<.25+temper*.5){H.trap=.9;setFace('annoyed',1.2);say('抱住你的手！咬咬',1500);note(`${n}抱住你的手踢踢`);return}
+  if(liked){H.mood+=.08;setFace('happy',1.8);H.lean=(Math.random()<.5?-1:1);heart();if(Math.random()<.6)say(Math.random()<.5?'呼嚕呼嚕…':'喵～',1300);note(`${n}很喜歡被摸${ZONE_NAME[zone]}`)}
+  else{H.mood+=.03;if(H.mood>.6)setFace('happy',1.2);if(Math.random()<.3)say('喵',900);note(`${n}讓你摸${ZONE_NAME[zone]}`)}
+}
+let touch=null;
+function touchEnd(cancel){if(!touch)return;clearTimeout(touch.hold);if(touch.mode==='hug'&&H.hug){H.hug=false;H.faceT=.01;say('喵～',1200);sitDown('front')}touch=null;hc.classList.remove('petting')}
+function startHug(){
+  const n=S.name||'牠',pref=S.hugPref||'mood',aff=P01('affection');
+  let p=pref==='love'?.9:pref==='hate'?.1:.25+H.mood*.45+aff*.25;if(H.cooldown>0)p*=.3;
+  if(H.state==='sleep')p*=.6;
+  if(Math.random()<p){H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart()}
+  else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done'}
+}
+hc.addEventListener('pointerdown',e=>{
+  e.preventDefault();try{hc.setPointerCapture(e.pointerId)}catch(_){}
+  touch={x:e.clientX,y:e.clientY,t0:performance.now(),moved:0,acc:0,mode:'tap',zone:null};
+  touch.hold=setTimeout(()=>{if(touch&&touch.mode==='tap'&&touch.moved<14){touch.mode='hug';startHug()}},550);
+});
+hc.addEventListener('pointermove',e=>{
+  if(!touch)return;const d=Math.hypot(e.clientX-touch.x,e.clientY-touch.y);touch.x=e.clientX;touch.y=e.clientY;touch.moved+=d;
+  if(touch.mode==='tap'&&touch.moved>14){touch.mode='pet';clearTimeout(touch.hold);hc.classList.add('petting')}
+  if(touch.mode!=='pet')return;
+  const z=zoneAt(e);H.petRecent+=d;touch.acc+=d;
+  if(touch.acc>110||z!==touch.zone){touch.acc=0;touch.zone=z;petTick(z)}
+});
+hc.addEventListener('pointerup',()=>{
+  if(!touch)return;const quick=touch.mode==='tap'&&performance.now()-touch.t0<450;touchEnd();if(quick)poke();
+});
+hc.addEventListener('pointercancel',()=>touchEnd(true));
 function poke(){
   if(H.state==='sleep'){wake();say('喵？',1500);H.tilt=8;return}
   if(H.state==='sit'&&H.view==='back'){setHView('front');H.timer=3+Math.random()*3;H.tilt=8;say('喵？',1400);return}
   H.hop=.55;H.wag=1.6;H.tilt=(Math.random()<.5?-1:1)*10;
-  const lines=['喵～','喵！','呼嚕呼嚕','嗯喵？'];say(lines[Math.floor(Math.random()*lines.length)],1400);
+  const lines=['喵～','喵！','嗯喵？','咪～'];say(lines[Math.floor(Math.random()*lines.length)],1400);
 }
-hc.addEventListener('click',poke);
 hc.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();poke()}});
 const track=e=>{const r=room.getBoundingClientRect();H.px=e.clientX-r.left;H.pAt=performance.now()};
 room.addEventListener('pointermove',track);room.addEventListener('pointerdown',track);
+let raf=0,lastTs=0;
+function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
 
 let view='maker';
 function showView(v){
