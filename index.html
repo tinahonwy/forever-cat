@@ -42,7 +42,12 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .window span::before{left:50%;top:0;bottom:0;width:6px;transform:translateX(-50%)}.window span::after{top:50%;left:0;right:0;height:6px;transform:translateY(-50%)}
 .floor{position:absolute;left:0;right:0;bottom:0;height:30%;background:#efdcc2;border-top:10px solid #fbf6ee}
 .bed{position:absolute;bottom:7%;height:12%;background:#e5868e;border-radius:50%;box-shadow:inset 0 -10px 0 rgba(0,0,0,.08)}
-.homecat{position:absolute;left:0;transform-origin:50% 100%;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.item{position:absolute;left:0;bottom:0;pointer-events:none}.item svg{display:block;width:100%;height:100%}
+.z1{z-index:1}.z3{z-index:3}#it-bowl{pointer-events:auto;cursor:pointer}
+.room.editing .item,.room.editing .bed{pointer-events:auto;cursor:grab;outline:2px dashed rgba(255,255,255,.9);outline-offset:3px;border-radius:6px}
+.room.editing #it-boxfront{outline:none}
+.roomtools{display:flex;justify-content:center;margin-top:10px}.furnwrap{display:flex;flex-direction:column;gap:6px;align-items:center}.furn{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.homecat{z-index:2;position:absolute;left:0;transform-origin:50% 100%;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .homecat.petting{cursor:grabbing}
 .heart{position:absolute;color:#e5707b;font-size:22px;pointer-events:none;z-index:3;animation:floatUp 1.2s ease-out forwards}
 @keyframes floatUp{from{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}to{transform:translateY(-60px) scale(1.1);opacity:0}}
@@ -322,6 +327,11 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="window" aria-hidden="true"><span></span></div>
     <div class="floor" aria-hidden="true"></div>
     <div class="bed" id="bed" aria-hidden="true"></div>
+    <div class="item z1" id="it-tree" hidden aria-hidden="true"><svg viewBox="0 0 90 120" preserveAspectRatio="none"><rect x="5" y="112" width="80" height="8" rx="3" fill="#b98a63"/><rect x="39" y="12" width="12" height="100" fill="#ead7b6"/><path d="M39,20 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,27 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,34 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,41 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,48 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,55 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,62 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,69 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,76 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,83 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,90 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,97 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,104 h12" stroke="#d2b88f" stroke-width="2"/><path d="M22,71 V84" stroke="#9a7a5c" stroke-width="1.5"/><circle cx="22" cy="87" r="4.5" fill="#e5868e"/><rect x="8" y="62" width="52" height="9" rx="4" fill="#a8775a"/><rect x="10" y="8" width="70" height="10" rx="5" fill="#a8775a"/></svg></div>
+    <div class="item z1" id="it-scratch" hidden aria-hidden="true"><svg viewBox="0 0 30 95" preserveAspectRatio="none"><rect x="0" y="88" width="30" height="7" rx="2" fill="#b98a63"/><rect x="8" y="6" width="14" height="82" fill="#ead7b6"/><path d="M8,12 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,18 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,24 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,30 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,36 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,42 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,48 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,54 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,60 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,66 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,72 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,78 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,84 h14" stroke="#d2b88f" stroke-width="2"/><rect x="6" y="3" width="18" height="5" rx="2" fill="#a8775a"/></svg></div>
+    <div class="item z1" id="it-boxback" hidden aria-hidden="true"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><path d="M8,26 L0,6 L32,12 L32,26Z" fill="#c98f55"/><path d="M92,26 L100,6 L68,12 L68,26Z" fill="#c98f55"/><rect x="6" y="16" width="88" height="14" fill="#8a5a33"/></svg></div>
+    <div class="item z3" id="it-boxfront" hidden aria-hidden="true"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><rect x="6" y="24" width="88" height="38" fill="#d9a066"/><rect x="6" y="22" width="88" height="5" fill="#e6b47e"/><rect x="44" y="27" width="12" height="35" fill="#c98f55" opacity=".5"/></svg></div>
+    <div class="item z3" id="it-bowl" hidden role="button" aria-label="飯碗，點一下倒飼料"><svg viewBox="0 0 42 18" preserveAspectRatio="none"><g id="food"><ellipse cx="21" cy="5" rx="15" ry="4.5" fill="#b77a4a"/><circle cx="14" cy="3.5" r="1.6" fill="#8f5a33"/><circle cx="24" cy="2.8" r="1.6" fill="#8f5a33"/><circle cx="29" cy="5" r="1.4" fill="#8f5a33"/></g><path d="M3,7 L39,7 L34,18 L8,18Z" fill="#6fa3c8"/><rect x="0" y="5" width="42" height="4" rx="2" fill="#8bbbe0"/></svg></div>
     <div class="homecat" id="homecat" role="button" tabindex="0" aria-label="摸摸牠">
       <div class="bubble" id="bubble" hidden></div>
       <div class="shadow" aria-hidden="true"></div>
@@ -331,7 +341,9 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
   </div>
   <p class="homehint"><span id="homeStatus">牠在家裡</span></p>
-  <p class="homehint small">點一下打招呼・在牠身上來回滑動是摸摸・按住不放是抱抱</p>
+  <p class="homehint small">點一下打招呼・在牠身上來回滑動是摸摸・按住不放是抱抱・點飯碗倒飼料</p>
+  <div class="roomtools"><button class="btn" id="roomEdit" type="button">佈置房間</button></div>
+  <div class="furnwrap" id="furnWrap" hidden><p class="homehint small">點家具加入或收起來，在房間裡拖曳家具可以移動位置</p><div class="furn" id="furn"></div></div>
   <div class="talk">
     <div class="care" id="care" hidden role="status">
       <p>聽起來你現在真的很難受，這些心情不用一個人扛著。</p>
@@ -769,8 +781,8 @@ $('openGuide').onclick=openGuide;
 /* ===== 貓咪的家 ===== */
 const room=$('room'),hc=$('homecat'),bubble=$('bubble'),bed=$('bed'),hCat=$('hCat');
 const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-const BED=.8;
-const H={x:.3,target:.3,state:'sit',timer:2,t:0,hop:0,face:'normal',goSleep:false,look:0,tilt:0,wag:0,px:0,pAt:-1e9,view:'front',
+let BED=.8;
+const H={x:.3,target:.3,state:'sit',timer:2,t:0,hop:0,face:'normal',goSleep:false,look:0,tilt:0,wag:0,px:0,pAt:-1e9,view:'front',y:0,jump:null,inBox:false,facing:1,
   mood:.7,petAcc:0,petRecent:0,cooldown:0,faceT:0,swat:0,trap:0,hug:false,hugK:0,wriggle:0,lean:0,statusT:0,statusTxt:''};
 let HP={};
 const P01=k=>(S[k]??50)/100;
@@ -787,6 +799,7 @@ function drawHomeCat(){
   hCat.innerHTML=s;
   HP={};VIEWS.forEach(v=>{HP[v]={};ORDERS[v].concat('face').forEach(k=>{HP[v][k]=document.getElementById(`hp-${v}-${k}`)})});
   hc.style.width=`calc(clamp(130px, 26%, 250px) * ${S.size})`;
+  drawFood();
 }
 const setT=(k,val)=>{const e=HP[H.view]&&HP[H.view][k];if(e)e.setAttribute('transform',val)};
 function setHView(v){if(H.view===v)return;H.view=v;VIEWS.forEach(k=>{const g=document.getElementById('hv-'+k);if(g)g.setAttribute('display',k===v?'inline':'none')})}
@@ -798,7 +811,9 @@ function heart(){const r=hCat.getBoundingClientRect(),rr=room.getBoundingClientR
   room.appendChild(el);setTimeout(()=>el.remove(),1300)}
 function sitDown(view){H.state='sit';H.timer=(2.5+Math.random()*4)*(1.6-P01('energy'));setHView(view||(Math.random()<.3?'back':'front'))}
 function wake(){sitDown('front');H.goSleep=false;setFace('normal');bubble.hidden=true}
-function startWalk(target,sleep,after){H.state='walk';H.target=target;H.goSleep=!!sleep;H.onArrive=after||null;setHView('side');if(H.face!=='normal')setFace('normal')}
+function startWalk(target,sleep,after){if(H.inBox){H.inBox=false;H.hop=.5}
+  if(H.y>.05){setHView('front');jumpTo(0,()=>startWalk(target,sleep,after));return}
+  H.state='walk';H.target=target;H.goSleep=!!sleep;H.onArrive=after||null;setHView('side');if(H.face!=='normal')setFace('normal')}
 function walkAway(){let t=H.x>.5?H.x-.35-Math.random()*.2:H.x+.35+Math.random()*.2;startWalk(Math.min(.96,Math.max(.04,t)))}
 function step(dt){
   H.timer-=dt;if(H.hop>0)H.hop=Math.max(0,H.hop-dt);if(H.wag>0)H.wag-=dt;H.tilt*=Math.exp(-dt*2.5);
@@ -810,22 +825,27 @@ function step(dt){
   if(H.wriggle>0){H.wriggle-=dt;if(H.wriggle<=0){H.hop=.55;walkAway();note(`${S.name||'牠'}逃走了`)}return}
   if(H.hug){H.x+=(.5-H.x)*Math.min(1,dt*3);if(Math.random()<dt*1.5)heart();H.mood=Math.min(1,H.mood+dt*.05);return}
   if(touch&&touch.mode==='pet')return;
-  if(H.state==='walk'){
+  if(H.jump){const J=H.jump;J.t+=dt;const p=Math.min(1,J.t/J.dur);H.y=J.from+(J.to-J.from)*p+Math.sin(p*Math.PI)*.35;if(p>=1){H.y=J.to;H.jump=null;H.state='sit';J.cb&&J.cb()}return}
+  if(H.state==='walk'){H.facing=Math.sign(H.target-H.x)||H.facing;
     const d=H.target-H.x,sp=(.07+.06*P01('energy'))*dt;
     if(Math.abs(d)<=sp){H.x=H.target;
       if(H.goSleep){H.goSleep=false;H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setFace('closed');say('Zzz…')}
       else{sitDown('front');if(H.onArrive){const f=H.onArrive;H.onArrive=null;f()}}}
     else H.x+=Math.sign(d)*sp;
   }else if(H.state==='sit'&&H.timer<=0){
+    if(tryActivity())return;
     const r=Math.random(),sleepy=.15+.25*(1-P01('energy'));
     if(r<1-sleepy-.15){let t=.04+Math.random()*.92;if(Math.abs(t-H.x)<.12)t=H.x>.5?t-.3:t+.3;startWalk(Math.min(.96,Math.max(.04,t)))}
-    else if(r<1-.15&&Math.abs(H.x-BED)>.02)startWalk(BED,true);
+    else if(r<1-.15&&(!roomCfg().bed.on||Math.abs(H.x-BED)>.02))goSleep();
     else{H.timer=2+Math.random()*3;if(Math.random()<.5)setHView(H.view==='back'?'front':'back')}
   }else if(H.state==='sleep'&&H.timer<=0)wake();
+  else if(H.state==='scratch'&&H.timer<=0)sitDown('front');
+  else if(H.state==='eat'&&H.timer<=0){roomCfg().bowl.food=false;drawFood();save();sitDown('front');setFace('happy',1.5);say('呼嚕～',1200)}
+  else if(H.state==='box'&&H.timer<=0){H.inBox=false;H.hop=.55;sitDown('front')}
 }
 function apply(dt){
   const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w),t=H.t,v=H.view;
-  const walking=H.state==='walk',sleeping=H.state==='sleep',dir=Math.sign(H.target-H.x)||1,ph=t*9,m=RM?0:1;
+  const walking=H.state==='walk',sleeping=H.state==='sleep',dir=walking?(Math.sign(H.target-H.x)||1):(H.facing||1),ph=t*9,m=RM?0:1;
   let lt=0;
   if(!sleeping&&!walking&&performance.now()-H.pAt<2500)lt=Math.max(-1,Math.min(1,(H.px-(px+w/2))/(rw*.3)));
   H.look+=(lt-H.look)*Math.min(1,dt*5);
@@ -833,10 +853,11 @@ function apply(dt){
   const ta=amp*(sleeping?3*Math.sin(t*.8):cross?18*Math.sin(t*10):H.wag>0?16*Math.sin(t*14):happy?10*Math.sin(t*1.1):walking?12*Math.sin(t*5):8*Math.sin(t*1.7));
   const tp=TAIL_PIVOT[v];setT('tail',`rotate(${ta*m} ${tp[0]} ${tp[1]})`);
   if(v==='side'){
-    const a=walking?22*Math.sin(ph)*m:0;
-    setT('legNF',`rotate(${a} 193 232)`);setT('legFB',`rotate(${a} 117 232)`);
-    setT('legNB',`rotate(${-a} 97 232)`);setT('legFF',`rotate(${-a} 213 232)`);
-    setT('head',`rotate(${walking?Math.sin(ph*2)*1.5*m:0} 200 180)`);
+    const scr=H.state==='scratch',eat=H.state==='eat',a=walking?22*Math.sin(ph)*m:0,k=Math.sin(t*14)*m;
+    if(scr){setT('legNF',`rotate(${-105+k*18} 193 232)`);setT('legFF',`rotate(${-95-k*18} 213 232)`);setT('legNB','');setT('legFB','')}
+    else{setT('legNF',`rotate(${a} 193 232)`);setT('legFB',`rotate(${a} 117 232)`);
+    setT('legNB',`rotate(${-a} 97 232)`);setT('legFF',`rotate(${-a} 213 232)`)}
+    setT('head',eat?`rotate(${16+Math.sin(t*8)*3*m} 200 180)`:scr?'rotate(-6 200 180)':`rotate(${walking?Math.sin(ph*2)*1.5*m:0} 200 180)`);
     setT('body',`translate(148 252) scale(1 ${1+(walking?0:.016*Math.sin(t*2.4)*m)}) translate(-148 -252)`);
   }else{
     const tilt=(v==='back'?H.look*5:H.look*6)+H.tilt+H.lean*12;
@@ -854,15 +875,17 @@ function apply(dt){
   if(walking)bob=Math.abs(Math.sin(ph))*w*.02*m;
   if(sleeping){sx=1.04;sy=.94}
   if(H.hop>0){const p=1-H.hop/.55;y=Math.sin(p*Math.PI)*w*.22}
+  y+=H.y*w;if(H.inBox)y-=w*.03;
   if(H.wriggle>0)rot=Math.sin(t*28)*9*(m||.4);
   const hk=H.hugK,sc=1+.42*hk;sx*=sc;sy*=sc;y+=w*.12*hk;
-  hCat.style.transform=(v==='side'&&dir<0)?'scaleX(-1)':'';
+  const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';hCat.style.transformOrigin='35% 90%';
+  hCat.style.transform=(flip?'scaleX(-1) ':'')+(v==='side'&&H.state==='scratch'?'rotate(-14deg)':'');
   hc.style.bottom=(rh*.11-w*.107)+'px';
   hc.style.transform=`translate(${px}px,${-(bob+y)}px) rotate(${rot}deg) scale(${sx},${sy})`;
   hc.classList.toggle('held',H.hug);
-  bed.style.left=(BED*(rw-w)+w*.04)+'px';bed.style.width=(w*.92)+'px';
+  layoutRoom(rw,rh,w);
   const n=S.name||'牠';
-  const txt=H.statusT>0?H.statusTxt:H.hug?`${n}讓你抱著`:walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
+  const txt=H.statusT>0?H.statusTxt:H.hug?`${n}讓你抱著`:walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
   if(!bubble.hidden)bubble.classList.toggle('flip',px+w*.58+bubble.offsetWidth>rw-6);
 }
@@ -872,7 +895,7 @@ const ZONE_NAME={head:'頭',chin:'下巴',cheek:'臉頰',back:'背',butt:'屁股
 const inEll=(x,y,cx,cy,rx,ry)=>((x-cx)/rx)**2+((y-cy)/ry)**2<1;
 function zoneAt(e){
   const r=hCat.getBoundingClientRect();let x=(e.clientX-r.left)/r.width*300;const y=(e.clientY-r.top)/r.height*300;
-  if(hCat.style.transform.includes('-1'))x=300-x;
+  if(hCat.dataset.flip==='1')x=300-x;
   const v=H.view,g=geo();
   if(v==='side'){
     if(inEll(x,y,220,140,64*g.hf+6,60))return x>250&&y>152?'chin':'head';
@@ -890,7 +913,7 @@ function petTick(zone){if(touch)touch.zones.add(zone);
     if(liked&&Math.random()<.8){say('呼嚕…',1200);note(`${n}睡夢中呼嚕呼嚕`);return}
     wake();setFace(hated?'annoyed':'normal',1.5);say(hated?'喵！':'喵？',1300);return;
   }
-  if(H.state==='walk'){sitDown('front')}
+  if(H.state==='jump')return;if(['walk','scratch','eat'].includes(H.state)){sitDown('front')}
   if(H.view==='back'&&Math.random()<.5)setHView('front');
   H.timer=Math.max(H.timer,3);
   if(H.cooldown>0||hated){if(touch)touch.bad='hate';
@@ -912,7 +935,7 @@ function startHug(){
   const n=S.name||'牠',pref=S.hugPref||'mood',aff=P01('affection');
   let p=pref==='love'?.9:pref==='hate'?.1:.25+H.mood*.45+aff*.25;if(H.cooldown>0)p*=.3;
   if(H.state==='sleep')p*=.6;
-  if(Math.random()<p){H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart()}
+  if(Math.random()<p){H.y=0;H.jump=null;H.inBox=false;H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart()}
   else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done';touch.hugFail=true}
 }
 hc.addEventListener('pointerdown',e=>{
@@ -961,6 +984,7 @@ function sayBoth(m,th,ms=2800){bubble.innerHTML='';if(m){const a=document.create
   if(th){const b=document.createElement('span');b.className='th';b.textContent=th;bubble.appendChild(b)}
   if(!m&&!th)return;bubble.hidden=false;clearTimeout(say.t);say.t=setTimeout(()=>{bubble.hidden=true},ms)}
 function comeOver(after){if(H.hug){after&&after();return}if(H.state==='sleep')wake();
+  if(H.y>.05||H.inBox||H.state==='jump'){if(H.state!=='jump')startWalk(.5,false,after);return}
   if(Math.abs(H.x-.5)<.06){sitDown('front');after&&after();return}startWalk(.5,false,after)}
 function respond(text){
   const n=S.name||'牠',it=intentOf(text),aff=P01('affection'),tmp=P01('temper'),en=P01('energy');
@@ -976,7 +1000,7 @@ function respond(text){
       :{m:'喵～',th:['（早安，早餐呢？）','（早！）'],a:warm?'come':'wag',f:'happy',d:warm?`${n}跑過來蹭你`:`${n}甩甩尾巴`},
     night:()=>asleep?{m:'呼嚕…',th:['（zzz）'],a:'none',d:`${n}在睡夢中呼嚕`}
       :{m:'喵～',th:warm?['（晚安，明天見）','（一起睡嗎）']:['（終於要睡了嗎）'],a:'bed',d:`${n}走去貓窩睡覺`},
-    food:()=>({m:pick(['喵喵喵！','喵！喵！']),th:['（罐罐！罐罐！）','（快點快點）','（是鮪魚嗎）'],a:'come',f:'happy',hop:1,d:`${n}衝過來了`}),
+    food:()=>({m:pick(['喵喵喵！','喵！喵！']),th:['（罐罐！罐罐！）','（快點快點）','（是鮪魚嗎）'],a:roomCfg().bowl.on?'eat':'come',f:'happy',hop:1,d:`${n}衝過來了`}),
     miss:()=>warm?{m:'呼嚕呼嚕…',th:['（我在這裡）','（蹭蹭）','（我也是）'],a:'come',f:'happy',lean:1,heart:1,d:`${n}走過來蹭你`}
       :{m:'…喵',th:['（知道了啦）','（慢慢眨眼）'],a:'blink',d:`${n}對你慢慢眨眼`},
     sad:()=>warm?{m:'咪…',th:['（我陪你）','（靠過來給你摸）'],a:'come',f:'closed',lean:1,d:`${n}靠過來陪你`}
@@ -1001,7 +1025,8 @@ function perform(r,th,asleep,ms){
   switch(r.a){
     case'come':comeOver(fx);break;
     case'back':if(H.state==='walk')sitDown('front');else setHView('front');sayBoth(r.m,th,ms);setTimeout(()=>{if(H.state==='sit'&&!H.hug){setHView('back');H.timer=5}},900);break;
-    case'bed':if(H.hug){fx();break}sayBoth(r.m,th,ms);startWalk(BED,true);break;
+    case'bed':if(H.hug){fx();break}sayBoth(r.m,th,ms);goSleep();break;
+    case'eat':sayBoth(r.m,th,ms);if(roomCfg().bowl.on)fillBowl(false);else comeOver(fx);break;
     case'wake':wake();H.hop=.55;sayBoth(r.m,th,ms);break;
     case'blink':if(H.state==='walk')sitDown('front');else if(!asleep)setHView('front');if(!asleep)setFace('closed',1.4);sayBoth(r.m,th,ms);break;
     case'none':sayBoth(r.m,th,ms);break;
@@ -1070,7 +1095,7 @@ ${catProfile()}${learnedPrompt()}
 - 如果主人真心問你是不是真的牠，溫柔誠實地說你是主人用回憶做出來陪他的小貓。
 - 主人難過時溫柔陪伴，也可以像貓一樣提醒他去吃飯、睡覺、找朋友聊聊。
 - 以「（」開頭、用括號包起來的訊息是旁白，描述主人對你做了什麼或發生了什麼，不是主人說的話；請用貓的方式對這件事反應，例如被摸得舒服就呼嚕撒嬌、被摸到討厭的地方就抱怨、主人很久沒來就撒嬌或鬧脾氣。
-- 只回傳 JSON。action 是你要做的動作：come（走到主人面前）、wag（甩尾巴）、hop（開心跳一下）、blink（慢慢眨眼）、back（屁股轉向主人）、bed（走去貓窩睡）、ear（耳朵轉向主人）、none。face 是表情：normal、happy、closed、annoyed。`}
+- 只回傳 JSON。action 是你要做的動作：come（走到主人面前）、wag（甩尾巴）、hop（開心跳一下）、blink（慢慢眨眼）、back（屁股轉向主人）、bed（走去貓窩睡）、eat（主人說要餵你時，去碗那邊吃飯）、ear（耳朵轉向主人）、none。face 是表情：normal、happy、closed、annoyed。`}
 const busyErr=e=>e&&(e.status===503||e.status===500||e.status===502||/high demand|overloaded|unavailable/i.test(e.message||''));
 let modelOverride='';
 async function askGemini(text){
@@ -1085,7 +1110,7 @@ async function askGeminiOnce(text,model){
   contents.push({role:'user',parts:[{text}]});
   const body={systemInstruction:{parts:[{text:systemPrompt()}]},contents,
     generationConfig:{temperature:1,maxOutputTokens:200,responseMimeType:'application/json',
-      responseSchema:{type:'OBJECT',properties:{say:{type:'STRING'},action:{type:'STRING',enum:['come','wag','hop','blink','back','bed','ear','none']},face:{type:'STRING',enum:['normal','happy','closed','annoyed']}},required:['say','action','face']}}};
+      responseSchema:{type:'OBJECT',properties:{say:{type:'STRING'},action:{type:'STRING',enum:['come','wag','hop','blink','back','bed','ear','eat','none']},face:{type:'STRING',enum:['normal','happy','closed','annoyed']}},required:['say','action','face']}}};
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
   try{
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -1289,6 +1314,59 @@ $('memClose').onclick=()=>{$('memPanel').hidden=true};
 $('memLearn').onclick=()=>{$('memMsg').textContent='整理中…';$('memLearn').disabled=true;maybeLearn(true)};
 $('memAdd').addEventListener('submit',e=>{e.preventDefault();const t=$('memText').value.trim();if(!t)return;if(addFact($('memCat').value,t,'me')){save();memLabel()}$('memText').value='';drawMem('記住了')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&pending.length>=2)maybeLearn(true)});
+
+/* ===== 房間佈置：家具和貓的活動 ===== */
+const ROOM_ITEMS={tree:['貓跳台',.12],scratch:['貓抓板',.32],box:['紙箱',.52],bowl:['飯碗',.64],bed:['貓窩',.82]};
+function roomCfg(){const r=S.room&&typeof S.room==='object'?S.room:{};
+  Object.keys(ROOM_ITEMS).forEach(k=>{if(!r[k]||typeof r[k]!=='object')r[k]={on:['bed','tree','bowl'].includes(k),x:ROOM_ITEMS[k][1]};if(k==='bowl'&&r[k].food==null)r[k].food=false});
+  S.room=r;return r}
+const IT={tree:[$('it-tree')],scratch:[$('it-scratch')],box:[$('it-boxback'),$('it-boxfront')],bowl:[$('it-bowl')],bed:[bed]};
+function drawFood(){$('food').style.display=roomCfg().bowl.food?'':'none'}
+function layoutRoom(rw,rh,w){
+  const R=roomCfg(),feet=rh*.11,cx=k=>R[k].x*(rw-w)+w/2;
+  const place=(el,k,ww,hh,b)=>{el.hidden=!R[k].on;if(!R[k].on)return;el.style.width=ww+'px';el.style.height=hh+'px';el.style.left=(cx(k)-ww/2)+'px';el.style.bottom=b+'px'};
+  place(IT.tree[0],'tree',w*.9,w*1.2,feet-w*.02);
+  place(IT.scratch[0],'scratch',w*.3,w*.95,feet-w*.02);
+  IT.box.forEach(el=>place(el,'box',w,w*.62,feet-w*.04));IT.box[1].style.zIndex=H.inBox?3:1;
+  place(IT.bowl[0],'bowl',w*.42,w*.18,feet-w*.03);
+  bed.hidden=!R.bed.on;bed.style.left=(cx('bed')-w*.46)+'px';bed.style.width=(w*.92)+'px';
+  BED=R.bed.x;
+}
+function jumpTo(y,cb){H.jump={from:H.y,to:y,t:0,dur:.55,cb};H.state='jump';if(H.face!=='normal')setFace('normal')}
+function goSleep(){if(roomCfg().bed.on)startWalk(BED,true);else{if(H.y>.05||H.inBox){startWalk(H.x,true);return}H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setFace('closed');say('Zzz…')}}
+function sideSpot(k,off){const rw=room.clientWidth,w=hc.offsetWidth,R=roomCfg(),f=off*w/Math.max(1,rw-w);
+  let t=R[k].x-f,face=1;if(t<.02){t=R[k].x+f;face=-1}return[Math.min(.98,Math.max(.02,t)),face]}
+function doAct(k){const R=roomCfg();
+  if(k==='tree')startWalk(R.tree.x,false,()=>{setHView('front');jumpTo(1.1,()=>{sitDown(Math.random()<.3?'back':'front');H.timer=8+Math.random()*10;note(`${S.name||'牠'}跳上貓跳台了`,3)})});
+  if(k==='scratch'){const[t,face]=sideSpot('scratch',.42);startWalk(t,false,()=>{H.state='scratch';H.facing=face;H.timer=3.5+Math.random()*3;setHView('side');if(Math.random()<.5)say('咔咔咔',1200)})}
+  if(k==='box')startWalk(R.box.x,false,()=>{setHView('front');jumpTo(.15,()=>{H.y=0;H.inBox=true;H.state='box';H.timer=8+Math.random()*8;setHView('front')})});
+  if(k==='eat'){const[t,face]=sideSpot('bowl',.4);startWalk(t,false,()=>{H.state='eat';H.facing=face;H.timer=6;setHView('side');say('咔滋咔滋',1800)})}
+}
+function tryActivity(){const R=roomCfg(),en=P01('energy'),opts=[];
+  if(R.bowl.on&&R.bowl.food)opts.push(['eat',.6]);
+  if(R.tree.on)opts.push(['tree',.1+.2*en]);
+  if(R.scratch.on)opts.push(['scratch',.06+.12*en]);
+  if(R.box.on)opts.push(['box',.12]);
+  let r=Math.random();for(const[k,p]of opts){if(r<p){doAct(k);return true}r-=p}return false}
+function fillBowl(byOwner){const R=roomCfg();if(!R.bowl.on)return;R.bowl.food=true;drawFood();save();
+  if(H.hug)return;if(H.state==='sleep'&&Math.random()<.5)return;if(H.state==='sleep')wake();
+  setTimeout(()=>{if(roomCfg().bowl.food&&!H.hug)doAct('eat')},500);
+  if(byOwner)setTimeout(()=>aiEvent('（主人幫你的碗倒了飼料）',{allowMove:false}),2500)}
+$('it-bowl').addEventListener('click',()=>{if(roomEdit)return;lastInteract=Date.now();idleFired=false;
+  if(roomCfg().bowl.food){note('碗裡還有飼料',2);return}note(`你幫${S.name||'牠'}倒了飼料`,3);fillBowl(true)});
+/* 佈置模式：開關家具、拖曳位置 */
+let roomEdit=false;
+function drawFurn(){const box=$('furn');box.innerHTML='';const R=roomCfg();
+  Object.entries(ROOM_ITEMS).forEach(([k,[n]])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=n;b.setAttribute('aria-pressed',!!R[k].on);
+    b.onclick=()=>{R[k].on=!R[k].on;if(!R[k].on){if(k==='tree'&&H.y>.05){H.y=0;H.jump=null;sitDown('front')}if(k==='box'&&H.inBox){H.inBox=false;sitDown('front')}
+      if((k==='bowl'&&H.state==='eat')||(k==='scratch'&&H.state==='scratch'))sitDown('front')}drawFurn();save()};box.appendChild(b)})}
+$('roomEdit').onclick=()=>{roomEdit=!roomEdit;room.classList.toggle('editing',roomEdit);$('furnWrap').hidden=!roomEdit;$('roomEdit').textContent=roomEdit?'完成佈置':'佈置房間';drawFurn()};
+Object.entries(IT).forEach(([k,els])=>els.forEach(el=>{
+  el.addEventListener('pointerdown',e=>{if(!roomEdit)return;e.preventDefault();e.stopPropagation();try{el.setPointerCapture(e.pointerId)}catch(_){}
+    const move=ev=>{const r=room.getBoundingClientRect(),w=hc.offsetWidth,x=Math.min(.98,Math.max(.02,(ev.clientX-r.left-w/2)/Math.max(1,r.width-w)));
+      roomCfg()[k].x=x;if(k==='tree'&&H.y>.05)H.x=x;if(k==='box'&&H.inBox)H.x=x};
+    const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);save()};
+    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)})}));
 
 let raf=0,lastTs=0;
 function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
