@@ -431,7 +431,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       <div class="bubble" id="bubble" hidden></div>
       <div class="shadow" aria-hidden="true"></div>
       <div class="catbox">
-        <svg class="layer" id="hCat" viewBox="0 0 300 300" aria-hidden="true"></svg>
+        <svg class="layer" id="hCat" viewBox="0 0 300 300" aria-hidden="true" overflow="visible"></svg>
       </div>
     </div>
   </div>
@@ -1013,7 +1013,9 @@ function apply(dt){
     if(v==='front'){
       setT('face',`translate(${H.look*10} ${Math.abs(H.look)*1.5})`);
       const s1=Math.max(0,Math.sin(t*11))*m,s2=Math.max(0,Math.sin(t*11+Math.PI))*m;
-      if(H.trap>0||st==='grab'||st==='leap'||(st==='jump'&&H.jumpPhase==='air'&&(H.jump&&H.jump.to>H.jump.from))){setT('frontL','translate(0 -16) rotate(28 138 228)');setT('frontR','translate(0 -16) rotate(-28 162 228)')}
+      if(st==='leap'&&H.leapT>0){const p=1-H.leapT/.7,a=m?(p<.15?p/.15:p>.85?(1-p)/.15:1):1;
+        setT('frontL',`translate(${-20*a} ${-176*a}) rotate(${172*a} 138 224)`);setT('frontR',`translate(${20*a} ${-176*a}) rotate(${-172*a} 162 224)`)}
+      else if(H.trap>0||st==='grab'||(st==='jump'&&H.jumpPhase==='air'&&(H.jump&&H.jump.to>H.jump.from))){setT('frontL','translate(0 -16) rotate(28 138 228)');setT('frontR','translate(0 -16) rotate(-28 162 228)')}
       else if(st==='bat'){setT('frontR',`translate(0 ${-20*s1}) rotate(${-45*s1} 162 228)`);setT('frontL',`translate(0 ${-20*s2}) rotate(${45*s2} 138 228)`)}
       else if(H.swat>0){setT('frontL','');setT('frontR','translate(0 -18) rotate(-30 162 228)')}
       else{setT('frontL','');setT('frontR','')}
@@ -1079,13 +1081,14 @@ function petTick(zone){if(touch)touch.zones.add(zone);
   H.timer=Math.max(H.timer,3);
   if(H.cooldown>0||hated){if(touch)touch.bad='hate';
     H.mood-=.1;setFace('annoyed',1.6);H.swat=.4;say(hated?(Math.random()<.5?'哈～！':'不要摸那裡'):'喵！夠了',1400);note(`${n}不喜歡被摸${ZONE_NAME[zone]}`);
+    logAct('petHate',hated?`被摸${ZONE_NAME[zone]}，不喜歡，哈氣（心情下降）`:`已經被摸夠了，還被摸${ZONE_NAME[zone]}，不耐煩（心情下降）`,false,{zone,hated});
     if(H.mood<.35||temper>.6||Math.random()<.4){touchEnd(true);H.cooldown=6;setTimeout(()=>{if(H.state==='sit')walkAway()},500)}
     return;
   }
   const limit=(1.5-temper)*(.6+aff)*1500;
-  if(H.petRecent>limit){if(touch)touch.bad='over';H.cooldown=6;setFace('annoyed',1.6);H.swat=.4;say('咬！（輕輕的）',1500);note(`${n}被摸太久，不耐煩了`);touchEnd(true);setTimeout(()=>{if(H.state==='sit')walkAway()},600);return}
-  if(zone==='belly'&&!liked&&Math.random()<.25+temper*.5){if(touch)touch.bad='trap';H.trap=.9;setFace('annoyed',1.2);say('抱住你的手！咬咬',1500);note(`${n}抱住你的手踢踢`);return}
-  if(liked){if(touch)touch.good++;H.mood+=.08;setFace('happy',1.8);H.lean=(Math.random()<.5?-1:1);heart();if(Math.random()<.6)say(Math.random()<.5?'呼嚕呼嚕…':'喵～',1300);note(`${n}很喜歡被摸${ZONE_NAME[zone]}`)}
+  if(H.petRecent>limit){if(touch)touch.bad='over';H.cooldown=6;setFace('annoyed',1.6);H.swat=.4;say('咬！（輕輕的）',1500);note(`${n}被摸太久，不耐煩了`);H.mood-=.06;logAct('petOver','被摸太久，輕咬一口走開（心情下降）',true,{zone});touchEnd(true);setTimeout(()=>{if(H.state==='sit')walkAway()},600);return}
+  if(zone==='belly'&&!liked&&Math.random()<.25+temper*.5){if(touch)touch.bad='trap';H.trap=.9;setFace('annoyed',1.2);say('抱住你的手！咬咬',1500);note(`${n}抱住你的手踢踢`);logAct('petTrap','被摸肚子，抱住你的手踢踢',true,{zone});return}
+  if(liked){if(touch)touch.good++;H.mood+=.08;setFace('happy',1.8);H.lean=(Math.random()<.5?-1:1);heart();if(Math.random()<.6)say(Math.random()<.5?'呼嚕呼嚕…':'喵～',1300);note(`${n}很喜歡被摸${ZONE_NAME[zone]}`);logAct('petLike',`被摸${ZONE_NAME[zone]}，很舒服地呼嚕（心情上升）`,false,{zone})}
   else{H.mood+=.03;if(H.mood>.6)setFace('happy',1.2);if(Math.random()<.3)say('喵',900);note(`${n}讓你摸${ZONE_NAME[zone]}`)}
 }
 let touch=null;
@@ -1094,7 +1097,7 @@ function touchEnd(cancel){if(!touch)return;clearTimeout(touch.hold);const t=touc
   recordPet(t,wasHug);const ev=touchStory(t,wasHug);if(ev&&Math.random()<.7)setTimeout(()=>aiEvent(ev,{allowMove:!t.bad&&!t.hugFail&&!t.escaped}),900)}
 function hugPatience(){const pref=S.hugPref||'mood',aff=P01('affection'),tmp=P01('temper');
   const b=pref==='love'?40:pref==='hate'?2.5:5+aff*10+H.mood*6;return b*(1.3-tmp*.6)*(.8+Math.random()*.4)}
-function escapeHug(){const n=S.name||'牠';H.hug=false;H.y=H.carry||0;H.carry=0;H.dragV=0;H.wriggle=.7;H.state='sit';
+function escapeHug(){const n=S.name||'牠';logAct('hugEscape','抱太久了，掙脫跳下來（心情下降）',true);H.hug=false;H.y=H.carry||0;H.carry=0;H.dragV=0;H.wriggle=.7;H.state='sit';
   setFace('annoyed',1.4);say('喵嗚！放開我',1400);note(`${n}掙脫跳下來了`,2.5);H.mood-=.06;H.cooldown=4;
   if(touch){touch.escaped=true;touch.mode='done';clearTimeout(touch.hold)}}
 function startHug(){
@@ -1102,8 +1105,8 @@ function startHug(){
   let p=pref==='love'?.9:pref==='hate'?.1:.25+H.mood*.45+aff*.25;if(H.cooldown>0)p*=.3;
   if(H.state==='sleep')p*=.6;
   if(Math.random()<p){const rr=room.getBoundingClientRect();H.dragX=touch.x-rr.left;H.dragY=H.dragY0=touch.y-rr.top;H.carry=0;H.dragV=0;H.warned=false;H.patience=hugPatience();
-    H.y=0;H.jump=null;H.inBox=false;H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart()}
-  else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done';touch.hugFail=true}
+    H.y=0;H.jump=null;H.inBox=false;H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart();logAct('hugOk','讓你抱起來，呼嚕呼嚕',true)}
+  else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);logAct('hugFail','不想被抱，扭來扭去跳走了（心情下降）',true);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done';touch.hugFail=true}
 }
 hc.addEventListener('pointerdown',e=>{
   if(wandOn)return;e.preventDefault();try{hc.setPointerCapture(e.pointerId)}catch(_){}
@@ -1740,8 +1743,8 @@ function drawWand(){
   $('featherG').setAttribute('transform',`translate(${FT.x},${FT.y}) rotate(${FT.ang})`);
   $('wandToy').style.zIndex=FT.hidden?'0':'50'}
 /* 行為紀錄 */
-const actAt={};let actAny=0;
-function logAct(key,text,force,meta){const now=performance.now();if(!force&&(now-(actAt[key]||0)<6000||now-actAny<2200))return;actAt[key]=now;actAny=now;
+const actAt={};let actAny=-1e9;
+function logAct(key,text,force,meta){const now=performance.now();if(!force&&(now-(actAt[key]??-1e9)<6000||now-actAny<2200))return;actAt[key]=now;actAny=now;
   talkLog.push(['act',`${S.name||'牠'}${text}`,'',key,meta||null]);while(talkLog.length>8)talkLog.shift();drawLog();maybeAsk(key,text)}
 const TRAIT_FIX={
   foodRun:[['牠沒那麼急',T=>{T.appetite-=2},'放飯時，牠不會一聽到聲音就衝過來']],
@@ -1766,6 +1769,13 @@ function openActFix(i,li){if(li.querySelector('.fix'))return;const[,text,,key,me
   const extra=()=>inp.value.trim()?`，真正的牠會：${inp.value.trim()}`:'';
   const btns=[];
   if(pk)btns.push(mk('牠不會這樣玩',()=>{const P=playPrefs();P[pk]=Math.max(.1,Math.round(P[pk]*.5*100)/100);addFact('修正',`玩逗貓棒時，牠不太會「${PREF_NAME[pk]}」${extra()}`,'me');done(`記住了，${n}以後比較少這樣玩`)}));
+  if(meta&&meta.zone&&ZONE_NAME[meta.zone]){const z=meta.zone,zn=ZONE_NAME[z],toL=()=>{S.likes=[...new Set([...(S.likes||[]),z])];S.dislikes=(S.dislikes||[]).filter(x=>x!==z)},toD=()=>{S.dislikes=[...new Set([...(S.dislikes||[]),z])];S.likes=(S.likes||[]).filter(x=>x!==z)};
+    if(key==='petHate'||key==='petTrap')btns.push(mk(`牠其實喜歡被摸${zn}`,()=>{toL();addFact('喜好',`牠喜歡被摸${zn}${extra()}`,'me');done(`記住了，${n}喜歡被摸${zn}`)}));
+    if(key==='petLike')btns.push(mk(`牠其實不喜歡被摸${zn}`,()=>{toD();addFact('討厭',`牠不喜歡被摸${zn}${extra()}`,'me');done(`記住了，${n}不喜歡被摸${zn}`)}));
+    if(key==='petOver'||key==='petHate')btns.push(mk('牠可以被摸很久',()=>{S.temper=Math.max(0,(S.temper??40)-15);S.affection=Math.min(100,(S.affection??60)+10);addFact('習性',`牠很能忍耐，可以被摸很久${extra()}`,'me');done(`記住了，${n}可以被摸久一點`)}));
+    if(key==='petLike')btns.push(mk('牠沒那麼愛被摸',()=>{S.affection=Math.max(0,(S.affection??60)-10);addFact('習性',`牠沒那麼愛被摸${extra()}`,'me');done('記住了')}))}
+  if(['hugFail','hugEscape'].includes(key))btns.push(mk('牠其實很愛被抱',()=>{S.hugPref='love';addFact('喜好',`牠很愛被抱${extra()}`,'me');done(`記住了，${n}很愛被抱`)}),mk('牠可以抱久一點',()=>{S.hugPref=S.hugPref==='hate'?'mood':S.hugPref;S.temper=Math.max(0,(S.temper??40)-10);addFact('習性',`牠可以讓人抱久一點${extra()}`,'me');done('記住了')}));
+  if(key==='hugOk')btns.push(mk('牠其實不愛被抱',()=>{S.hugPref='hate';addFact('討厭',`牠不喜歡被抱${extra()}`,'me');done(`記住了，${n}不愛被抱`)}));
   if(meta&&meta.flavor){const f=meta.flavor;
     btns.push(mk(`牠超愛${f}`,()=>{setFlavorPref(f,3);addFact('喜好',`牠超愛${f}口味的罐頭${extra()}`,'me');done(`記住了，${n}最愛${f}`)}));
     btns.push(mk(`牠不喜歡${f}`,()=>{setFlavorPref(f,-3);addFact('討厭',`牠不喜歡${f}口味的罐頭${extra()}`,'me');done(`記住了，${n}不愛${f}`)}))}
