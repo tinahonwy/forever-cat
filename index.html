@@ -43,7 +43,13 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .floor{position:absolute;left:0;right:0;bottom:0;height:30%;background:#efdcc2;border-top:10px solid #fbf6ee}
 .bed{position:absolute;bottom:7%;height:12%;background:#e5868e;border-radius:50%;box-shadow:inset 0 -10px 0 rgba(0,0,0,.08)}
 .item{position:absolute;left:0;bottom:0;pointer-events:none}.item svg{display:block;width:100%;height:100%}
-.z1{z-index:1}.z3{z-index:3}#it-bowl{pointer-events:auto;cursor:pointer}
+.z1{z-index:1}
+#it-tree,#it-scratch,#it-boxback,#it-boxfront,.bed{pointer-events:auto;cursor:pointer}
+.room.wand,.room.wand *{cursor:none!important}.room.wand{touch-action:none}.room.wand .wandbtn,.room.wand .wandbtn *{cursor:pointer!important}
+.toy{position:absolute;left:0;top:0;z-index:5;pointer-events:none;transform-origin:15px 0}
+.wandbtn{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(255,255,255,.92);border:2px solid transparent;border-radius:18px;padding:8px 8px 6px;cursor:pointer;font:inherit;font-size:12px;color:#2e3936;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.wandbtn[aria-pressed="true"]{border-color:#e5707b;background:#fff3f4}
+.wandbtn:focus-visible{outline:2.5px solid #e5707b;outline-offset:2px}.z3{z-index:3}#it-bowl{pointer-events:auto;cursor:pointer}
 .room.editing .item,.room.editing .bed{pointer-events:auto;cursor:grab;outline:2px dashed rgba(255,255,255,.9);outline-offset:3px;border-radius:6px}
 .room.editing #it-boxfront{outline:none}
 .roomtools{display:flex;justify-content:center;margin-top:10px}.furnwrap{display:flex;flex-direction:column;gap:6px;align-items:center}.furn{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
@@ -150,6 +156,9 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 @media (max-width:420px){.split{grid-template-columns:minmax(0,1fr)}}
 input[type=range]{width:100%;accent-color:var(--accent)}
+.kgbody p{margin:0 0 8px;line-height:1.7}.kgbody ul{margin:0 0 8px;padding-left:1.2em;line-height:1.8}.kglink{display:inline-block;text-decoration:none}
+.kgkey{display:flex;gap:8px}.kgkey input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px}
+.photorow{display:flex;flex-direction:column;gap:8px}
 .hint{font-size:13px;color:var(--muted);background:var(--chip);padding:8px 12px;border-radius:12px;margin:0}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .btn{font:inherit;font-size:14px;border:1.5px solid var(--line);background:var(--panel);color:var(--fg);padding:6px 14px;border-radius:12px;cursor:pointer}
@@ -208,6 +217,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
 
     <div class="pane" data-pane="color">
+      <div class="photorow"><button class="btn primary" id="photoBtn" type="button">從照片自動畫一隻</button><input type="file" id="photoInput" accept="image/*" hidden><p class="hint" id="photoMsg">上傳一張牠的正面照片，Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。</p></div>
       <div class="row"><span class="lbl">底色</span><div class="swatches" id="sw-base"></div></div>
       <p class="hint">在左邊的貓身上直接畫花紋，畫到身體外面的部分會自動隱藏。</p>
       <div class="row"><span class="lbl">筆刷顏色</span><div class="swatches" id="sw-brush"></div></div>
@@ -296,7 +306,8 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="row"><label class="lbl" for="aiModel">模型</label><select id="aiModel"></select></div>
     <div class="btns"><button class="btn primary" id="aiSave" type="button">儲存並測試</button><button class="btn" id="aiForget" type="button">清除對話記憶</button></div>
     <p class="gsum" id="aiMsg" role="status"></p>
-    <p class="gsub">金鑰只存在這台裝置的瀏覽器，不會上傳到 GitHub 或雲端，換裝置要重新貼一次。清空金鑰欄再按儲存就會刪除。還沒有金鑰？到 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請。</p>
+    <p class="gsub">金鑰只存在這台裝置的瀏覽器，不會上傳到 GitHub 或雲端，換裝置要重新貼一次。清空金鑰欄再按儲存就會刪除。</p>
+    <button class="btn" id="kgOpen" type="button">還沒有金鑰？一步步教我申請</button>
   </div>
 </div>
 
@@ -322,6 +333,17 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<div class="guide" id="keyGuide" hidden role="dialog" aria-modal="true" aria-labelledby="kgTitle">
+  <div class="gcard">
+    <div class="ghead"><span id="kgProg"></span><button class="gx" id="kgClose" type="button">之後再說</button></div>
+    <h2 id="kgTitle"></h2>
+    <div class="kgbody" id="kgBody"></div>
+    <div class="kgkey" id="kgKeyRow" hidden><input id="kgKey" type="password" autocomplete="off" spellcheck="false" placeholder="把金鑰貼在這裡" aria-label="Gemini API 金鑰"><button class="btn primary" id="kgTest" type="button">儲存並測試</button></div>
+    <p class="gsum" id="kgMsg" role="status" hidden></p>
+    <div class="gfoot"><button class="btn" id="kgBack" type="button">上一步</button><button class="btn primary" id="kgNext" type="button">下一步</button></div>
+  </div>
+</div>
+
 <section class="home" id="viewHome" hidden>
   <div class="room" id="room">
     <div class="window" aria-hidden="true"><span></span></div>
@@ -332,6 +354,9 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="item z1" id="it-boxback" hidden aria-hidden="true"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><path d="M8,26 L0,6 L32,12 L32,26Z" fill="#c98f55"/><path d="M92,26 L100,6 L68,12 L68,26Z" fill="#c98f55"/><rect x="6" y="16" width="88" height="14" fill="#8a5a33"/></svg></div>
     <div class="item z3" id="it-boxfront" hidden aria-hidden="true"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><rect x="6" y="24" width="88" height="38" fill="#d9a066"/><rect x="6" y="22" width="88" height="5" fill="#e6b47e"/><rect x="44" y="27" width="12" height="35" fill="#c98f55" opacity=".5"/></svg></div>
     <div class="item z3" id="it-bowl" hidden role="button" aria-label="飯碗，點一下倒飼料"><svg viewBox="0 0 42 18" preserveAspectRatio="none"><g id="food"><ellipse cx="21" cy="5" rx="15" ry="4.5" fill="#b77a4a"/><circle cx="14" cy="3.5" r="1.6" fill="#8f5a33"/><circle cx="24" cy="2.8" r="1.6" fill="#8f5a33"/><circle cx="29" cy="5" r="1.4" fill="#8f5a33"/></g><path d="M3,7 L39,7 L34,18 L8,18Z" fill="#6fa3c8"/><rect x="0" y="5" width="42" height="4" rx="2" fill="#8bbbe0"/></svg></div>
+
+    <div class="toy" id="toy" hidden aria-hidden="true"><svg viewBox="0 0 30 262" width="30" height="262" overflow="visible"><path d="M15,0 V234" stroke="#6b5b4c" stroke-width="1.6"/><g transform="translate(15 236) scale(1.8) translate(-15 -236)"><circle cx="15" cy="236" r="4" fill="#e8c14f"/><path d="M15,238 C5,246 4,256 9,262 C12,254 14,248 15,240Z" fill="#e5707b"/><path d="M15,238 C25,246 26,256 21,262 C18,254 16,248 15,240Z" fill="#5fb3a3"/><path d="M15,239 C13,250 15,258 15,262 C17,256 18,248 15,239Z" fill="#f6c27f"/></g></svg></div>
+    <button class="wandbtn" id="wandBtn" type="button" aria-pressed="false" aria-label="逗貓棒"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M8,34 L26,10" stroke="#a8775a" stroke-width="3" stroke-linecap="round"/><path d="M26,10 C30,14 31,20 30,26" stroke="#6b5b4c" stroke-width="1.4" fill="none"/><path d="M30,26 C25,29 25,35 28,38 C30,34 31,31 30,27Z" fill="#e5707b"/><path d="M30,26 C35,29 36,34 33,38 C32,34 31,31 30,27Z" fill="#5fb3a3"/></svg><span>逗貓棒</span></button>
     <div class="homecat" id="homecat" role="button" tabindex="0" aria-label="摸摸牠">
       <div class="bubble" id="bubble" hidden></div>
       <div class="shadow" aria-hidden="true"></div>
@@ -341,7 +366,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
   </div>
   <p class="homehint"><span id="homeStatus">牠在家裡</span></p>
-  <p class="homehint small">點一下打招呼・在牠身上來回滑動是摸摸・按住不放是抱抱・點飯碗倒飼料</p>
+  <p class="homehint small">點一下打招呼・在牠身上來回滑動是摸摸・按住不放是抱抱・點家具叫牠去玩・右邊的逗貓棒可以陪牠玩</p>
   <div class="roomtools"><button class="btn" id="roomEdit" type="button">佈置房間</button></div>
   <div class="furnwrap" id="furnWrap" hidden><p class="homehint small">點家具加入或收起來，在房間裡拖曳家具可以移動位置</p><div class="furn" id="furn"></div></div>
   <div class="talk">
@@ -826,6 +851,7 @@ function step(dt){
   if(H.hug){H.x+=(.5-H.x)*Math.min(1,dt*3);if(Math.random()<dt*1.5)heart();H.mood=Math.min(1,H.mood+dt*.05);return}
   if(touch&&touch.mode==='pet')return;
   if(H.jump){const J=H.jump;J.t+=dt;const p=Math.min(1,J.t/J.dur);H.y=J.from+(J.to-J.from)*p+Math.sin(p*Math.PI)*.35;if(p>=1){H.y=J.to;H.jump=null;H.state='sit';J.cb&&J.cb()}return}
+  if(wandOn&&!H.jump&&!H.inBox&&H.y<.05&&playTick(dt))return;
   if(H.state==='walk'){H.facing=Math.sign(H.target-H.x)||H.facing;
     const d=H.target-H.x,sp=(.07+.06*P01('energy'))*dt;
     if(Math.abs(d)<=sp){H.x=H.target;
@@ -845,12 +871,12 @@ function step(dt){
 }
 function apply(dt){
   const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w),t=H.t,v=H.view;
-  const walking=H.state==='walk',sleeping=H.state==='sleep',dir=walking?(Math.sign(H.target-H.x)||1):(H.facing||1),ph=t*9,m=RM?0:1;
+  const walking=H.state==='walk'||H.state==='chase',sleeping=H.state==='sleep',dir=walking?(Math.sign(H.target-H.x)||1):(H.facing||1),ph=t*9,m=RM?0:1;
   let lt=0;
   if(!sleeping&&!walking&&performance.now()-H.pAt<2500)lt=Math.max(-1,Math.min(1,(H.px-(px+w/2))/(rw*.3)));
   H.look+=(lt-H.look)*Math.min(1,dt*5);
   const amp=v==='back'?1.3:1,happy=H.face==='happy',cross=H.face==='annoyed';
-  const ta=amp*(sleeping?3*Math.sin(t*.8):cross?18*Math.sin(t*10):H.wag>0?16*Math.sin(t*14):happy?10*Math.sin(t*1.1):walking?12*Math.sin(t*5):8*Math.sin(t*1.7));
+  const ta=amp*(H.state==='ready'?22*Math.sin(t*16):sleeping?3*Math.sin(t*.8):cross?18*Math.sin(t*10):H.wag>0?16*Math.sin(t*14):happy?10*Math.sin(t*1.1):walking?12*Math.sin(t*5):8*Math.sin(t*1.7));
   const tp=TAIL_PIVOT[v];setT('tail',`rotate(${ta*m} ${tp[0]} ${tp[1]})`);
   if(v==='side'){
     const scr=H.state==='scratch',eat=H.state==='eat',a=walking?22*Math.sin(ph)*m:0,k=Math.sin(t*14)*m;
@@ -876,16 +902,17 @@ function apply(dt){
   if(sleeping){sx=1.04;sy=.94}
   if(H.hop>0){const p=1-H.hop/.55;y=Math.sin(p*Math.PI)*w*.22}
   y+=H.y*w;if(H.inBox)y-=w*.03;
+  const wig=H.state==='ready'?Math.sin(t*22)*w*.012*m:0;if(H.state==='ready'){sy*=.88;sx*=1.04}
   if(H.wriggle>0)rot=Math.sin(t*28)*9*(m||.4);
   const hk=H.hugK,sc=1+.42*hk;sx*=sc;sy*=sc;y+=w*.12*hk;
   const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';hCat.style.transformOrigin='35% 90%';
   hCat.style.transform=(flip?'scaleX(-1) ':'')+(v==='side'&&H.state==='scratch'?'rotate(-14deg)':'');
   hc.style.bottom=(rh*.11-w*.107)+'px';
-  hc.style.transform=`translate(${px}px,${-(bob+y)}px) rotate(${rot}deg) scale(${sx},${sy})`;
+  hc.style.transform=`translate(${px+wig}px,${-(bob+y)}px) rotate(${rot}deg) scale(${sx},${sy})`;
   hc.classList.toggle('held',H.hug);
   layoutRoom(rw,rh,w);
   const n=S.name||'牠';
-  const txt=H.statusT>0?H.statusTxt:H.hug?`${n}讓你抱著`:walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
+  const txt=H.statusT>0?H.statusTxt:H.hug?`${n}讓你抱著`:H.state==='chase'?`${n}在追逗貓棒`:H.state==='ready'?`${n}盯著逗貓棒，屁股扭扭`:H.state==='bat'?`${n}伸手抓逗貓棒`:walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
   if(!bubble.hidden)bubble.classList.toggle('flip',px+w*.58+bubble.offsetWidth>rw-6);
 }
@@ -939,7 +966,7 @@ function startHug(){
   else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done';touch.hugFail=true}
 }
 hc.addEventListener('pointerdown',e=>{
-  e.preventDefault();try{hc.setPointerCapture(e.pointerId)}catch(_){}
+  if(wandOn)return;e.preventDefault();try{hc.setPointerCapture(e.pointerId)}catch(_){}
   touch={x:e.clientX,y:e.clientY,t0:performance.now(),moved:0,acc:0,mode:'tap',zone:null,zones:new Set(),good:0,bad:''};
   touch.hold=setTimeout(()=>{if(touch&&touch.mode==='tap'&&touch.moved<14){touch.mode='hug';startHug()}},550);
 });
@@ -1156,7 +1183,7 @@ function openAI(){const k=aiKey();$('aiKey').value=k;$('aiKey').type='password';
   $('aiModeCat').setAttribute('aria-pressed',S.talkMode!=='ai');$('aiModeAI').setAttribute('aria-pressed',S.talkMode==='ai');
   $('aiMsg').textContent=k?'這台裝置已經存了金鑰':'還沒有金鑰';$('aiPanel').hidden=false}
 function aiLabel(){$('openAI').textContent=aiOn()?'說話模式：AI':'說話模式：貓語'}
-$('openAI').onclick=openAI;
+$('openAI').onclick=()=>{if(!aiKey())openKeyGuide();else openAI()};
 $('aiClose').onclick=()=>{$('aiPanel').hidden=true};
 $('aiShow').onclick=()=>{const i=$('aiKey');i.type=i.type==='password'?'text':'password';$('aiShow').textContent=i.type==='password'?'顯示':'隱藏'};
 $('aiModeCat').onclick=()=>{S.talkMode='cat';save();openAI();aiLabel()};
@@ -1367,6 +1394,185 @@ Object.entries(IT).forEach(([k,els])=>els.forEach(el=>{
       roomCfg()[k].x=x;if(k==='tree'&&H.y>.05)H.x=x;if(k==='box'&&H.inBox)H.x=x};
     const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);save()};
     el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)})}));
+
+/* ===== 點家具叫牠去玩 ===== */
+const ITEM_CALL={tree:['貓跳台','tree'],scratch:['貓抓板','scratch'],box:['紙箱','box'],bed:['貓窩','bed']};
+Object.entries(ITEM_CALL).forEach(([k,[name,act]])=>IT[k].forEach(el=>el.addEventListener('click',()=>{
+  if(roomEdit||wandOn||H.hug)return;lastInteract=Date.now();idleFired=false;const n=S.name||'牠';
+  const lazy=Math.random()<.45*(1-P01('energy'))+(H.mood<.35?.3:0);
+  if(H.state==='sleep'&&act!=='bed'){if(Math.random()<.5){note(`${n}睡得很熟，沒有理你`,2.5);return}wake()}
+  if(lazy){if(H.state==='sit')setHView('front');say(Math.random()<.5?'…喵':'（看了一眼）',1400);note(`${n}看了${name}一眼，懶得動`,3);return}
+  if(act==='bed'){note(`${n}要去睡覺了`,3);goSleep();return}
+  note(`你拍拍${name}，${n}跑過去了`,3);doAct(act)})));
+
+/* ===== 逗貓棒 ===== */
+let wandOn=false;
+const toy=$('toy'),PL={x:0,y:0,lx:0,sp:0,moveAt:-1e9,secs:0,total:0,tired:0,lunge:0,lungeV:0,caughtAt:0,down:false};
+function setWand(on){
+  wandOn=on;room.classList.toggle('wand',on);$('wandBtn').setAttribute('aria-pressed',on);toy.hidden=!on;
+  const n=S.name||'牠';
+  if(on){if(roomEdit)$('roomEdit').click();const r=room.getBoundingClientRect();PL.x=PL.lx=r.width*.7;PL.y=r.height*.45;PL.secs=0;PL.total=0;PL.tired=0;drawToy();note(`拿起逗貓棒，在房間裡晃晃看`,3)}
+  else{if(['chase','ready','bat'].includes(H.state))sitDown('front');
+    if(PL.total>5){const s=Math.round(PL.total);setTimeout(()=>aiEvent(`（主人用逗貓棒陪你玩了大約 ${s} 秒${PL.caught?`，你抓到了 ${PL.caught} 次`:''}）`,{allowMove:false}),600)}
+    PL.caught=0}
+}
+$('wandBtn').addEventListener('click',e=>{e.stopPropagation();setWand(!wandOn)});
+function drawToy(){toy.style.left=(PL.x-15)+'px';toy.style.top=(PL.y-252)+'px';toy.style.transform=`rotate(${Math.max(-25,Math.min(25,(PL.x-PL.lx)*.6))}deg)`}
+function toyMove(e){const r=room.getBoundingClientRect();PL.x=Math.max(0,Math.min(r.width,e.clientX-r.left));PL.y=Math.max(40,Math.min(r.height-6,e.clientY-r.top));
+  PL.moveAt=performance.now();H.px=PL.x;H.pAt=performance.now();lastInteract=Date.now();idleFired=false;drawToy()}
+room.addEventListener('pointerdown',e=>{if(!wandOn||e.target.closest('#wandBtn'))return;PL.down=true;e.preventDefault();try{room.setPointerCapture(e.pointerId)}catch(_){}toyMove(e)});
+room.addEventListener('pointermove',e=>{if(!wandOn)return;if(e.pointerType==='mouse'||PL.down)toyMove(e)});
+['pointerup','pointercancel'].forEach(t=>room.addEventListener(t,()=>{PL.down=false}));
+function caught(){const n=S.name||'牠',now=performance.now();if(now-PL.caughtAt<1500)return;PL.caughtAt=now;PL.caught=(PL.caught||0)+1;
+  H.mood=Math.min(1,H.mood+.08);heart();setFace('happy',1.2);say(pick(['抓到了！','喵！','嘿！']),1200);note(`${n}抓到逗貓棒了！`,2.5)}
+function playTick(dt){
+  const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,cpx=H.x*(rw-w)+w/2,feetY=rh*.89;
+  const k=1-Math.exp(-dt*5);PL.sp=PL.sp*(1-k)+Math.abs(PL.x-PL.lx)/Math.max(dt,1e-3)*k;PL.lx=PL.x;drawToy();
+  if(PL.lunge>0){PL.lunge-=dt;H.x=Math.min(1,Math.max(0,H.x+PL.lungeV*dt));if(PL.lunge<=0&&Math.abs(PL.x-(H.x*(rw-w)+w/2))<w*.4&&PL.y>feetY-w*.6)caught();return true}
+  if(PL.tired>0){PL.tired-=dt;return false}
+  const en=P01('energy'),interest=.3+.7*en,recent=performance.now()-PL.moveAt<1500,dx=PL.x-cpx,adx=Math.abs(dx),low=PL.y>feetY-w*.5;
+  if(H.state==='sleep'){if(recent&&adx<w*1.5&&Math.random()<dt*.6){wake();say('喵？',1000)}return true}
+  if((H.state==='scratch'||H.state==='eat')&&recent&&adx<w*1.6&&Math.random()<dt*interest)sitDown('front');
+  if(!['sit','walk','chase','ready','bat'].includes(H.state))return false;
+  if(!recent){if(['chase','ready','bat'].includes(H.state)){sitDown('front');H.timer=4}return H.state==='sit'}
+  if(H.state==='walk'){H.state='sit'}
+  PL.secs+=dt;PL.total+=dt;
+  if(PL.secs>20+50*en){PL.secs=0;PL.tired=20+Math.random()*15;sitDown('front');H.timer=6;say('呼…玩累了',1600);note(`${S.name||'牠'}玩累了，休息一下`,3);return true}
+  const look=()=>{H.facing=Math.sign(dx)||H.facing};
+  if(H.state!=='chase'&&adx>w*.5&&(PL.sp>w*.6||adx>w*1.2)&&Math.random()<dt*3*interest){H.state='chase';setHView('side')}
+  if(H.state==='chase'){const tx=Math.min(1,Math.max(0,(PL.x-w/2)/Math.max(1,rw-w))),sp=(.18+.22*en)*dt,near=(w*.3)/Math.max(1,rw-w);
+    H.target=tx;look();
+    if(Math.abs(tx-H.x)<=sp+near){H.state=low?'ready':'bat';H.timer=.5+Math.random()*.8;setHView(low?'side':'front')}else H.x+=Math.sign(tx-H.x)*sp;return true}
+  if(H.state==='sit'&&adx<w*1.3&&Math.random()<dt*2.5*interest){H.state=low?'ready':'bat';H.timer=.6+Math.random()*.8;setHView(low?'side':'front');look()}
+  if(H.state==='ready'){look();H.timer-=0;if(!low){H.state='bat';setHView('front');H.timer=.3}
+    else if(H.timer<=0){const d=Math.min(adx,w*.75)/Math.max(1,rw-w);PL.lunge=.45;PL.lungeV=Math.sign(dx)*d/.45;H.hop=.55;H.timer=.9+Math.random()*1.1*(1.3-en)}return true}
+  if(H.state==='bat'){if(low){H.state='ready';setHView('side');H.timer=.4}
+    else if(H.timer<=0){H.swat=.35;H.timer=.35+Math.random()*.6;if(adx<w*.55&&Math.random()<.4*interest){H.hop=.55;if(PL.y>feetY-w*1.4)setTimeout(()=>{if(Math.abs(PL.x-(H.x*(room.clientWidth-hc.offsetWidth)+hc.offsetWidth/2))<hc.offsetWidth*.45)caught()},280)}}
+    if(adx>w*.8){H.state='chase';setHView('side')}return true}
+  return H.state!=='sit';
+}
+
+/* ===== 從照片自動畫一隻 ===== */
+const PHOTO_PARTS={forehead:'額頭到頭頂',head_left:'左半邊臉',head_right:'右半邊臉',ear_left:'左耳',ear_right:'右耳',eye_patch_left:'左眼周圍',eye_patch_right:'右眼周圍',
+  muzzle:'鼻子嘴巴周圍（口罩區）',chin:'下巴',chest:'胸口',body_left:'身體左側',body_right:'身體右側',belly:'肚子下半',front_paws:'前腳掌',back_paws:'後腳掌',tail:'整條尾巴',tail_tip:'尾巴尖'};
+const HEX=/^#[0-9a-fA-F]{6}$/;
+const PHOTO_SCHEMA={type:'OBJECT',properties:{
+  isCat:{type:'BOOLEAN'},
+  base:{type:'STRING'},fur:{type:'STRING',enum:['none','short','medium','long']},
+  eyeL:{type:'STRING'},eyeR:{type:'STRING'},nose:{type:'STRING'},whColor:{type:'STRING'},
+  earL:{type:'STRING',enum:['normal','big','round','fold','curl','tipped','none']},earR:{type:'STRING',enum:['normal','big','round','fold','curl','tipped','none']},
+  tail:{type:'STRING',enum:['long','short','kirin','none']},
+  tabbyColor:{type:'STRING'},
+  regions:{type:'ARRAY',items:{type:'OBJECT',properties:{part:{type:'STRING',enum:Object.keys(PHOTO_PARTS)},color:{type:'STRING'}},required:['part','color']}},
+  summary:{type:'STRING'}},required:['isCat','base','fur','eyeL','eyeR','earL','earR','tail','regions','summary']};
+async function gemParts(sys,parts,schema,maxTok){
+  const order=[aiModel(),...AI_MODELS.map(m=>m[0]).filter(m=>m!==aiModel())];let last;
+  for(let i=0;i<order.length;i++){
+    try{const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(order[i])}:generateContent`,
+        {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':aiKey()},
+         body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:'user',parts}],
+           generationConfig:{temperature:.2,maxOutputTokens:maxTok||1200,responseMimeType:'application/json',responseSchema:schema}})});
+      const j=await res.json().catch(()=>({}));
+      if(!res.ok){const e=new Error((j.error&&j.error.message)||('HTTP '+res.status));e.status=res.status;throw e}
+      return JSON.parse((((j.candidates||[])[0]||{}).content||{}).parts.map(p=>p.text||'').join(''))}
+    catch(e){last=e;if(!busyErr(e))throw e;await new Promise(r=>setTimeout(r,800))}}
+  throw last}
+function shrinkImage(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error('讀不到這張照片'));
+  fr.onload=()=>{const img=new Image();img.onerror=()=>rej(new Error('這個檔案格式讀不出來，換一張 JPG 或 PNG 試試'));
+    img.onload=()=>{const m=768,sc=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85).split(',')[1])};img.src=fr.result};fr.readAsDataURL(file)})}
+function paintRegion(c,part,col){
+  c.fillStyle=col;c.strokeStyle=col;c.lineCap='round';c.lineJoin='round';
+  const ell=(x,y,rx,ry,r=0)=>{c.beginPath();c.ellipse(x,y,rx,ry,r,0,Math.PI*2);c.fill()};
+  const g=geo(),hf=g.hf;
+  switch(part){
+    case'forehead':ell(150,84,86*hf,42);break;
+    case'head_left':ell(108,118,52*hf,74);break;
+    case'head_right':ell(192,118,52*hf,74);break;
+    case'ear_left':ell(90,56,40,48,-.3);break;
+    case'ear_right':ell(210,56,40,48,.3);break;
+    case'eye_patch_left':ell(118,128,27,23);break;
+    case'eye_patch_right':ell(182,128,27,23);break;
+    case'muzzle':c.fill(new Path2D('M150,104 C132,118 106,138 108,156 C120,180 180,180 192,156 C194,138 168,118 150,104 Z'));break;
+    case'chin':ell(150,180,36,16);break;
+    case'chest':ell(150,226,30,38);break;
+    case'body_left':ell(110,206,42*g.brx/62,52);break;
+    case'body_right':ell(190,206,42*g.brx/62,52);break;
+    case'belly':ell(150,250,54*g.brx/62,22);break;
+    case'front_paws':c.fillRect(124,248,52,24);break;
+    case'back_paws':c.fillRect(94,254,34,18);c.fillRect(172,254,34,18);break;
+    case'tail':{const d=TAILS.front[S.tail];if(d){c.lineWidth=g.tw+6;c.stroke(new Path2D(d))}break}
+    case'tail_tip':{const end={long:[240,184],short:[220,234],kirin:[244,206]}[S.tail];if(end)ell(end[0],end[1],g.tw*.9,g.tw*.9);break}
+  }
+}
+function paintTabby(c,col){c.strokeStyle=col;c.lineWidth=6;c.lineCap='round';
+  const L=a=>a.forEach(([x1,y1,x2,y2])=>{c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke()});
+  const mir=a=>a.concat(a.map(([a1,b1,a2,b2])=>[300-a1,b1,300-a2,b2]));
+  L([[138,58,140,80],[150,54,150,82],[162,58,160,80]]);
+  L(mir([[62,108,84,114],[60,124,82,126],[96,186,112,194],[92,204,110,210],[94,222,110,226]]));
+  const d=TAILS.front[S.tail];if(d&&S.tail==='long')L([[230,238,242,232],[242,216,254,216],[238,198,250,194]])}
+async function photoToCat(file){
+  const msg=t=>{$('photoMsg').textContent=t};
+  if(!aiKey()){msg('分析照片需要 Gemini 金鑰，先跟著步驟申請一把（免費）');openKeyGuide();return}
+  msg('正在讀取照片…');let b64;try{b64=await shrinkImage(file)}catch(e){msg(e.message);return}
+  msg('Gemini 正在看照片，大約需要幾秒…');$('photoBtn').disabled=true;
+  const sys=`你是幫忙把真實貓咪照片轉成可愛扁平插畫參數的助手。插畫是一隻正面坐著的貓。請仔細看照片，回傳 JSON：
+- isCat：照片裡有沒有清楚的貓
+- base：最大面積的底色（#rrggbb）。白底帶色塊的貓（例如賓士、三花），底色是白色
+- regions：底色之外的色塊或白色區塊，各寫一筆部位和顏色。可用部位：${Object.entries(PHOTO_PARTS).map(([k,v])=>k+'='+v).join('、')}。左右都以「看照片的人」的左右為準。例如賓士貓（黑底白口罩白胸口白襪子）：base 黑色，regions 有 muzzle、chest、front_paws 白色。三花：base 白色，regions 有幾塊橘色和黑色
+- tabbyColor：如果有虎斑條紋，條紋的顏色；沒有就空字串
+- eyeL、eyeR：照片中左邊、右邊那隻眼睛的虹膜顏色（#rrggbb），異色瞳就分開寫；看不到就寫常見的黃綠色
+- nose：鼻頭顏色；whColor：鬍鬚顏色
+- earL、earR：耳朵類型（normal 一般立耳、big 大耳、round 小圓耳、fold 折耳、curl 捲耳、tipped 被剪過一角的 TNR 剪耳、none 沒有）
+- fur：毛長；tail：長尾 long、短尾 short、麒麟尾（尾巴短而彎折）kirin、沒有尾巴 none，看不到尾巴就寫 long
+- summary：用台灣繁體中文一句話描述這隻貓的外觀
+顏色請用插畫風格稍微提亮、乾淨的顏色，不要太灰暗。`;
+  try{
+    const o=await gemParts(sys,[{text:'請分析這隻貓。'},{inlineData:{mimeType:'image/jpeg',data:b64}}],PHOTO_SCHEMA);
+    if(!o.isCat){msg('這張照片好像看不清楚貓，換一張正面、光線好一點的照片試試');return}
+    if(mview!=='front')setMView('front');pushUndo();
+    const hx=v=>HEX.test(v||'')?v.toLowerCase():null;
+    if(hx(o.base))S.base=hx(o.base);if(['none','short','medium','long'].includes(o.fur))S.fur=o.fur;
+    const ears=Object.keys(EAR).concat('none');if(ears.includes(o.earL))S.earL=o.earL;if(ears.includes(o.earR))S.earR=o.earR;S.earLink=S.earL===S.earR;
+    if(['long','short','kirin','none'].includes(o.tail))S.tail=o.tail;
+    if(hx(o.eyeL))S.eyeL=hx(o.eyeL);if(hx(o.eyeR))S.eyeR=hx(o.eyeR);S.eyeLink=S.eyeL===S.eyeR;
+    if(hx(o.nose))S.nose=hx(o.nose);if(hx(o.whColor))S.whColor=hx(o.whColor);
+    const c=CV.front.getContext('2d');c.clearRect(0,0,600,600);c.save();c.scale(2,2);
+    const order=['body_left','body_right','belly','head_left','head_right','forehead','ear_left','ear_right','tail','tail_tip','eye_patch_left','eye_patch_right','chest','chin','muzzle','front_paws','back_paws'];
+    const regs=(o.regions||[]).filter(r=>PHOTO_PARTS[r.part]&&hx(r.color)).sort((a,b)=>order.indexOf(a.part)-order.indexOf(b.part));
+    regs.forEach(r=>paintRegion(c,r.part,hx(r.color)));
+    if(hx(o.tabbyColor))paintTabby(c,hx(o.tabbyColor));
+    c.restore();
+    S.sideEdited=false;S.backEdited=false;autoDerive();render();
+    msg(`畫好了：${o.summary||''} 花紋不像的地方可以直接用筆刷修，按「上一步」可以回到原本的花紋。`);
+  }catch(e){msg('分析失敗：'+aiErrText(e))}
+  finally{$('photoBtn').disabled=false;$('photoInput').value=''}
+}
+$('photoBtn').onclick=()=>{if(!aiKey()){$('photoMsg').textContent='分析照片需要 Gemini 金鑰，先跟著步驟申請一把（免費）';openKeyGuide();return}$('photoInput').click()};
+$('photoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)photoToCat(f)};
+
+/* ===== 申請 Gemini 金鑰的引導 ===== */
+const KG=[
+  {t:'讓牠可以跟你說話',b:'<p>要讓貓用自己的語氣說話、或從照片自動畫貓，需要一把 Google 的「Gemini API 金鑰」。</p><ul><li>免費，不用綁信用卡</li><li>大約 3 分鐘就能申請好</li><li>金鑰只會存在你這台裝置，不會給別人</li></ul><p class="gsub">免費版的對話內容，Google 可能會拿來改善他們的服務。</p>'},
+  {t:'1. 打開 Google AI Studio',b:'<p>按下面的按鈕，會開一個新分頁。用你的 Google 帳號登入，第一次進去要勾選同意條款。</p><p><a class="btn primary kglink" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">打開 Google AI Studio</a></p><p class="gsub">弄好之後回到這個分頁，按「下一步」。</p>'},
+  {t:'2. 建立金鑰',b:'<p>在「API Keys」頁面，按 <b>Create API key</b>（建立 API 金鑰）。</p><p>如果它要你選專案，選第一個或讓它幫你建一個新的都可以。</p><p class="gsub">看到「Set up billing」（設定付費）不要按，維持免費方案就好。</p>'},
+  {t:'3. 複製金鑰',b:'<p>畫面會出現一串很長的文字，通常是 <b>AQ.</b> 或 <b>AIza</b> 開頭，按旁邊的複製按鈕。</p><p class="gsub">這串就像密碼，不要傳給別人或貼到聊天裡。</p>'},
+  {t:'4. 貼到這裡',b:'<p>把剛剛複製的金鑰貼在下面，按「儲存並測試」。</p>',key:true}
+];
+let kgI=0;
+function openKeyGuide(){kgI=0;$('kgMsg').hidden=true;$('kgKey').value='';$('keyGuide').hidden=false;drawKG()}
+function drawKG(){const Q=KG[kgI];$('kgProg').textContent=`${kgI+1} / ${KG.length}`;$('kgTitle').textContent=Q.t;$('kgBody').innerHTML=Q.b;
+  $('kgKeyRow').hidden=!Q.key;$('kgBack').hidden=kgI===0;$('kgNext').hidden=!!Q.key;$('kgNext').textContent=kgI===0?'開始':'下一步';if(Q.key)setTimeout(()=>$('kgKey').focus(),50)}
+$('kgNext').onclick=()=>{if(kgI<KG.length-1){kgI++;drawKG()}};
+$('kgBack').onclick=()=>{if(kgI>0){kgI--;drawKG()}};
+$('kgClose').onclick=()=>{$('keyGuide').hidden=true};
+$('kgTest').onclick=async()=>{const k=$('kgKey').value.trim(),m=$('kgMsg');m.hidden=false;
+  if(!k){m.textContent='還沒貼上金鑰喔';return}
+  $('aiKey').value=k;m.textContent='測試中…';$('kgTest').disabled=true;
+  try{await $('aiSave').onclick()}finally{$('kgTest').disabled=false}
+  const r=$('aiMsg').textContent;m.textContent=r;
+  if(/^成功/.test(r)){m.textContent=r+' 已經開好說話模式了！';$('kgNext').hidden=true;$('kgClose').textContent='完成';aiLabel()}};
+$('kgOpen').onclick=()=>{$('aiPanel').hidden=true;openKeyGuide()};
 
 let raf=0,lastTs=0;
 function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
