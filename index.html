@@ -162,6 +162,8 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 @media (max-width:420px){.split{grid-template-columns:minmax(0,1fr)}}
 input[type=range]{width:100%;accent-color:var(--accent)}
+.kwlist{margin:0;padding-left:1.2em;line-height:1.8}.kwcheck{display:flex;gap:8px;align-items:center;font-size:15px;background:var(--chip);padding:10px 12px;border-radius:12px;cursor:pointer}.kwcheck input{width:18px;height:18px;accent-color:var(--accent)}
+#keyWarn p{margin:0;line-height:1.7}
 .kgbody p{margin:0 0 8px;line-height:1.7}.kgbody ul{margin:0 0 8px;padding-left:1.2em;line-height:1.8}.kglink{display:inline-block;text-decoration:none}
 .kgkey{display:flex;gap:8px}.kgkey input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px}
 .photobtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;background:var(--accent);color:#fff;border:0;border-radius:16px;padding:14px 18px;cursor:pointer}
@@ -316,7 +318,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="row"><label class="lbl" for="aiKey">Gemini API 金鑰</label>
       <div class="keyrow"><input id="aiKey" type="password" autocomplete="off" spellcheck="false" placeholder="貼上金鑰（AQ. 或 AIza 開頭）"><button class="btn" id="aiShow" type="button">顯示</button></div></div>
     <div class="row"><label class="lbl" for="aiModel">模型</label><select id="aiModel"></select></div>
-    <div class="btns"><button class="btn primary" id="aiSave" type="button">儲存並測試</button><button class="btn" id="aiForget" type="button">清除對話記憶</button></div>
+    <div class="btns"><button class="btn primary" id="aiSave" type="button">儲存並測試</button><button class="btn" id="aiForget" type="button">清除對話記憶</button><button class="btn warn" id="aiDel" type="button">刪除這台裝置的金鑰</button></div>
     <p class="gsum" id="aiMsg" role="status"></p>
     <p class="gsub">金鑰只存在這台裝置的瀏覽器，不會上傳到 GitHub 或雲端，換裝置要重新貼一次。清空金鑰欄再按儲存就會刪除。</p>
     <button class="btn" id="kgOpen" type="button">還沒有金鑰？一步步教我申請</button>
@@ -356,6 +358,15 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<div class="guide" id="keyWarn" hidden role="alertdialog" aria-modal="true" aria-labelledby="kwTitle">
+  <div class="gcard">
+    <h2 id="kwTitle">只在你自己的裝置上儲存金鑰</h2>
+    <p>金鑰會存在這個瀏覽器裡，之後用這台裝置、這個瀏覽器的人，都可能看到或用掉你的額度。</p>
+    <ul class="kwlist"><li>請只在<b>自己的私人電腦或手機</b>上儲存</li><li>不要在公用電腦、網咖、學校或公司的共用電腦上儲存</li><li>不小心存在別人的電腦上：到「AI 說話設定」按「刪除這台裝置的金鑰」，或回 Google AI Studio 把那把金鑰刪掉</li></ul>
+    <label class="kwcheck"><input type="checkbox" id="kwOk"> 這是我自己的私人裝置</label>
+    <div class="gfoot"><button class="btn" id="kwCancel" type="button">取消</button><button class="btn primary" id="kwGo" type="button" disabled>儲存金鑰</button></div>
+  </div>
+</div>
 <section class="home" id="viewHome" hidden>
   <div class="room" id="room">
     <div class="window" aria-hidden="true"><span></span></div>
@@ -856,7 +867,7 @@ function heart(){const r=hCat.getBoundingClientRect(),rr=room.getBoundingClientR
 function sitDown(view){H.state='sit';H.timer=(2.5+Math.random()*4)*(1.6-P01('energy'));setHView(view||(Math.random()<.3?'back':'front'))}
 function wake(){sitDown('front');H.goSleep=false;setFace('normal');bubble.hidden=true}
 function startWalk(target,sleep,after){if(H.inBox){H.inBox=false;H.hop=.5}
-  if(H.y>.05){setHView('front');jumpTo(0,()=>startWalk(target,sleep,after));return}
+  if(H.y>.05){setHView('front');jumpDown(()=>startWalk(target,sleep,after));return}
   H.state='walk';H.target=target;H.goSleep=!!sleep;H.onArrive=after||null;setHView('side');if(H.face!=='normal')setFace('normal')}
 function walkAway(){let t=H.x>.5?H.x-.35-Math.random()*.2:H.x+.35+Math.random()*.2;startWalk(Math.min(.96,Math.max(.04,t)))}
 function step(dt){
@@ -869,7 +880,10 @@ function step(dt){
   if(H.wriggle>0){H.wriggle-=dt;if(H.wriggle<=0){H.hop=.55;walkAway();note(`${S.name||'牠'}逃走了`)}return}
   if(H.hug){H.x+=(.5-H.x)*Math.min(1,dt*3);if(Math.random()<dt*1.5)heart();H.mood=Math.min(1,H.mood+dt*.05);return}
   if(touch&&touch.mode==='pet')return;
-  if(H.jump){const J=H.jump;J.t+=dt;const p=Math.min(1,J.t/J.dur);H.y=J.from+(J.to-J.from)*p+Math.sin(p*Math.PI)*.35;if(p>=1){H.y=J.to;H.jump=null;H.state='sit';J.cb&&J.cb()}return}
+  if(H.jump){const J=H.jump;J.t+=dt;const a=J.t-J.pre,p=Math.max(0,Math.min(1,a/J.dur));
+    H.jumpPhase=a<0?'crouch':p<1?'air':'land';H.jumpP=p;
+    H.y=J.from+(J.to-J.from)*(p<1?(1-Math.cos(p*Math.PI))/2:1)+(p<1?Math.sin(p*Math.PI)*(.25+Math.abs(J.to-J.from)*.35):0);
+    if(a>=J.dur+J.post+J.pause){H.y=J.to;H.jump=null;H.jumpPhase=null;H.state='sit';J.cb&&J.cb()}return}
   if(wandOn&&!H.jump&&!H.inBox&&H.y<.05&&playTick(dt))return;
   if(H.state==='walk'){H.facing=Math.sign(H.target-H.x)||H.facing;
     const d=H.target-H.x,sp=(.07+.06*P01('energy'))*dt;
@@ -910,7 +924,7 @@ function apply(dt){
     if(v==='front'){
       setT('face',`translate(${H.look*10} ${Math.abs(H.look)*1.5})`);
       const s1=Math.max(0,Math.sin(t*11))*m,s2=Math.max(0,Math.sin(t*11+Math.PI))*m;
-      if(H.trap>0||st==='grab'||st==='leap'){setT('frontL','translate(0 -16) rotate(28 138 228)');setT('frontR','translate(0 -16) rotate(-28 162 228)')}
+      if(H.trap>0||st==='grab'||st==='leap'||(st==='jump'&&H.jumpPhase==='air'&&(H.jump&&H.jump.to>H.jump.from))){setT('frontL','translate(0 -16) rotate(28 138 228)');setT('frontR','translate(0 -16) rotate(-28 162 228)')}
       else if(st==='bat'){setT('frontR',`translate(0 ${-20*s1}) rotate(${-45*s1} 162 228)`);setT('frontL',`translate(0 ${-20*s2}) rotate(${45*s2} 138 228)`)}
       else if(H.swat>0){setT('frontL','');setT('frontR','translate(0 -18) rotate(-30 162 228)')}
       else{setT('frontL','');setT('frontR','')}
@@ -923,6 +937,7 @@ function apply(dt){
   if(sleeping){sx=1.04;sy=.94}
   if(H.hop>0){const p=1-H.hop/.55;y=Math.sin(p*Math.PI)*w*.22}
   y+=H.y*w;if(H.inBox)y-=w*.03;
+  if(st==='jump'&&H.jumpPhase&&m){const ph2=H.jumpPhase;if(ph2==='crouch'){sy*=.84;sx*=1.1}else if(ph2==='air'){const q=Math.sin(H.jumpP*Math.PI);sy*=1+.12*q;sx*=1-.08*q}else{sy*=.9;sx*=1.06}}
   const wig=st==='ready'?Math.sin(t*22)*w*.012*m:0;if(st==='ready'){sy*=.88;sx*=1.04}
   if(st==='stalk'){sy*=.86;sx*=1.05}
   if(st==='bat'){sy*=1.07;y+=w*.04}
@@ -1216,12 +1231,17 @@ $('aiClose').onclick=()=>{$('aiPanel').hidden=true};
 $('aiShow').onclick=()=>{const i=$('aiKey');i.type=i.type==='password'?'text':'password';$('aiShow').textContent=i.type==='password'?'顯示':'隱藏'};
 $('aiModeCat').onclick=()=>{S.talkMode='cat';save();openAI();aiLabel()};
 $('aiModeAI').onclick=()=>{if(!$('aiKey').value.trim()&&!aiKey()){$('aiMsg').textContent='先貼上金鑰並按「儲存」，才能開說話模式';return}S.talkMode='ai';save();openAI();aiLabel()};
-$('aiSave').onclick=async()=>{const k=$('aiKey').value.trim();ls.set(AIKEY,k);ls.set(AIMODEL,$('aiModel').value);
+function confirmKeyWarn(){return new Promise(res=>{const d=$('keyWarn'),ok=$('kwOk'),go=$('kwGo');ok.checked=false;go.disabled=true;d.hidden=false;
+  ok.onchange=()=>{go.disabled=!ok.checked};const end=v=>{d.hidden=true;res(v)};go.onclick=()=>end(true);$('kwCancel').onclick=()=>end(false)})}
+$('aiSave').onclick=async()=>{const k0=$('aiKey').value.trim();if(k0&&k0!==aiKey()&&!(await confirmKeyWarn())){$('aiMsg').textContent='已取消，沒有儲存金鑰';return}
+  return doAiSave()};
+$('aiDel').onclick=()=>{$('aiKey').value='';doAiSave()};
+async function doAiSave(){const k=$('aiKey').value.trim();ls.set(AIKEY,k);ls.set(AIMODEL,$('aiModel').value);
   if(!k){$('aiMsg').textContent='已清除這台裝置的金鑰';if(S.talkMode==='ai'){S.talkMode='cat';save()}aiLabel();return}
   $('aiMsg').textContent='已儲存，正在測試…';
   try{const o=await askGemini('（主人剛打開房間）');$('aiMsg').textContent=`成功！${S.name||'牠'}說：「${o.say}」`+(modelOverride?`（${aiModel()} 太忙，這次改用 ${modelOverride}）`:'');
     if(S.talkMode!=='ai'){S.talkMode='ai';save();$('aiModeCat').setAttribute('aria-pressed',false);$('aiModeAI').setAttribute('aria-pressed',true)}}
-  catch(e){$('aiMsg').textContent=aiErrText(e)}aiLabel()};
+  catch(e){$('aiMsg').textContent=aiErrText(e)}aiLabel()}
 $('aiForget').onclick=()=>{chatHist=[];ls.set(CHATKEY,'');$('aiMsg').textContent='已清除這台裝置上的對話記憶'};
 
 /* ===== AI 旁白事件：摸摸抱抱的感想、主動找你 ===== */
@@ -1387,12 +1407,13 @@ function layoutRoom(rw,rh,w){
   bed.hidden=!R.bed.on;bed.style.left=(cx('bed')-w*.46)+'px';bed.style.width=(w*.92)+'px';
   BED=R.bed.x;
 }
-function jumpTo(y,cb){H.jump={from:H.y,to:y,t:0,dur:.55,cb};H.state='jump';if(H.face!=='normal')setFace('normal')}
+function jumpTo(y,cb,o={}){const up=y>H.y;H.jump={from:H.y,to:y,t:0,pre:o.pre??(up?.28:.12),dur:o.dur??(up?.5:.42),post:.2,pause:o.pause||0,cb};H.state='jump';if(H.face!=='normal')setFace('normal')}
+function jumpDown(cb){if(H.y>.8)jumpTo(.56,()=>jumpTo(0,cb),{pause:.15});else jumpTo(0,cb)}
 function goSleep(){if(roomCfg().bed.on)startWalk(BED,true);else{if(H.y>.05||H.inBox){startWalk(H.x,true);return}H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setFace('closed');say('Zzz…')}}
 function sideSpot(k,off){const rw=room.clientWidth,w=hc.offsetWidth,R=roomCfg(),f=off*w/Math.max(1,rw-w);
   let t=R[k].x-f,face=1;if(t<.02){t=R[k].x+f;face=-1}return[Math.min(.98,Math.max(.02,t)),face]}
 function doAct(k){const R=roomCfg();
-  if(k==='tree')startWalk(R.tree.x,false,()=>{setHView('front');jumpTo(1.1,()=>{sitDown(Math.random()<.3?'back':'front');H.timer=8+Math.random()*10;note(`${S.name||'牠'}跳上貓跳台了`,3)})});
+  if(k==='tree')startWalk(R.tree.x,false,()=>{setHView('front');jumpTo(.56,()=>jumpTo(1.1,()=>{sitDown(Math.random()<.3?'back':'front');H.timer=8+Math.random()*10;note(`${S.name||'牠'}跳上貓跳台了`,3)}),{pause:.35})});
   if(k==='scratch'){const[t,face]=sideSpot('scratch',.42);startWalk(t,false,()=>{H.state='scratch';H.facing=face;H.timer=3.5+Math.random()*3;setHView('side');if(Math.random()<.5)say('咔咔咔',1200)})}
   if(k==='box')startWalk(R.box.x,false,()=>{setHView('front');jumpTo(.15,()=>{H.y=0;H.inBox=true;H.state='box';H.timer=8+Math.random()*8;setHView('front')})});
   if(k==='eat'){const[t,face]=sideSpot('bowl',.4);startWalk(t,false,()=>{H.state='eat';H.facing=face;H.timer=6;setHView('side');say('咔滋咔滋',1800)})}
@@ -1682,6 +1703,7 @@ $('kgTest').onclick=async()=>{const k=$('kgKey').value.trim(),m=$('kgMsg');m.hid
   if(!k){m.textContent='還沒貼上金鑰喔';return}
   $('aiKey').value=k;m.textContent='測試中…';$('kgTest').disabled=true;
   try{await $('aiSave').onclick()}finally{$('kgTest').disabled=false}
+  if(/已取消/.test($('aiMsg').textContent)){m.textContent='已取消。請在自己的私人裝置上再試一次。';return}
   const r=$('aiMsg').textContent;m.textContent=r;
   if(/^成功/.test(r)){m.textContent=r+' 已經開好說話模式了！';$('kgNext').hidden=true;$('kgClose').textContent='完成';aiLabel()}};
 $('kgOpen').onclick=()=>{$('aiPanel').hidden=true;openKeyGuide()};
