@@ -66,6 +66,10 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .crumb.wet{background:#c98b6b;width:4px;height:4px}
 @keyframes crumb{0%{transform:translate(0,0)}40%{transform:translate(calc(var(--dx)*.5),-16px)}100%{transform:translate(var(--dx),8px);opacity:0}}
 .heart.pop{color:#2e3936;font-size:18px;background:#fff;border-radius:10px;padding:2px 8px;font-family:var(--font-display)}
+.flavormenu{position:absolute;right:84px;top:42%;z-index:85;background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:6px;display:grid;grid-template-columns:repeat(3,auto);gap:4px;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.flavormenu button{font:inherit;font-size:14px;background:var(--chip);color:var(--fg);border:0;border-radius:10px;padding:6px 10px;cursor:pointer}
+.flavormenu button:first-child{grid-column:1/-1;background:var(--accent-soft);color:var(--accent)}
+@media (max-width:480px){.flavormenu{right:58px;top:30%}}
 .room .wandbtn{top:30%}.room .canbtn{top:54%}.room .takebtn{top:78%}
 @media (max-width:480px){.wandbtn{padding:5px 6px 4px;font-size:11px;border-radius:14px;right:8px}.wandbtn svg{width:22px;height:22px}}
 @media (prefers-reduced-motion:reduce){#it-fountain .water,#it-fountain .rip{animation:none}}
@@ -412,14 +416,15 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="item z1" id="it-scratch" hidden aria-hidden="true"><svg viewBox="0 0 30 95" preserveAspectRatio="none"><rect x="0" y="88" width="30" height="7" rx="2" fill="#b98a63"/><rect x="8" y="6" width="14" height="82" fill="#ead7b6"/><path d="M8,12 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,18 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,24 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,30 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,36 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,42 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,48 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,54 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,60 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,66 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,72 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,78 h14" stroke="#d2b88f" stroke-width="2"/><path d="M8,84 h14" stroke="#d2b88f" stroke-width="2"/><rect x="6" y="3" width="18" height="5" rx="2" fill="#a8775a"/></svg></div>
     <div class="item z1" id="it-boxback" hidden aria-hidden="true"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><path d="M8,26 L0,6 L32,12 L32,26Z" fill="#c98f55"/><path d="M92,26 L100,6 L68,12 L68,26Z" fill="#c98f55"/><rect x="6" y="16" width="88" height="14" fill="#8a5a33"/></svg></div>
     <div class="item z3" id="it-boxfront" hidden aria-hidden="true"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><rect x="6" y="24" width="88" height="38" fill="#d9a066"/><rect x="6" y="22" width="88" height="5" fill="#e6b47e"/><rect x="44" y="27" width="12" height="35" fill="#c98f55" opacity=".5"/></svg></div>
-    <div class="item z3" id="it-plate" hidden role="button" aria-label="盤子"><svg viewBox="0 0 44 12" preserveAspectRatio="none"><g id="plateFood"><ellipse cx="22" cy="6" rx="12" ry="5" fill="#c98b6b"/><ellipse cx="18" cy="4.5" rx="4" ry="1.6" fill="#dca386"/><ellipse cx="26" cy="5.5" rx="3" ry="1.3" fill="#b5735a"/></g><ellipse cx="22" cy="8.5" rx="21" ry="3.5" fill="#dcd6cc"/><ellipse cx="22" cy="7.8" rx="17" ry="2.4" fill="#f6f2ec"/></svg></div>
+    <div class="item z3" id="it-plate" hidden role="button" aria-label="盤子"><svg viewBox="0 0 44 12" preserveAspectRatio="none"><g id="plateFood"><ellipse id="plateMain" cx="22" cy="6" rx="12" ry="5" fill="#c98b6b"/><ellipse cx="18" cy="4.5" rx="4" ry="1.6" fill="#dca386"/><ellipse cx="26" cy="5.5" rx="3" ry="1.3" fill="#b5735a"/></g><ellipse cx="22" cy="8.5" rx="21" ry="3.5" fill="#dcd6cc"/><ellipse cx="22" cy="7.8" rx="17" ry="2.4" fill="#f6f2ec"/></svg></div>
     <div class="item z1" id="it-fountain" hidden role="button" aria-label="飲水機"><svg viewBox="0 0 42 50" preserveAspectRatio="none"><ellipse cx="21" cy="46" rx="20" ry="4" fill="#b9dcef"/><rect x="5" y="22" width="32" height="26" rx="8" fill="#7fb3d5"/><rect x="5" y="22" width="32" height="7" rx="3.5" fill="#9fc8e3"/><ellipse cx="21" cy="24" rx="12" ry="3" fill="#d6eefa"/><path class="water" d="M21,9 C21,15 21,19 21,23" stroke="#d6eefa" stroke-width="3" stroke-linecap="round" fill="none"/><ellipse class="rip" cx="21" cy="24" rx="4" ry="1.2" fill="none" stroke="#ffffff" stroke-width=".9"/><ellipse class="rip rip2" cx="21" cy="24" rx="4" ry="1.2" fill="none" stroke="#ffffff" stroke-width=".9"/><circle cx="21" cy="8" r="3" fill="#5f9fc8"/></svg></div>
-    <div class="cananim" id="canAnim" hidden aria-hidden="true"><svg viewBox="0 0 26 30" width="100%" height="100%" overflow="visible"><rect x="2" y="8" width="22" height="20" rx="3" fill="#c9d3dc"/><rect x="2" y="13" width="22" height="9" fill="#e5707b"/><path d="M8,17 l3,-2 l3,2 l3,-2" stroke="#fff" stroke-width="1.4" fill="none"/><g class="lid"><ellipse cx="13" cy="8" rx="11" ry="3" fill="#aeb9c4"/><ellipse cx="13" cy="7.6" rx="8" ry="2" fill="#d7dee5"/><rect x="11" y="5" width="5" height="2.4" rx="1.2" fill="#8d99a6"/></g><g class="spill"><ellipse cx="13" cy="9" rx="8" ry="2.4" fill="#c98b6b"/></g></svg></div>
+    <div class="cananim" id="canAnim" hidden aria-hidden="true"><svg viewBox="0 0 26 30" width="100%" height="100%" overflow="visible"><rect x="2" y="8" width="22" height="20" rx="3" fill="#c9d3dc"/><rect id="canLabel" x="2" y="13" width="22" height="9" fill="#e5707b"/><path d="M8,17 l3,-2 l3,2 l3,-2" stroke="#fff" stroke-width="1.4" fill="none"/><g class="lid"><ellipse cx="13" cy="8" rx="11" ry="3" fill="#aeb9c4"/><ellipse cx="13" cy="7.6" rx="8" ry="2" fill="#d7dee5"/><rect x="11" y="5" width="5" height="2.4" rx="1.2" fill="#8d99a6"/></g><g class="spill"><ellipse id="canSpill" cx="13" cy="9" rx="8" ry="2.4" fill="#c98b6b"/></g></svg></div>
     <div class="item z3" id="it-bowl" hidden role="button" aria-label="飯碗，點一下倒飼料"><svg viewBox="0 0 42 18" preserveAspectRatio="none"><g id="food"><ellipse cx="21" cy="5" rx="15" ry="4.5" fill="#b77a4a"/><circle cx="14" cy="3.5" r="1.6" fill="#8f5a33"/><circle cx="24" cy="2.8" r="1.6" fill="#8f5a33"/><circle cx="29" cy="5" r="1.4" fill="#8f5a33"/></g><path d="M3,7 L39,7 L34,18 L8,18Z" fill="#6fa3c8"/><rect x="0" y="5" width="42" height="4" rx="2" fill="#8bbbe0"/></svg></div>
 
     <svg class="toylayer" id="wandToy" hidden aria-hidden="true"><path id="stringPath" fill="none" stroke="#6b5b4c" stroke-width="1.6"/><g id="featherG"><circle r="6" fill="#e8c14f"/><path d="M0,3 C-16,14 -18,30 -9,42 C-4,28 -1,18 0,6Z" fill="#e5707b"/><path d="M0,3 C16,14 18,30 9,42 C4,28 1,18 0,6Z" fill="#5fb3a3"/><path d="M0,4 C-3,20 0,34 0,44 C3,32 4,18 0,4Z" fill="#f6c27f"/></g></svg>
     <svg class="toylayer" id="wandStick" hidden aria-hidden="true"><path id="stickPath" stroke="#a8775a" stroke-width="5" stroke-linecap="round"/></svg>
     <button class="wandbtn canbtn" id="canBtn" type="button" aria-label="開罐頭"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><rect x="9" y="14" width="22" height="18" rx="3" fill="#c9d3dc"/><rect x="9" y="18" width="22" height="8" fill="#e5707b"/><ellipse cx="20" cy="14" rx="11" ry="3.2" fill="#aeb9c4"/><rect x="18" y="10" width="5" height="3" rx="1.5" fill="#8d99a6"/></svg><span>罐頭</span></button>
+    <div class="flavormenu" id="flavorMenu" hidden role="menu" aria-label="選罐頭口味"></div>
     <button class="wandbtn takebtn" id="takeBtn" type="button" hidden aria-label="收罐頭"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><ellipse cx="20" cy="27" rx="15" ry="5" fill="#dcd6cc"/><ellipse cx="20" cy="25" rx="9" ry="3.5" fill="#c98b6b"/><path d="M27,8 L13,20" stroke="#e5707b" stroke-width="3" stroke-linecap="round"/><path d="M13,20 l-3,-1 l2,4z" fill="#e5707b"/></svg><span>收罐頭</span></button>
     <button class="wandbtn" id="wandBtn" type="button" aria-pressed="false" aria-label="逗貓棒"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M8,34 L26,10" stroke="#a8775a" stroke-width="3" stroke-linecap="round"/><path d="M26,10 C30,14 31,20 30,26" stroke="#6b5b4c" stroke-width="1.4" fill="none"/><path d="M30,26 C25,29 25,35 28,38 C30,34 31,31 30,27Z" fill="#e5707b"/><path d="M30,26 C35,29 36,34 33,38 C32,34 31,31 30,27Z" fill="#5fb3a3"/></svg><span>逗貓棒</span></button>
     <div class="homecat" id="homecat" role="button" tabindex="0" aria-label="摸摸牠">
@@ -972,8 +977,8 @@ function step(dt){
   else if(H.state==='eat'){const it=H.eatSrc||'bowl',N=needs(),a=foodAmt(it),take=Math.min(a,(it==='plate'?.12:.09)*dt);setFood(it,a-take);N.full=Math.min(1,N.full+take*(it==='plate'?.7:.55));
     if(Math.random()<dt*.35)say(it==='plate'?'吧唧吧唧':'咔滋咔滋',900);
     if(!RM&&Math.random()<dt*(it==='plate'?1.2:2.6))crumb(it);
-    if(foodAmt(it)<=.001){setFood(it,0);save();sitDown('front');setFace('happy',1.5);H.lickT=1.6;say('（舔舔嘴巴）呼嚕～',1500);logAct('eatAll',`把${it==='plate'?'罐頭':'飼料'}吃光光了`,true)}
-    else if(H.timer<=0||N.full>.97){save();sitDown('front');H.lickT=1.2;logAct('leftover',`吃了一些就走開了，${it==='plate'?'盤子':'碗'}裡還剩一點`,true)}}
+    if(foodAmt(it)<=.001){setFood(it,0);save();sitDown('front');setFace('happy',1.5);H.lickT=1.6;say('（舔舔嘴巴）呼嚕～',1500);logAct('eatAll',`把${it==='plate'?canName():'飼料'}吃光光了`,true,it==='plate'?{flavor:plateFlavor()}:null)}
+    else if(H.timer<=0||N.full>.97){save();sitDown('front');H.lickT=1.2;logAct('leftover',it==='plate'?`${canName()}吃了一些就走開了，盤子裡還剩一點`:'吃了一些就走開了，碗裡還剩一點',true,it==='plate'?{flavor:plateFlavor()}:null)}}
   else if(H.state==='drink'){const N=needs();N.water=Math.min(1,N.water+dt*.12);if(H.timer<=0||N.water>=.99){save();sitDown('front')}}
   else if(H.state==='sniff'&&H.timer<=0)walkAway();
   else if(H.state==='beg'){if(foodAmt('bowl')>.01||foodAmt('plate')>.01){const src=foodAmt('plate')>.01?'plate':'bowl';doAct('eat',src,{fast:true})}
@@ -1248,7 +1253,7 @@ function catProfile(){
     traitText(),
     `現在：${tod}，你${st}，心情${H.mood>.7?'很好':H.mood>.4?'普通':'有點差'}，${needText()}。`].filter(Boolean).join('\n')}
 function needText(){const N=needs();return `肚子${N.full<.3?'很餓':N.full<.6?'有點餓':'飽飽的'}${N.water<.35?'、有點口渴':''}、精神${N.energy<.3?'很累':N.energy<.6?'普通':'很好'}`}
-function traitText(){const T=traits(),o=[];if(T.appetite>=2)o.push('很貪吃');if(T.appetite<=-2)o.push('食量小');if(T.canLove>=2)o.push('超愛罐頭');if(T.picky>=2)o.push('挑食');if(T.drink>=2)o.push('很愛喝水');if(T.drink<=-2)o.push('很少喝水');if(T.demand>=2)o.push('肚子餓會一直討飯');if(T.demand<=-2)o.push('不太討飯');return o.length?`飲食習慣：${o.join('、')}`:''}
+function traitText(){const T=traits(),o=[];{const lk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)>=2),dk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)<=-2);if(lk.length)o.push(`愛吃${lk.join('、')}罐頭`);if(dk.length)o.push(`不愛${dk.join('、')}罐頭`)}if(T.appetite>=2)o.push('很貪吃');if(T.appetite<=-2)o.push('食量小');if(T.canLove>=2)o.push('超愛罐頭');if(T.picky>=2)o.push('挑食');if(T.drink>=2)o.push('很愛喝水');if(T.drink<=-2)o.push('很少喝水');if(T.demand>=2)o.push('肚子餓會一直討飯');if(T.demand<=-2)o.push('不太討飯');return o.length?`飲食習慣：${o.join('、')}`:''}
 function systemPrompt(){return `你是一隻名叫「${S.name||'貓咪'}」的貓，住在主人為你做的小小網頁房間裡。主人很愛你，這裡是讓主人可以繼續陪伴你的地方。
 
 ${catProfile()}${learnedPrompt()}
@@ -1595,30 +1600,43 @@ function foodAmt(src){const R=roomCfg();return src==='plate'?(+R.plate.food||0):
 function setFood(src,v){const R=roomCfg();v=Math.max(0,Math.min(1,v));if(src==='plate')R.plate.food=v;else R.bowl.food=v;drawFood()}
 function drawFood(){const fb=foodAmt('bowl'),fp=foodAmt('plate');
   const a=$('food');a.style.display=fb>.01?'':'none';a.setAttribute('transform',`translate(21 8) scale(${.6+.4*fb} ${.35+.65*fb}) translate(-21 -8)`);
-  $('takeBtn').hidden=!(fp>.01);const b=$('plateFood');b.style.display=fp>.01?'':'none';b.setAttribute('transform',`translate(22 6) scale(${.5+.5*fp} ${.3+.7*fp}) translate(-22 -6)`)}
+  $('takeBtn').hidden=!(fp>.01);const fc=FLAVORS[plateFlavor()];if(fc)$('plateMain').setAttribute('fill',fc[1]);const b=$('plateFood');b.style.display=fp>.01?'':'none';b.setAttribute('transform',`translate(22 6) scale(${.5+.5*fp} ${.3+.7*fp}) translate(-22 -6)`)}
 function eagerness(src){const n=needs(),T=traits();let e=.2+(1-n.full)*.9+T.appetite*.06-(src==='bowl'?T.picky*.05:0);
-  if(src==='plate'){e+=.25+T.canLove*.08;if(canAge()>30)e*=.25}if(n.full>.9)e-=.35;return Math.max(.02,Math.min(1,e))}
+  if(src==='plate'){e+=.25+T.canLove*.08+flavorPref(plateFlavor())*.1;if(canAge()>30)e*=.25}if(n.full>.9)e-=.35;return Math.max(.02,Math.min(1,e))}
 function startEat(it){const T=traits();H.state='eat';H.eatSrc=it;H.waitFood=null;setHView('side');
-  H.timer=(4+Math.random()*6)*(1+T.appetite*.1)*(1-T.picky*.06)*(it==='plate'?1.3:1);say(it==='plate'?'吧唧吧唧':'咔滋咔滋',1500)}
+  const fp=it==='plate'?flavorPref(plateFlavor()):0;H.timer=(4+Math.random()*6)*(1+T.appetite*.1)*(1-T.picky*.06)*(it==='plate'?1.3*(1+fp*.18)*(fp<=-2?.45:1):1);say(it==='plate'?'吧唧吧唧':'咔滋咔滋',1500)}
 function foodReact(src,o={}){const e=eagerness(src),food=src==='plate'?'罐頭':'飼料';
   if(H.hug||(wandOn&&!['sit','walk'].includes(H.state)))return;
   if(H.state==='sleep'){const p=o.sound?.25+e*.7:.15+e*.5;if(Math.random()>p){logAct('foodSleep',`睡得很熟，沒聽到${src==='plate'?'開罐頭':'倒飼料'}的聲音`,true);return}wake()}
   if(['eat','drink'].includes(H.state))return;
   const r=Math.random();
-  if(r<e){const fast=e>.72;logAct(src==='plate'?'canRun':'foodRun',fast?(src==='plate'?'一聽到開罐頭的聲音就衝過來':'聽到倒飼料的聲音就衝過來'):`走過去吃${food}`,true);doAct('eat',src,{fast})}
-  else if(r<e+.4){logAct('foodLater',`看了一眼${food}，晚點再吃`,true);if(H.state==='sit')setHView('front');say('…喵',1000)}
-  else{logAct('foodIgnore',src==='plate'&&canAge()>30?'聞一聞放太久的罐頭，不想吃':`走過去聞一聞${food}，沒有吃`,true);doAct('sniff',src)}}
+  const meta=src==='plate'?{flavor:plateFlavor()}:null,cn=src==='plate'?canName():food;
+  if(r<e){const fast=e>.72;logAct(src==='plate'?'canRun':'foodRun',fast?(src==='plate'?`一聽到開${cn}的聲音就衝過來`:'聽到倒飼料的聲音就衝過來'):`走過去吃${cn}`,true,meta);doAct('eat',src,{fast})}
+  else if(r<e+.4){logAct('foodLater',`看了一眼${cn}，晚點再吃`,true,meta);if(H.state==='sit')setHView('front');say('…喵',1000)}
+  else{logAct('foodIgnore',src==='plate'&&canAge()>30?`聞一聞放太久的${cn}，不想吃`:`走過去聞一聞${cn}，沒有吃`,true,meta);doAct('sniff',src)}}
 function fillBowl(byOwner){const R=roomCfg();if(!R.bowl.on)return;setFood('bowl',1);save();
   setTimeout(()=>foodReact('bowl',{sound:true}),400);
   if(byOwner)setTimeout(()=>aiEvent('（主人幫你的碗倒了飼料）',{allowMove:false}),2600)}
 $('it-bowl').addEventListener('click',()=>{if(roomEdit||wandOn)return;lastInteract=Date.now();idleFired=false;
   if(foodAmt('bowl')>.6){note('碗裡還有飼料',2);return}note(`你幫${S.name||'牠'}倒了飼料`,3);fillBowl(true)});
+/* ===== 罐頭口味：每隻貓有自己的喜好 ===== */
+const FLAVORS={'鮪魚':['#e5707b','#d99a8a'],'雞肉':['#e9a35b','#e3c08f'],'鮭魚':['#f08a5d','#f0a07a'],'牛肉':['#9b5a45','#9a5a45'],'鯖魚':['#6f8fa8','#b8a290'],'鴨肉':['#8a6448','#a8735a'],'海鮮':['#4a90c8','#d99a7c'],'羊肉':['#b07a5a','#b0806a']};
+const FL_NAMES=Object.keys(FLAVORS);
+function plateFlavor(){return roomCfg().plate.flavor||''}
+function innatePref(f){let h=0;const k=(S.name||'cat')+'|'+f;for(let i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))|0;return((Math.abs(h)%300)/100)-1.5}
+function memoryPref(f){let v=0;learned().forEach(x=>{if(!x.t.includes(f))return;if(/不愛|不吃|討厭|不喜歡|沒興趣|不碰/.test(x.t))v-=2;else if(/愛|喜歡|最愛|超愛|很愛/.test(x.t))v+=2});return Math.max(-3,Math.min(3,v))}
+function flavorPref(f){if(!f)return 0;const set=S.flavors&&typeof S.flavors==='object'?S.flavors[f]:null;if(typeof set==='number')return set;const m=memoryPref(f);return m||innatePref(f)}
+function flavorKnown(f){return(S.flavors&&typeof S.flavors[f]==='number')||memoryPref(f)!==0}
+function setFlavorPref(f,v){if(!S.flavors||typeof S.flavors!=='object')S.flavors={};S.flavors[f]=Math.max(-3,Math.min(3,v))}
+function canName(){const f=plateFlavor();return f?`${f}罐頭`:'罐頭'}
 let canBusy=false;
 function popText(x,y,t){const el=document.createElement('span');el.className='heart pop';el.textContent=t;el.style.left=x+'px';el.style.top=y+'px';room.appendChild(el);setTimeout(()=>el.remove(),1300)}
-function openCan(){const R=roomCfg(),n=S.name||'牠';if(canBusy||roomEdit)return;if(wandOn)setWand(false);
+function openCan(fl){const R=roomCfg(),n=S.name||'牠';if(canBusy||roomEdit)return;if(wandOn)setWand(false);
   if(!R.plate.on){R.plate.on=true;save()}
   if(foodAmt('plate')>.5){note('盤子裡還有罐頭',2);return}
-  canBusy=true;lastInteract=Date.now();idleFired=false;note(`你開了一個罐頭給${n}`,3);
+  fl=FLAVORS[fl]?fl:FL_NAMES[Math.floor(Math.random()*FL_NAMES.length)];R.plate.flavor=fl;
+  canBusy=true;lastInteract=Date.now();idleFired=false;note(`你開了一個${fl}罐頭給${n}`,3);
+  $('canLabel').setAttribute('fill',FLAVORS[fl][0]);$('canSpill').setAttribute('fill',FLAVORS[fl][1]);
   const el=$('canAnim'),rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,cx=R.plate.x*(rw-w)+w/2;
   el.style.left=(cx-w*.16)+'px';el.style.bottom=(rh*.11+w*.22)+'px';el.style.width=(w*.26)+'px';el.style.height=(w*.3)+'px';
   el.className='cananim';el.hidden=false;void el.offsetWidth;el.classList.add('s1');
@@ -1626,19 +1644,21 @@ function openCan(){const R=roomCfg(),n=S.name||'牠';if(canBusy||roomEdit)return
   setTimeout(()=>el.classList.add('s3'),950);
   setTimeout(()=>{setFood('plate',1);roomCfg().plate.at=Date.now();save()},1400);
   setTimeout(()=>{el.hidden=true;el.className='cananim';canBusy=false},2000);
-  setTimeout(()=>aiEvent('（主人開了一個罐頭放到你的盤子裡）',{allowMove:false}),3200)}
-$('canBtn').addEventListener('click',e=>{e.stopPropagation();openCan()});
+  setTimeout(()=>aiEvent(`（主人開了一個${fl}口味的罐頭放到你的盤子裡）`,{allowMove:false}),3200)}
+$('canBtn').addEventListener('click',e=>{e.stopPropagation();if(canBusy)return;if(foodAmt('plate')>.5){note('盤子裡還有罐頭',2);return}const m=$('flavorMenu');m.hidden=!m.hidden});
+(()=>{const m=$('flavorMenu');const add=(t,f)=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=e=>{e.stopPropagation();m.hidden=true;openCan(f)};m.appendChild(b)};
+  add('隨機口味',null);FL_NAMES.forEach(f=>add(f,f));document.addEventListener('pointerdown',e=>{if(!m.hidden&&!e.target.closest('#flavorMenu')&&!e.target.closest('#canBtn'))m.hidden=true})})();
 function canAge(){const at=roomCfg().plate.at;return at?(Date.now()-at)/60000:0}
 function takeCan(){const R=roomCfg(),n=S.name||'牠',left=foodAmt('plate');if(left<=.01||canBusy)return;
   const mins=canAge(),eating=H.state==='eat'&&H.eatSrc==='plate',T=traits(),N=needs();
-  setFood('plate',0);R.plate.at=0;save();lastInteract=Date.now();idleFired=false;note('你把沒吃完的罐頭收起來了',3);
+  const cnm=canName();setFood('plate',0);R.plate.at=0;save();lastInteract=Date.now();idleFired=false;note(`你把沒吃完的${cnm}收起來了`,3);
   let line,face=null,text;
   if(eating){sitDown('front');face='annoyed';line='喵嗚！我還在吃！';H.mood-=.08;text='正在吃罐頭就被你收走了，很不高興'}
   else if(mins<2&&left>.5){const mad=T.canLove>=1||N.full<.5;face=mad?'annoyed':null;line=mad?'喵！我還要吃！':'喵？';text=mad?'罐頭才剛開就被收走，跑來抗議':'看著罐頭被收走，歪頭';if(mad){H.mood-=.05;comeOver(()=>{})}}
   else if(mins>30){line=pick(['（終於收了，那個放太久了）','喵～']);text='看你收走放很久的罐頭，一點也不在意'}
   else{const full=N.full>.8;line=full?'（反正吃飽了）':'喵…';text=full?'吃飽了，不在意罐頭被收走':'看著罐頭被收走，有點捨不得'}
   if(face)setFace(face,1.6);logAct('canTaken',text,true);
-  if(aiOn()){sayBoth('…',null,1500);aiEvent(`（主人把盤子裡沒吃完的罐頭收走了。罐頭放了大約 ${mins<1?'不到 1':Math.round(mins)} 分鐘，還剩大約 ${Math.round(left*100)}%${eating?'，你正在吃':''}）`,{allowMove:false,force:true})}
+  if(aiOn()){sayBoth('…',null,1500);aiEvent(`（主人把盤子裡沒吃完的${canName()}收走了。罐頭放了大約 ${mins<1?'不到 1':Math.round(mins)} 分鐘，還剩大約 ${Math.round(left*100)}%${eating?'，你正在吃':''}）`,{allowMove:false,force:true})}
   else say(line,1800)}
 $('takeBtn').addEventListener('click',e=>{e.stopPropagation();takeCan()});
 
@@ -1721,8 +1741,8 @@ function drawWand(){
   $('wandToy').style.zIndex=FT.hidden?'0':'50'}
 /* 行為紀錄 */
 const actAt={};let actAny=0;
-function logAct(key,text,force){const now=performance.now();if(!force&&(now-(actAt[key]||0)<6000||now-actAny<2200))return;actAt[key]=now;actAny=now;
-  talkLog.push(['act',`${S.name||'牠'}${text}`,'',key]);while(talkLog.length>8)talkLog.shift();drawLog();maybeAsk(key,text)}
+function logAct(key,text,force,meta){const now=performance.now();if(!force&&(now-(actAt[key]||0)<6000||now-actAny<2200))return;actAt[key]=now;actAny=now;
+  talkLog.push(['act',`${S.name||'牠'}${text}`,'',key,meta||null]);while(talkLog.length>8)talkLog.shift();drawLog();maybeAsk(key,text)}
 const TRAIT_FIX={
   foodRun:[['牠沒那麼急',T=>{T.appetite-=2},'放飯時，牠不會一聽到聲音就衝過來']],
   canRun:[['牠沒那麼愛罐頭',T=>{T.canLove-=2},'牠沒有特別愛吃罐頭']],
@@ -1738,7 +1758,7 @@ const TRAIT_FIX={
 };
 TRAIT_FIX.go_fountain=TRAIT_FIX.drink;TRAIT_FIX.lazy_fountain=[['牠很愛喝水',T=>{T.drink+=2},'牠很愛喝水']];
 const PLAY_KEYS=['chase','stalk','pounce','bat','leap','hide','dash','search','caught','tired','watch'];
-function openActFix(i,li){if(li.querySelector('.fix'))return;const[,text,,key]=talkLog[i];const pk=PREF_OF[key],tk=todKey(),n=S.name||'牠';
+function openActFix(i,li){if(li.querySelector('.fix'))return;const[,text,,key,meta]=talkLog[i];const pk=PREF_OF[key],tk=todKey(),n=S.name||'牠';
   const f=document.createElement('div');f.className='fix actfix';
   const inp=document.createElement('input');inp.id='afix-'+i;inp.maxLength=100;inp.placeholder=`真正的${n}會怎麼做？（可以不寫）`;inp.setAttribute('aria-label','真正的牠會怎麼做');
   const mk=(t,fn)=>{const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=t;b.onclick=fn;return b};
@@ -1746,6 +1766,9 @@ function openActFix(i,li){if(li.querySelector('.fix'))return;const[,text,,key]=t
   const extra=()=>inp.value.trim()?`，真正的牠會：${inp.value.trim()}`:'';
   const btns=[];
   if(pk)btns.push(mk('牠不會這樣玩',()=>{const P=playPrefs();P[pk]=Math.max(.1,Math.round(P[pk]*.5*100)/100);addFact('修正',`玩逗貓棒時，牠不太會「${PREF_NAME[pk]}」${extra()}`,'me');done(`記住了，${n}以後比較少這樣玩`)}));
+  if(meta&&meta.flavor){const f=meta.flavor;
+    btns.push(mk(`牠超愛${f}`,()=>{setFlavorPref(f,3);addFact('喜好',`牠超愛${f}口味的罐頭${extra()}`,'me');done(`記住了，${n}最愛${f}`)}));
+    btns.push(mk(`牠不喜歡${f}`,()=>{setFlavorPref(f,-3);addFact('討厭',`牠不喜歡${f}口味的罐頭${extra()}`,'me');done(`記住了，${n}不愛${f}`)}))}
   (TRAIT_FIX[key]||[]).forEach(([lab,fn,fact])=>btns.push(mk(lab,()=>{const T=traits();fn(T);Object.keys(T).forEach(k=>{T[k]=Math.max(-5,Math.min(5,T[k]))});addFact('修正',fact+extra(),'me');done(`記住了，${n}以後會更像牠`)})));
   const m=/^(go|lazy)_(\w+)$/.exec(key||'');
   if(m&&m[2]!=='fountain'&&ROOM_ITEMS[m[2]]){const k=m[2],nm=ROOM_ITEMS[k][0];if(!S.itemLove||typeof S.itemLove!=='object')S.itemLove={};
