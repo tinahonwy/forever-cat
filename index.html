@@ -47,13 +47,15 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .catbox{position:relative;width:100%;aspect-ratio:1}
 .shadow{position:absolute;left:22%;width:56%;top:86%;height:8%;background:rgba(40,60,50,.16);border-radius:50%}
 .bubble{position:absolute;left:58%;top:-4%;background:#fff;color:#3b3434;font-family:var(--font-display);font-size:18px;padding:6px 14px;border-radius:18px;white-space:nowrap;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.viewpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:560px;width:100%;margin-inline:auto}
+.vhint{font-size:13px;color:var(--muted)}
 .homehint{text-align:center;color:var(--muted);font-size:14px;margin:12px 0 0}
 .stage{position:relative;width:100%;max-width:560px;aspect-ratio:1;background:var(--stage);border-radius:28px;overflow:hidden;margin-inline:auto}
 .wrap{position:absolute;inset:7%;transform-origin:50% 88%;transition:transform .25s ease}
 .layer{position:absolute;inset:0;width:100%;height:100%;display:block}
 #top{pointer-events:none}
-#paint{-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;touch-action:auto}
-.painting #paint{cursor:crosshair;touch-action:none}
+.paint{-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;touch-action:auto}
+.painting .paint{cursor:crosshair;touch-action:none}
 .eyes{transform-box:fill-box;transform-origin:center;animation:blink 5.5s infinite}
 @keyframes blink{0%,94%,100%{transform:scaleY(1)}96.5%{transform:scaleY(.12)}}
 @media (prefers-reduced-motion:reduce){.eyes{animation:none}.wrap{transition:none}}
@@ -113,11 +115,14 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="stage" id="stage">
       <div class="wrap" id="wrap">
         <svg class="layer" id="base" viewBox="0 0 300 300" aria-hidden="true"></svg>
-        <canvas class="layer" id="paint" width="600" height="600" aria-label="花紋畫布"></canvas>
+        <canvas class="layer paint" id="paint" width="600" height="600" aria-label="正面花紋畫布"></canvas>
+        <canvas class="layer paint" id="paintSide" width="600" height="600" aria-label="側面花紋畫布" hidden></canvas>
+        <canvas class="layer paint" id="paintBack" width="600" height="600" aria-label="背面花紋畫布" hidden></canvas>
         <svg class="layer" id="top" viewBox="0 0 300 300" aria-hidden="true"></svg>
       </div>
       <span class="badge" id="badge" hidden>用手指或滑鼠在貓身上畫花紋</span>
     </div>
+    <div class="viewpick"><div class="chips" id="c-mview" role="group" aria-label="角度"></div><span class="vhint" id="vhint"></span></div>
     <div class="namecard">
       <label for="catName">牠的名字</label>
       <input id="catName" maxlength="12" autocomplete="off">
@@ -143,7 +148,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
         <div class="row"><span class="lbl">筆觸</span><div class="chips" id="c-soft"></div></div>
       </div>
       <div class="row"><span class="lbl">左右對稱</span><div class="chips" id="c-sym"></div></div>
-      <div class="row"><span class="lbl">花紋印章</span>
+      <div class="row" id="stampRow"><span class="lbl">花紋印章（正面）</span>
         <div class="btns">
           <button class="btn" data-stamp="tabby">虎斑紋</button>
           <button class="btn" data-stamp="mask">白口罩</button>
@@ -151,7 +156,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
           <button class="btn" data-stamp="patch">大斑塊</button>
         </div>
       </div>
-      <div class="btns"><button class="btn" id="undo">↶ 上一步</button><button class="btn" id="redo">下一步 ↷</button><button class="btn warn" id="clearPaint">清除花紋</button></div>
+      <div class="btns"><button class="btn" id="undo">↶ 上一步</button><button class="btn" id="redo">下一步 ↷</button><button class="btn warn" id="clearPaint">清除花紋</button><button class="btn" id="rederive" hidden>從正面重新帶入</button></div>
     </div>
 
     <div class="pane" data-pane="eyes">
@@ -226,11 +231,14 @@ const firebaseConfig = {
 const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434',eyeLink:true,nose:'#e88a90',
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
-  brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false};
+  brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,backEdited:false};
 const KEY='neko-maker-v1';
-let S={...DEF},tab='color';
+let S={...DEF},tab='color',mview='front',booting=true;
 const $=id=>document.getElementById(id);
-const base=$('base'),topL=$('top'),cv=$('paint'),ctx=cv.getContext('2d'),wrap=$('wrap');
+const base=$('base'),topL=$('top'),wrap=$('wrap');
+const VIEWS=['front','side','back'],VNAME={front:'正面',side:'側面',back:'背面'};
+const CV={front:$('paint'),side:$('paintSide'),back:$('paintBack')};
+let cv=CV.front,ctx=cv.getContext('2d');
 
 const BASES=[['奶油','#f6efe3'],['白','#fbf9f5'],['橘','#f6c27f'],['深橘','#e9a35b'],['奶茶','#d9b48f'],['灰','#a3a3a8'],['藍灰','#8d97a5'],['銀','#d3d6da'],['棕','#9b7458'],['黑','#3d3838']];
 const BRUSH=[['橘','#f2b06b'],['深橘','#d98f45'],['黑','#3d3838'],['灰','#8f8f95'],['棕','#8a6448'],['白','#fbf9f5'],['奶油','#f6efe3'],['奶茶','#d9b48f']];
@@ -253,47 +261,98 @@ function lum(h){const[r,g,b]=rgb(h);return(.299*r+.587*g+.114*b)/255}
 function mix(a,b,t){const A=rgb(a),B=rgb(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
 function rgba(h,a){const[r,g,b]=rgb(h);return`rgba(${r},${g},${b},${a})`}
 
-const ORDER=['tail','backL','backR','body','frontL','frontR','head'];
-function partShapes(fill){
-  const hf=1+(S.fat-1)*.35,brx=62*S.fat,tw={none:12,short:16,medium:22,long:28}[S.fur],fr={medium:7,long:11}[S.fur]||0;
-  const P={tail:'',backL:'',backR:'',body:'',frontL:'',frontR:'',head:''};
-  const tail={long:'M196,250 C240,252 252,214 240,184',short:'M198,250 C214,252 222,244 220,234',kirin:'M196,250 C232,252 242,228 234,212 C230,204 240,198 244,206'}[S.tail];
-  if(tail)P.tail=`<path d="${tail}" stroke="${fill}" stroke-width="${tw}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+/* ===== 貓的形狀：正面、側面（朝右）、背面 ===== */
+const ORDERS={
+  front:['tail','backL','backR','body','frontL','frontR','head'],
+  side:['tail','legFB','legFF','body','legNB','legNF','head'],
+  back:['feetL','feetR','head','body','tail']
+};
+const TAILS={
+  front:{long:'M196,250 C240,252 252,214 240,184',short:'M198,250 C214,252 222,244 220,234',kirin:'M196,250 C232,252 242,228 234,212 C230,204 240,198 244,206'},
+  side:{long:'M76,206 C46,206 30,176 40,140',short:'M76,204 C64,204 58,196 60,186',kirin:'M76,206 C48,206 36,184 42,166 C46,156 56,156 54,164'},
+  back:{long:'M150,256 C152,232 172,214 166,184',short:'M150,256 C152,246 158,240 158,232',kirin:'M150,256 C152,234 170,220 166,204 C164,196 174,194 174,202'}
+};
+const TAIL_PIVOT={front:[198,250],side:[76,206],back:[150,256]};
+const SIDE_EARS={near:[[184,104],[228,86],[194,50]],far:[[226,90],[262,98],[250,46]]};
+function sideEar(t,which){const[B1,B2,T]=SIDE_EARS[which],M=[(B1[0]+B2[0])/2,(B1[1]+B2[1])/2];
+  const at=(k,P=T)=>[M[0]+(P[0]-M[0])*k,M[1]+(P[1]-M[1])*k],lerp=(A,k)=>[A[0]+(T[0]-A[0])*k,A[1]+(T[1]-A[1])*k],pt=q=>q.map(n=>n.toFixed(1)).join(',');
+  let d='';
+  if(t==='normal')d=`M${pt(B1)} L${pt(T)} L${pt(B2)} Z`;
+  else if(t==='big')d=`M${pt(B1)} L${pt(at(1.3))} L${pt(B2)} Z`;
+  else if(t==='round')d=`M${pt(B1)} Q${pt(at(1.35))} ${pt(B2)} Z`;
+  else if(t==='tipped')d=`M${pt(B1)} L${pt(lerp(B1,.62))} L${pt(lerp(B2,.62))} L${pt(B2)} Z`;
+  else if(t==='curl')d=`M${pt(B1)} L${pt(T)} Q${T[0]-14},${T[1]-6} ${T[0]-12},${T[1]+8} L${pt(B2)} Z`;
+  else if(t==='fold'){const F=at(.5);d=`M${pt(B1)} L${(F[0]+14).toFixed(1)},${(F[1]+8).toFixed(1)} L${pt(B2)} Z`}
+  return{d,a:at(.55)}}
+function geo(){const hf=1+(S.fat-1)*.35;return{hf,brx:62*S.fat,tw:{none:12,short:16,medium:22,long:28}[S.fur],fr:{medium:7,long:11}[S.fur]||0,
+  sbrx:78*(1+(S.fat-1)*.3),sbry:44*(1+(S.fat-1)*.6)}}
+function partShapes(fill,v='front'){
+  const g=geo(),P={};ORDERS[v].forEach(k=>{P[k]=''});
   const leg=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w/2}" fill="${fill}"/>`;
-  P.backL=leg(98,234,26,32);P.backR=leg(176,234,26,32);
-  P.body=`<ellipse cx="150" cy="208" rx="${brx}" ry="54" fill="${fill}"/>`;
-  if(fr)[-40,-18,4,26].forEach(a=>{const r=a*Math.PI/180,x=brx*Math.cos(r),y=208+54*Math.sin(r);P.body+=`<circle cx="${150+x}" cy="${y}" r="${fr}" fill="${fill}"/><circle cx="${150-x}" cy="${y}" r="${fr}" fill="${fill}"/>`});
-  P.frontL=leg(128,220,21,48);P.frontR=leg(151,220,21,48);
-  [['L',S.earL],['R',S.earR]].forEach(([side,t])=>{if(EAR[t]&&t!=='fold')P.head+=`<path d="${EAR[t].d}" fill="${fill}" stroke="${fill}" stroke-width="8" stroke-linejoin="round"${side==='R'?` transform="${MIRROR}"`:''}/>`});
-  P.head+=`<ellipse cx="150" cy="122" rx="${88*hf}" ry="70" fill="${fill}"/>`;
-  if(fr){[14,34,54].forEach(a=>{const r=a*Math.PI/180,x=88*hf*Math.cos(r),y=122+70*Math.sin(r);P.head+=`<circle cx="${150+x}" cy="${y}" r="${fr+1}" fill="${fill}"/><circle cx="${150-x}" cy="${y}" r="${fr+1}" fill="${fill}"/>`});
-    if(S.fur==='long')[-26,-9,9,26].forEach(dx=>P.head+=`<circle cx="${150+dx}" cy="190" r="12" fill="${fill}"/>`)}
+  const circ=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}"/>`;
+  const tail=TAILS[v][S.tail];
+  if(tail)P.tail=`<path d="${tail}" stroke="${fill}" stroke-width="${g.tw}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const frontHead=()=>{let s='';
+    [['L',S.earL],['R',S.earR]].forEach(([side,t])=>{if(EAR[t]&&t!=='fold')s+=`<path d="${EAR[t].d}" fill="${fill}" stroke="${fill}" stroke-width="8" stroke-linejoin="round"${side==='R'?` transform="${MIRROR}"`:''}/>`});
+    s+=`<ellipse cx="150" cy="122" rx="${88*g.hf}" ry="70" fill="${fill}"/>`;
+    if(g.fr){[14,34,54].forEach(a=>{const r=a*Math.PI/180,x=88*g.hf*Math.cos(r),y=122+70*Math.sin(r);s+=circ(150+x,y,g.fr+1)+circ(150-x,y,g.fr+1)});
+      if(S.fur==='long'&&v==='front')[-26,-9,9,26].forEach(dx=>{s+=circ(150+dx,190,12)})}
+    return s};
+  const frontBody=()=>{let s=`<ellipse cx="150" cy="208" rx="${g.brx}" ry="54" fill="${fill}"/>`;
+    if(g.fr)[-40,-18,4,26].forEach(a=>{const r=a*Math.PI/180,x=g.brx*Math.cos(r),y=208+54*Math.sin(r);s+=circ(150+x,y,g.fr)+circ(150-x,y,g.fr)});
+    return s};
+  if(v==='front'){P.backL=leg(98,234,26,32);P.backR=leg(176,234,26,32);P.body=frontBody();P.frontL=leg(128,220,21,48);P.frontR=leg(151,220,21,48);P.head=frontHead()}
+  if(v==='back'){P.feetL=leg(100,236,28,32);P.feetR=leg(172,236,28,32);P.head=frontHead();P.body=frontBody()}
+  if(v==='side'){
+    P.legFB=leg(108,226,18,44);P.legFF=leg(204,226,18,44);P.legNB=leg(88,226,18,44);P.legNF=leg(184,226,18,44);
+    P.body=`<ellipse cx="148" cy="208" rx="${g.sbrx}" ry="${g.sbry}" fill="${fill}"/>`;
+    if(g.fr){[70,90,110].forEach(a=>{const r=a*Math.PI/180;P.body+=circ(148+g.sbrx*Math.cos(r),208+g.sbry*Math.sin(r),g.fr)});P.body+=circ(212,200,g.fr+2)+circ(204,218,g.fr+1)}
+    const ear=(t,w)=>(EAR[t]&&t!=='fold')?`<path d="${sideEar(t,w).d}" fill="${fill}" stroke="${fill}" stroke-width="6" stroke-linejoin="round"/>`:'';
+    P.head=ear(S.earR,'far')+ear(S.earL,'near')+`<ellipse cx="220" cy="140" rx="${64*g.hf}" ry="56" fill="${fill}"/>`;
+    if(g.fr)[40,70,100,130].forEach(a=>{const r=a*Math.PI/180;P.head+=circ(220+64*g.hf*Math.cos(r),140+56*Math.sin(r),g.fr+1)});
+  }
   return P;
 }
-function shapes(fill){const P=partShapes(fill);return ORDER.map(k=>P[k]).join('')}
-function featureParts(opt={}){
-  const hf=1+(S.fat-1)*.35,dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#3b3434',shade=mix(S.base,dark?'#ffffff':'#000000',.13);
+function shapes(fill,v=mview){const P=partShapes(fill,v);return ORDERS[v].map(k=>P[k]).join('')}
+function featureParts(v='front',opt={}){
+  const g=geo(),dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#3b3434',shade=mix(S.base,dark?'#ffffff':'#000000',.13);
   const F={head:'',face:'',frontL:'',frontR:''};
-  [['L',S.earL],['R',S.earR]].forEach(([side,t])=>{const e=EAR[t];if(!e)return;const m=side==='R'?MIRROR+' ':'';
-    if(t==='fold')F.head+=`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round" transform="${m}"/>`;
-    else F.head+=`<path d="${e.d}" fill="#f6b3b8" stroke="#f6b3b8" stroke-width="3" stroke-linejoin="round" transform="${m}translate(${e.a[0]},${e.a[1]}) scale(.45) translate(${-e.a[0]},${-e.a[1]})"/>`});
-  if(S.fur==='none')F.head+=`<path d="M132,72 q18,-7 36,0 M138,82 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-  F.frontL=`<path d="M130,232 L130,262" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>`;
-  F.frontR=`<path d="M170,232 L170,262" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>`;
-  F.face+=`<ellipse cx="104" cy="148" rx="13" ry="8" fill="#f4a6a8"/><ellipse cx="196" cy="148" rx="13" ry="8" fill="#f4a6a8"/>`;
-  const r={S:6,M:8.5,L:11}[S.eyeSize];
-  if(opt.closed)F.face+=`<path d="M${120-r},129 q${r},${r} ${2*r},0 M${180-r},129 q${r},${r} ${2*r},0" stroke="${ink}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
-  else F.face+=`<g class="eyes"><circle cx="120" cy="130" r="${r}" fill="${S.eyeL}"/><circle cx="180" cy="130" r="${r}" fill="${S.eyeLink?S.eyeL:S.eyeR}"/></g>`;
-  F.face+=`<ellipse cx="150" cy="142" rx="5.5" ry="4" fill="${S.nose}"/>`;
-  F.face+=`<path d="M138,148 q6,8 12,0 q6,8 12,0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-  const L={short:24,mid:36,long:50}[S.whLen];
-  const wh=(side,n)=>{let p='';for(let i=0;i<n;i++){const ang=(n===1?0:-14+28*i/(n-1))*Math.PI/180,y0=140+(i-(n-1)/2)*6,sx=150+side*74*hf,ex=sx+side*L*Math.cos(ang),ey=y0+L*Math.sin(ang);
+  const r={S:6,M:8.5,L:11}[S.eyeSize],L={short:24,mid:36,long:50}[S.whLen],wR=S.whLink?S.whL:S.whR;
+  const whisk=(sx,y,side,n,len)=>{let p='';for(let i=0;i<n;i++){const ang=(n===1?0:-14+28*i/(n-1))*Math.PI/180,y0=y+(i-(n-1)/2)*6,ex=sx+side*len*Math.cos(ang),ey=y0+len*Math.sin(ang);
     if(S.whCurl){const mx=(sx+ex)/2,my=(y0+ey)/2-9;p+=`M${sx},${y0} Q${mx},${my} ${ex},${ey+3} `}else p+=`M${sx},${y0} L${ex},${ey} `}return p};
-  const d=wh(-1,S.whL)+wh(1,S.whLink?S.whL:S.whR);
-  if(d)F.face+=`<path d="${d}" stroke="${S.whColor}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  const wpath=d=>d?`<path d="${d}" stroke="${S.whColor}" stroke-width="2" fill="none" stroke-linecap="round"/>`:'';
+  const inner=(t,pre)=>{const e=EAR[t];if(!e)return'';
+    if(t==='fold')return`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round" transform="${pre}"/>`;
+    return`<path d="${e.d}" fill="#f6b3b8" stroke="#f6b3b8" stroke-width="3" stroke-linejoin="round" transform="${pre} translate(${e.a[0]},${e.a[1]}) scale(.45) translate(${-e.a[0]},${-e.a[1]})"/>`};
+  const eye=(cx,cy,col)=>opt.closed?`<path d="M${cx-r},${cy-1} q${r},${r} ${2*r},0" stroke="${ink}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`:`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>`;
+  if(v==='front'){
+    F.head=inner(S.earL,'')+inner(S.earR,MIRROR);
+    if(S.fur==='none')F.head+=`<path d="M132,72 q18,-7 36,0 M138,82 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    F.frontL=`<path d="M130,232 L130,262" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>`;
+    F.frontR=`<path d="M170,232 L170,262" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>`;
+    F.face=`<ellipse cx="104" cy="148" rx="13" ry="8" fill="#f4a6a8"/><ellipse cx="196" cy="148" rx="13" ry="8" fill="#f4a6a8"/>`;
+    F.face+=`<g class="eyes">${eye(120,130,S.eyeL)}${eye(180,130,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
+    F.face+=`<ellipse cx="150" cy="142" rx="5.5" ry="4" fill="${S.nose}"/>`;
+    F.face+=`<path d="M138,148 q6,8 12,0 q6,8 12,0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    F.face+=wpath(whisk(150-74*g.hf,140,-1,S.whL,L)+whisk(150+74*g.hf,140,1,wR,L));
+  }
+  if(v==='side'){
+    if(EAR[S.earL]){const e=sideEar(S.earL,'near');F.head=S.earL==='fold'?`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round"/>`:`<path d="${e.d}" fill="#f6b3b8" stroke="#f6b3b8" stroke-width="3" stroke-linejoin="round" transform="translate(${e.a[0]},${e.a[1]}) scale(.45) translate(${-e.a[0]},${-e.a[1]})"/>`}
+    if(S.fur==='none')F.head+=`<path d="M196,104 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    F.face=`<ellipse cx="246" cy="156" rx="11" ry="7" fill="#f4a6a8"/>`;
+    F.face+=`<g class="eyes">${eye(250,132,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
+    F.face+=`<ellipse cx="281" cy="146" rx="4.5" ry="3.5" fill="${S.nose}"/>`;
+    F.face+=`<path d="M279,152 q-3,6 -10,3" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    F.face+=wpath(whisk(264,150,1,wR,L));
+  }
+  if(v==='back'){
+    F.head=wpath(whisk(150-84*g.hf,142,-1,S.whL,L*.55)+whisk(150+84*g.hf,142,1,wR,L*.55));
+  }
   return F;
 }
-function topLayer(opt={}){const F=featureParts(opt);return F.head+F.face+F.frontL+F.frontR}
+function topLayer(opt={},v=mview){const F=featureParts(v,opt);return F.head+F.face+F.frontL+F.frontR}
+function maskURL(v=mview){return`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">${shapes('#000',v)}</svg>`)}")`}
+
 function render(){
   base.innerHTML=shapes(S.base);topL.innerHTML=topLayer();
   const m=maskURL();
@@ -319,7 +378,7 @@ function chips(id,list,key,onSet){const el=$(id);
   list.forEach(([v,n])=>{const b=document.createElement('button');b.className='chip';b.textContent=n;b.onclick=()=>set(key,v,onSet);el.appendChild(b);
     controls.push(()=>b.setAttribute('aria-pressed',S[key]===v))});
 }
-function set(k,v,onSet){S[k]=v;if(onSet)onSet(v);render()}
+function set(k,v,onSet){S[k]=v;if(onSet)onSet(v);if(['fat','tail','fur'].includes(k))autoDerive();render()}
 function refreshControls(){controls.forEach(f=>f())}
 
 swatches('sw-base',BASES,'base');
@@ -333,14 +392,14 @@ swatches('sw-eyeL',EYES,'eyeL');swatches('sw-eyeR',EYES,'eyeR');swatches('sw-nos
 chips('c-earLink',[[true,'兩邊一樣'],[false,'左右分開']],'earLink',v=>{if(v)S.earR=S.earL});
 chips('c-earL',EARS,'earL',v=>{if(S.earLink)S.earR=v});chips('c-earR',EARS,'earR');
 chips('c-fur',[['none','無毛'],['short','短毛'],['medium','中長毛'],['long','長毛']],'fur');
-chips('c-tail',[['long','長尾'],['short','短尾'],['kirin','麒麟尾'],['nottail','沒有尾巴']].map(x=>x[0]==='nottail'?['none',x[1]]:x),'tail');
+chips('c-tail',[['long','長尾'],['short','短尾'],['kirin','麒麟尾'],['none','沒有尾巴']],'tail');
 swatches('sw-whColor',WHC,'whColor');
 chips('c-whLen',[['short','短'],['mid','中'],['long','長']],'whLen');
 chips('c-whCurl',[[false,'直的'],[true,'微捲']],'whCurl');
 chips('c-whLink',[[true,'兩邊一樣'],[false,'左右分開']],'whLink',v=>{if(v)S.whR=S.whL});
 const nums=[0,1,2,3,4,5].map(n=>[n,String(n)]);
 chips('c-whL',nums,'whL',v=>{if(S.whLink)S.whR=v});chips('c-whR',nums,'whR');
-['brushSize','size','fat'].forEach(k=>{const el=$(k);el.oninput=()=>{S[k]=+el.value;render()};controls.push(()=>{el.value=S[k]})});
+['brushSize','size','fat'].forEach(k=>{const el=$(k);el.oninput=()=>{S[k]=+el.value;if(k==='fat')autoDerive();render()};controls.push(()=>{el.value=S[k]})});
 $('catName').oninput=e=>{S.name=e.target.value;save()};
 
 /* tabs */
@@ -349,31 +408,89 @@ function showTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.setAttr
   $('stage').classList.toggle('painting',t==='color');$('badge').hidden=t!=='color';try{localStorage.setItem(KEY+'-tab',t)}catch(e){}}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
+/* ===== 側面、背面花紋：從正面自動帶入 ===== */
+let scratchCtx=null;
+function scratch(){if(!scratchCtx){const c=document.createElement('canvas');c.width=c.height=300;scratchCtx=c.getContext('2d')}return scratchCtx}
+function sample(data,x0,y0,x1,y1,skip){
+  let n=0,hit=0,r=0,g=0,b=0;
+  for(let y=y0;y<y1;y+=3)for(let x=x0;x<x1;x+=3){if(skip&&skip(x,y))continue;n++;
+    const i=(Math.round(y*2)*600+Math.round(x*2))*4;if(data[i+3]>128){hit++;r+=data[i];g+=data[i+1];b+=data[i+2]}}
+  return{cov:n?hit/n:0,c:hit?'#'+[r,g,b].map(v=>Math.round(v/hit).toString(16).padStart(2,'0')).join(''):null};
+}
+function derive(v){
+  const data=CV.front.getContext('2d').getImageData(0,0,600,600).data,g=geo();
+  const inBody=(x,y)=>((x-150)/g.brx)**2+((y-208)/54)**2<1;
+  const sL=sample(data,88,165,124,252,(x,y)=>!inBody(x,y)),sR=sample(data,176,165,212,252,(x,y)=>!inBody(x,y));
+  const side=sL.cov>=sR.cov?sL:sR,chest=sample(data,132,188,168,236),legs=sample(data,128,250,172,268);
+  let tail={cov:0,c:null};const td=TAILS.front[S.tail];
+  if(td){const sc=scratch();sc.lineWidth=g.tw;const p=new Path2D(td);tail=sample(data,176,150,272,266,(x,y)=>inBody(x,y)||!sc.isPointInStroke(p,x,y))}
+  const c=CV[v].getContext('2d');c.clearRect(0,0,600,600);c.save();c.scale(2,2);
+  const fillIf=(s,fn,min=.4)=>{if(s.c&&s.cov>=min){c.fillStyle=s.c;c.strokeStyle=s.c;fn()}};
+  const stripes=(s,fn)=>{if(s.c&&s.cov>=.08&&s.cov<.4){c.strokeStyle=s.c;c.lineWidth=7;c.lineCap='round';fn()}};
+  const tailStroke=d=>()=>{c.lineWidth=g.tw;c.lineCap='round';c.lineJoin='round';c.stroke(new Path2D(d))};
+  if(v==='side'){
+    c.drawImage(CV.front,116,20,184,372,156,62,130,134);
+    const ell=()=>{c.beginPath();c.ellipse(148,208,g.sbrx,g.sbry,0,0,Math.PI*2)};
+    fillIf(side,()=>{c.save();ell();c.clip();c.fillRect(50,140,200,72);c.restore()});
+    stripes(side,()=>{c.save();ell();c.clip();for(let x=92;x<=200;x+=24){c.beginPath();c.moveTo(x,166);c.lineTo(x-4,198);c.stroke()}c.restore()});
+    fillIf(chest,()=>{c.beginPath();c.ellipse(212,222,24,26,0,0,Math.PI*2);c.fill()});
+    if(TAILS.side[S.tail])fillIf(tail,tailStroke(TAILS.side[S.tail]),.35);
+    fillIf(legs,()=>{c.fillRect(80,252,150,20)},.35);
+  }
+  if(v==='back'){
+    c.save();c.translate(300,0);c.scale(-1,1);c.drawImage(CV.front,116,0,368,236,58,0,184,158);c.restore();
+    const ell=()=>{c.beginPath();c.ellipse(150,208,g.brx,54,0,0,Math.PI*2)};
+    fillIf(side,()=>{c.save();ell();c.clip();c.fillRect(60,140,180,84);c.restore()});
+    stripes(side,()=>{c.save();ell();c.clip();[176,196,216,236].forEach(y=>{c.beginPath();c.moveTo(150-g.brx*.55,y);c.quadraticCurveTo(150,y+8,150+g.brx*.55,y);c.stroke()});c.restore()});
+    if(TAILS.back[S.tail])fillIf(tail,tailStroke(TAILS.back[S.tail]),.35);
+    fillIf(legs,()=>{c.fillRect(96,254,108,18)},.35);
+  }
+  c.restore();
+}
+function autoDerive(){['side','back'].forEach(v=>{if(!S[v+'Edited'])derive(v)})}
+
+/* ===== 捏貓的角度切換 ===== */
+const hist={front:{u:[],r:[]},side:{u:[],r:[]},back:{u:[],r:[]}};
+let undoStack=hist.front.u,redoStack=hist.front.r;
+const vhint=()=>{$('vhint').textContent=mview==='front'?'側面和背面的花紋會自動從正面帶入':(S[mview+'Edited']?'這個角度是你畫的':'這是從正面自動帶入的，不像可以直接補畫')};
+const mviewBtns=VIEWS.map(v=>{const b=document.createElement('button');b.className='chip';b.dataset.v=v;b.textContent=VNAME[v];b.onclick=()=>setMView(v);$('c-mview').appendChild(b);return b});
+function setMView(v){
+  mview=v;VIEWS.forEach(k=>{CV[k].hidden=k!==v});cv=CV[v];ctx=cv.getContext('2d');
+  undoStack=hist[v].u;redoStack=hist[v].r;histUI();
+  $('stampRow').hidden=v!=='front';$('rederive').hidden=v==='front';
+  mviewBtns.forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));vhint();render();
+}
+$('rederive').onclick=()=>{if(mview==='front')return;pushUndo();S[mview+'Edited']=false;derive(mview);vhint();save()};
+
 /* painting */
-const undoStack=[],redoStack=[];
 function snap(){return ctx.getImageData(0,0,600,600)}
 function histUI(){$('undo').disabled=!undoStack.length;$('redo').disabled=!redoStack.length}
 function pushUndo(){try{undoStack.push(snap());if(undoStack.length>30)undoStack.shift();redoStack.length=0}catch(e){}histUI()}
-function undo(){const d=undoStack.pop();if(!d)return;redoStack.push(snap());ctx.putImageData(d,0,0);histUI();save()}
-function redo(){const d=redoStack.pop();if(!d)return;undoStack.push(snap());ctx.putImageData(d,0,0);histUI();save()}
+function afterChange(){if(mview==='front')autoDerive();save()}
+function undo(){const d=undoStack.pop();if(!d)return;redoStack.push(snap());ctx.putImageData(d,0,0);histUI();afterChange()}
+function redo(){const d=redoStack.pop();if(!d)return;undoStack.push(snap());ctx.putImageData(d,0,0);histUI();afterChange()}
 document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
   if(k==='z'&&!e.shiftKey){e.preventDefault();undo()}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();redo()}});
-function pt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*600,y:(e.clientY-r.top)/r.height*600}}
+function pt(e){const r=e.currentTarget.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*600,y:(e.clientY-r.top)/r.height*600}}
 function dab1(x,y){const rad=S.brushSize;ctx.globalCompositeOperation=S.eraser?'destination-out':'source-over';
   const c=S.eraser?'#000000':S.brush;
   if(S.soft){const g=ctx.createRadialGradient(x,y,0,x,y,rad);g.addColorStop(0,rgba(c,1));g.addColorStop(.5,rgba(c,.9));g.addColorStop(1,rgba(c,0));ctx.fillStyle=g}
   else ctx.fillStyle=c;
   ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation='source-over'}
-function dab(p){dab1(p.x,p.y);if(S.sym)dab1(600-p.x,p.y)}
+function dab(p){dab1(p.x,p.y);if(S.sym&&mview!=='side')dab1(600-p.x,p.y)}
 let painting=false,last=null;
-cv.addEventListener('pointerdown',e=>{if(tab!=='color')return;e.preventDefault();pushUndo();painting=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}last=pt(e);dab(last)});
-cv.addEventListener('pointermove',e=>{if(!painting)return;const p=pt(e),dx=p.x-last.x,dy=p.y-last.y,dist=Math.hypot(dx,dy),step=Math.max(2,S.brushSize*.22);
-  if(dist<step)return;const n=Math.floor(dist/step);for(let i=1;i<=n;i++)dab({x:last.x+dx*i/n,y:last.y+dy*i/n});last=p});
-['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,()=>{if(painting){painting=false;save()}}));
+VIEWS.forEach(k=>{const c=CV[k];
+  c.addEventListener('pointerdown',e=>{if(tab!=='color')return;e.preventDefault();pushUndo();painting=true;
+    if(mview!=='front'&&!S[mview+'Edited']){S[mview+'Edited']=true;vhint()}
+    try{c.setPointerCapture(e.pointerId)}catch(_){}last=pt(e);dab(last)});
+  c.addEventListener('pointermove',e=>{if(!painting)return;const p=pt(e),dx=p.x-last.x,dy=p.y-last.y,dist=Math.hypot(dx,dy),step=Math.max(2,S.brushSize*.22);
+    if(dist<step)return;const n=Math.floor(dist/step);for(let i=1;i<=n;i++)dab({x:last.x+dx*i/n,y:last.y+dy*i/n});last=p});
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>c.addEventListener(t,()=>{if(painting){painting=false;afterChange()}}));
+});
 $('undo').onclick=undo;$('redo').onclick=redo;histUI();
 let clearArm=false;
 $('clearPaint').onclick=e=>{if(!clearArm){clearArm=true;e.target.textContent='再按一次清除';setTimeout(()=>{clearArm=false;e.target.textContent='清除花紋'},2500);return}
-  pushUndo();ctx.clearRect(0,0,600,600);clearArm=false;e.target.textContent='清除花紋';save()};
+  pushUndo();ctx.clearRect(0,0,600,600);clearArm=false;e.target.textContent='清除花紋';afterChange()};
 
 function stamp(kind){pushUndo();ctx.save();ctx.scale(2,2);ctx.globalCompositeOperation='source-over';
   const lines=(arr,w,c)=>{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';arr.forEach(([a,b,c2,d])=>{ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c2,d);ctx.stroke()})};
@@ -384,7 +501,7 @@ function stamp(kind){pushUndo();ctx.save();ctx.scale(2,2);ctx.globalCompositeOpe
   if(kind==='mask'){ctx.fillStyle='#fbf9f5';ctx.fill(new Path2D('M150,100 C132,116 106,136 108,154 C120,178 180,178 192,154 C194,136 168,116 150,100 Z'))}
   if(kind==='chest'){ctx.fillStyle='#fbf9f5';ctx.beginPath();ctx.ellipse(150,226,30,36,0,0,Math.PI*2);ctx.fill()}
   if(kind==='patch'){ctx.fillStyle=S.brush;[[108,86,32,24,-.4],[196,220,26,22,.3],[244,196,16,24,0],[110,236,18,14,0]].forEach(([x,y,a,b,r])=>{ctx.beginPath();ctx.ellipse(x,y,a,b,r,0,Math.PI*2);ctx.fill()})}
-  ctx.restore();save()}
+  ctx.restore();afterChange()}
 document.querySelectorAll('[data-stamp]').forEach(b=>b.onclick=()=>stamp(b.dataset.stamp));
 
 /* save / load */
@@ -392,24 +509,29 @@ let saveT,user=null,db=null,auth=null,loading=false;
 const status=t=>{$('saved').textContent=t};
 function save(){clearTimeout(saveT);saveT=setTimeout(doSave,user?1200:400)}
 async function doSave(){
-  const data={S,paint:cv.toDataURL()};
+  if(booting)return;
+  const data={S,paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintBack:CV.back.toDataURL()};
   try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
   if(user&&db&&!loading){
-    if(data.paint.length>900000){status('花紋太複雜，超過雲端單筆上限，請清掉一些');return}
-    try{await setDoc(doc(db,'users',user.uid,'cats','main'),{settings:S,paint:data.paint,updatedAt:serverTimestamp()});status('已同步到雲端')}
+    if(data.paint.length+data.paintSide.length+data.paintBack.length>950000){status('花紋太複雜，超過雲端單筆上限，請清掉一些');return}
+    try{await setDoc(doc(db,'users',user.uid,'cats','main'),{settings:S,paint:data.paint,paintSide:data.paintSide,paintBack:data.paintBack,updatedAt:serverTimestamp()});status('已同步到雲端')}
     catch(e){status('雲端儲存失敗（'+(e.code||e.message)+'）')}
   }else if(!user)status('已自動儲存在這台裝置')
 }
-function applyData(settings,paint){
-  return new Promise(res=>{
-    S={...DEF,...settings};$('catName').value=S.name;ctx.clearRect(0,0,600,600);(undoStack.length=0,redoStack.length=0,histUI());
-    if(!paint){render();return res()}
-    const img=new Image();img.onload=()=>{ctx.drawImage(img,0,0);render();res()};img.onerror=()=>{render();res()};img.src=paint;
-  })
+function loadImg(c,url){return new Promise(res=>{const x=c.getContext('2d');x.clearRect(0,0,600,600);if(!url)return res();
+  const img=new Image();img.onload=()=>{x.drawImage(img,0,0);res()};img.onerror=()=>res();img.src=url})}
+async function applyData(settings,p={}){
+  S={...DEF,...settings};$('catName').value=S.name;
+  VIEWS.forEach(v=>{hist[v].u.length=0;hist[v].r.length=0});histUI();
+  await Promise.all([loadImg(CV.front,p.paint),loadImg(CV.side,p.paintSide),loadImg(CV.back,p.paintBack)]);
+  if(!p.paintSide)S.sideEdited=false;if(!p.paintBack)S.backEdited=false;
+  autoDerive();vhint();render();
 }
 let resetArm=false;
 $('resetAll').onclick=e=>{if(!resetArm){resetArm=true;e.target.textContent='再按一次確認';setTimeout(()=>{resetArm=false;e.target.textContent='全部重來'},2500);return}
-  resetArm=false;e.target.textContent='全部重來';S={...DEF};$('catName').value=S.name;ctx.clearRect(0,0,600,600);(undoStack.length=0,redoStack.length=0,histUI());stamp('patch');(undoStack.length=0,redoStack.length=0,histUI());render()};
+  resetArm=false;e.target.textContent='全部重來';S={...DEF};$('catName').value=S.name;
+  VIEWS.forEach(v=>{CV[v].getContext('2d').clearRect(0,0,600,600);hist[v].u.length=0;hist[v].r.length=0});
+  setMView('front');stamp('patch');hist.front.u.length=0;histUI();render()};
 
 /* auth */
 function setupFirebase(){
@@ -425,90 +547,96 @@ function setupFirebase(){
     loading=true;status('正在讀取雲端的貓…');
     try{
       const snap=await getDoc(doc(db,'users',u.uid,'cats','main'));
-      if(snap.exists()){const d=snap.data();await applyData(d.settings,d.paint)}
+      if(snap.exists()){const d=snap.data();await applyData(d.settings,d)}
       loading=false;doSave();
     }catch(e){loading=false;status('讀取雲端失敗（'+(e.code||e.message)+'）')}
   });
 }
 
 /* ===== 貓咪的家 ===== */
-function maskURL(){return`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">${shapes('#000')}</svg>`)}")`}
-const room=$('room'),hc=$('homecat'),bubble=$('bubble'),bed=$('bed');
+const room=$('room'),hc=$('homecat'),bubble=$('bubble'),bed=$('bed'),hCat=$('hCat');
 const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const BED=.8;
-const H={x:.3,target:.3,state:'sit',timer:2,t:0,hop:0,closed:false,goSleep:false,look:0,tilt:0,wag:0,px:0,pAt:-1e9};
+const H={x:.3,target:.3,state:'sit',timer:2,t:0,hop:0,closed:false,goSleep:false,look:0,tilt:0,wag:0,px:0,pAt:-1e9,view:'front'};
 let HP={};
 function drawHomeCat(){
-  const P=partShapes(S.base),M=partShapes('#fff'),F=featureParts({closed:H.closed});
-  let s=`<defs><image id="hpat" href="${cv.toDataURL()}" x="0" y="0" width="300" height="300"/>`;
-  ORDER.forEach(k=>{s+=`<mask id="hm-${k}" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="300">${M[k]}</mask>`});
+  let s='<defs>';
+  VIEWS.forEach(v=>{s+=`<image id="hpat-${v}" href="${CV[v].toDataURL()}" x="0" y="0" width="300" height="300"/>`;
+    const M=partShapes('#fff',v);ORDERS[v].forEach(k=>{s+=`<mask id="hm-${v}-${k}" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="300">${M[k]}</mask>`})});
   s+='</defs>';
-  ORDER.forEach(k=>{
-    s+=`<g id="hp-${k}">${P[k]}<use href="#hpat" mask="url(#hm-${k})"/>`;
-    if(k==='head')s+=F.head+`<g id="hp-face">${F.face}</g>`;else s+=(F[k]||'');
-    s+='</g>';
-  });
-  $('hCat').innerHTML=s;
-  HP={};ORDER.concat('face').forEach(k=>{HP[k]=document.getElementById('hp-'+k)});
+  VIEWS.forEach(v=>{const P=partShapes(S.base,v),F=featureParts(v,{closed:H.closed});
+    s+=`<g id="hv-${v}" display="${v===H.view?'inline':'none'}">`;
+    ORDERS[v].forEach(k=>{s+=`<g id="hp-${v}-${k}">${P[k]}<use href="#hpat-${v}" mask="url(#hm-${v}-${k})"/>`;
+      s+=k==='head'?F.head+`<g id="hp-${v}-face">${F.face}</g>`:(F[k]||'');s+='</g>'});
+    s+='</g>'});
+  hCat.innerHTML=s;
+  HP={};VIEWS.forEach(v=>{HP[v]={};ORDERS[v].concat('face').forEach(k=>{HP[v][k]=document.getElementById(`hp-${v}-${k}`)})});
   hc.style.width=`calc(clamp(130px, 26%, 250px) * ${S.size})`;
 }
-const setT=(k,v)=>{if(HP[k])HP[k].setAttribute('transform',v)};
-function setClosed(c){if(H.closed!==c){H.closed=c;if(HP.face)HP.face.innerHTML=featureParts({closed:c}).face}}
+const setT=(k,val)=>{const e=HP[H.view]&&HP[H.view][k];if(e)e.setAttribute('transform',val)};
+function setHView(v){if(H.view===v)return;H.view=v;VIEWS.forEach(k=>{const g=document.getElementById('hv-'+k);if(g)g.setAttribute('display',k===v?'inline':'none')})}
+function setClosed(c){if(H.closed!==c){H.closed=c;VIEWS.forEach(v=>{if(HP[v]&&HP[v].face)HP[v].face.innerHTML=featureParts(v,{closed:c}).face})}}
 function say(t,ms){bubble.textContent=t;bubble.hidden=false;clearTimeout(say.t);if(ms)say.t=setTimeout(()=>{bubble.hidden=true},ms)}
-function wake(){H.state='sit';H.timer=3+Math.random()*3;H.goSleep=false;setClosed(false);bubble.hidden=true}
+function sitDown(){H.state='sit';H.timer=2.5+Math.random()*4;setHView(Math.random()<.3?'back':'front')}
+function wake(){sitDown();setHView('front');H.goSleep=false;setClosed(false);bubble.hidden=true}
+function startWalk(target,sleep){H.state='walk';H.target=target;H.goSleep=!!sleep;setHView('side')}
 function step(dt){
   H.timer-=dt;if(H.hop>0)H.hop=Math.max(0,H.hop-dt);if(H.wag>0)H.wag-=dt;H.tilt*=Math.exp(-dt*2.5);
   if(H.state==='walk'){
     const d=H.target-H.x,sp=.1*dt;
     if(Math.abs(d)<=sp){H.x=H.target;
-      if(H.goSleep){H.goSleep=false;H.state='sleep';H.timer=14+Math.random()*12;setClosed(true);say('Zzz…')}
-      else{H.state='sit';H.timer=2.5+Math.random()*4}}
+      if(H.goSleep){H.goSleep=false;H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setClosed(true);say('Zzz…')}
+      else sitDown()}
     else H.x+=Math.sign(d)*sp;
   }else if(H.state==='sit'&&H.timer<=0){
     const r=Math.random();
-    if(r<.6){H.state='walk';H.target=.04+Math.random()*.92}
-    else if(r<.85){H.state='walk';H.target=BED;H.goSleep=true}
-    else H.timer=2+Math.random()*3;
+    if(r<.6){let t=.04+Math.random()*.92;if(Math.abs(t-H.x)<.12)t=H.x>.5?t-.3:t+.3;startWalk(Math.min(.96,Math.max(.04,t)))}
+    else if(r<.85&&Math.abs(H.x-BED)>.02)startWalk(BED,true);
+    else{H.timer=2+Math.random()*3;if(Math.random()<.5)setHView(H.view==='back'?'front':'back')}
   }else if(H.state==='sleep'&&H.timer<=0)wake();
 }
 function apply(dt){
-  const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w),t=H.t;
+  const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w),t=H.t,v=H.view;
   const walking=H.state==='walk',sleeping=H.state==='sleep',dir=Math.sign(H.target-H.x)||1,ph=t*9,m=RM?0:1;
-  /* 頭看哪裡：手指或滑鼠附近 > 走路方向 > 正前方 */
+  /* 頭看哪裡：手指或滑鼠附近 > 正前方 */
   let lt=0;
-  if(!sleeping&&performance.now()-H.pAt<2500)lt=Math.max(-1,Math.min(1,(H.px-(px+w/2))/(rw*.3)));
-  else if(walking)lt=dir*.7;
+  if(!sleeping&&!walking&&performance.now()-H.pAt<2500)lt=Math.max(-1,Math.min(1,(H.px-(px+w/2))/(rw*.3)));
   H.look+=(lt-H.look)*Math.min(1,dt*5);
   /* 尾巴 */
-  const ta=sleeping?3*Math.sin(t*.8):H.wag>0?16*Math.sin(t*14):walking?12*Math.sin(t*5):8*Math.sin(t*1.7);
-  setT('tail',`rotate(${ta*m} 198 250)`);
-  /* 腳 */
-  if(walking&&m){const s=Math.sin(ph),l1=Math.max(0,s)*8,l2=Math.max(0,-s)*8;
-    setT('frontL',`translate(0 ${-l1}) rotate(${s*7} 138 228)`);setT('frontR',`translate(0 ${-l2}) rotate(${s*7} 162 228)`);
-    setT('backL',`translate(0 ${-l2})`);setT('backR',`translate(0 ${-l1})`);
-  }else['frontL','frontR','backL','backR'].forEach(k=>setT(k,''));
-  /* 頭和臉 */
-  const tilt=H.look*6+H.tilt+(walking?Math.sin(ph)*1.2*m:0);
-  setT('head',`translate(0 ${sleeping?8:0}) rotate(${tilt} 150 190)`);
-  setT('face',`translate(${H.look*10} ${Math.abs(H.look)*1.5})`);
-  /* 呼吸 */
-  const br=m*(sleeping?.014*Math.sin(t*1.6):walking?0:.016*Math.sin(t*2.4));
-  setT('body',`translate(150 262) scale(1 ${1+br}) translate(-150 -262)`);
+  const amp=v==='back'?1.3:1;
+  const ta=amp*(sleeping?3*Math.sin(t*.8):H.wag>0?16*Math.sin(t*14):walking?12*Math.sin(t*5):8*Math.sin(t*1.7));
+  const tp=TAIL_PIVOT[v];setT('tail',`rotate(${ta*m} ${tp[0]} ${tp[1]})`);
+  /* 腳（側面走路） */
+  if(v==='side'){
+    const a=walking?22*Math.sin(ph)*m:0;
+    setT('legNF',`rotate(${a} 193 232)`);setT('legFB',`rotate(${a} 117 232)`);
+    setT('legNB',`rotate(${-a} 97 232)`);setT('legFF',`rotate(${-a} 213 232)`);
+    setT('head',`rotate(${walking?Math.sin(ph*2)*1.5*m:0} 200 180)`);
+    setT('body',`translate(148 252) scale(1 ${1+(walking?0:.016*Math.sin(t*2.4)*m)}) translate(-148 -252)`);
+  }else{
+    const tilt=v==='back'?H.look*5+H.tilt:H.look*6+H.tilt;
+    setT('head',`translate(0 ${sleeping?8:0}) rotate(${tilt} 150 190)`);
+    if(v==='front')setT('face',`translate(${H.look*10} ${Math.abs(H.look)*1.5})`);
+    const br=m*(sleeping?.014*Math.sin(t*1.6):.016*Math.sin(t*2.4));
+    setT('body',`translate(150 262) scale(1 ${1+br}) translate(-150 -262)`);
+  }
   /* 整隻移動 */
   let bob=0,y=0,sx=1,sy=1;
-  if(walking)bob=Math.abs(Math.sin(ph))*w*.025*m;
+  if(walking)bob=Math.abs(Math.sin(ph))*w*.02*m;
   if(sleeping){sx=1.04;sy=.94}
   if(H.hop>0){const p=1-H.hop/.55;y=Math.sin(p*Math.PI)*w*.22}
+  hCat.style.transform=(v==='side'&&dir<0)?'scaleX(-1)':'';
   hc.style.bottom=(rh*.11-w*.107)+'px';
   hc.style.transform=`translate(${px}px,${-(bob+y)}px) scale(${sx},${sy})`;
   bed.style.left=(BED*(rw-w)+w*.04)+'px';bed.style.width=(w*.92)+'px';
-  const n=S.name||'牠',txt=walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:`${n}坐著發呆`;
+  const n=S.name||'牠',txt=walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
 }
 let raf=0,lastTs=0;
 function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
 function poke(){
   if(H.state==='sleep'){wake();say('喵？',1500);H.tilt=8;return}
+  if(H.state==='sit'&&H.view==='back'){setHView('front');H.timer=3+Math.random()*3;H.tilt=8;say('喵？',1400);return}
   H.hop=.55;H.wag=1.6;H.tilt=(Math.random()<.5?-1:1)*10;
   const lines=['喵～','喵！','呼嚕呼嚕','嗯喵？'];say(lines[Math.floor(Math.random()*lines.length)],1400);
 }
@@ -529,11 +657,12 @@ document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.datas
 (async function init(){
   let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY))}catch(e){}
   let t='color';try{t=localStorage.getItem(KEY+'-tab')||'color'}catch(e){}
-  showTab(t);
-  if(saved&&saved.S)await applyData(saved.S,saved.paint);
-  else{$('catName').value=S.name;stamp('patch');(undoStack.length=0,redoStack.length=0,histUI());render()}
+  showTab(t);setMView('front');
+  if(saved&&saved.S)await applyData(saved.S,saved);
+  else{$('catName').value=S.name;stamp('patch');hist.front.u.length=0;histUI();autoDerive();render()}
   let v='maker';try{v=localStorage.getItem(KEY+'-view')||'maker'}catch(e){}
   showView(v);
+  booting=false;save();
   setupFirebase();
 })();
 </script>
