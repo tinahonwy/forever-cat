@@ -107,6 +107,14 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 #aiModel{font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px}
 .gsub a{color:var(--accent)}
 #openAI{color:var(--fg)}
+.askcard{max-width:640px;margin:12px auto 0;background:var(--panel);border:1.5px solid var(--accent);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.askhead{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}.askhead span:first-child{color:var(--accent);font-weight:500}
+.askq{margin:0;font-family:var(--font-display);font-size:18px;line-height:1.5;text-wrap:balance}
+.askfree{display:flex;gap:8px}.askfree input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px}
+.askfoot{display:flex;gap:16px;flex-wrap:wrap}
+.askset{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;background:var(--chip);border-radius:12px;padding:10px 12px}
+.askset label{display:flex;align-items:center;gap:8px;margin-right:auto;cursor:pointer}.askset input{width:18px;height:18px;accent-color:var(--accent)}
+.askset select{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:2px 6px}
 .memlist h3{font-size:14px;font-weight:500;color:var(--muted);margin:10px 0 4px}
 .memlist ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .memlist li{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;background:var(--chip);border-radius:12px;padding:8px 8px 8px 12px;font-size:14.5px}
@@ -347,6 +355,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <h2 id="memTitle">牠記得的事</h2>
     <p class="gsub">你平常跟牠說的話會在背景慢慢整理成記憶，牠說話時會參考這些。記錯的可以按 ✕ 刪掉。</p>
     <div class="gsum"><b>互動習慣</b><br><span id="memHabit"></span></div>
+    <div class="askset"><label><input type="checkbox" id="askOn"> 每天問我關於牠的小問題</label><span>每天最多</span><select id="askPer" aria-label="每天最多幾題"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select><span>題</span></div>
     <div class="memlist" id="memList"></div>
     <form class="memadd" id="memAdd"><select id="memCat" aria-label="分類"></select><input id="memText" maxlength="120" placeholder="自己補充一件關於牠的事" aria-label="補充的記憶"><button class="btn primary" type="submit">記住</button></form>
     <div class="btns"><button class="btn" id="memLearn" type="button">現在整理</button></div>
@@ -408,6 +417,13 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
         <svg class="layer" id="hCat" viewBox="0 0 300 300" aria-hidden="true"></svg>
       </div>
     </div>
+  </div>
+  <div class="askcard" id="askCard" hidden role="region" aria-label="關於牠的小問題">
+    <div class="askhead"><span>小問題</span><span id="askLeft"></span></div>
+    <p class="askq" id="askQ"></p>
+    <div class="chips" id="askOpts"></div>
+    <div class="askfree"><input id="askText" maxlength="120" placeholder="或自己寫：真正的牠會…" aria-label="自己寫答案"><button class="btn primary" id="askSend" type="button">記住</button></div>
+    <div class="askfoot"><button class="linkbtn" id="askSkip" type="button">跳過</button><button class="linkbtn" id="askStop" type="button">今天不要再問</button><button class="linkbtn" id="askSet" type="button">設定</button></div>
   </div>
   <div class="needs" id="needsBar" aria-label="貓的狀態">
     <div class="meter"><span>飽足</span><i><b id="nb-full"></b></i></div>
@@ -1377,7 +1393,7 @@ async function maybeLearn(force){
   if(learning||!aiKey()||!pending.length||(!force&&pending.length<6))return;
   learning=true;const batch=pending.slice(),n=S.name||'貓咪';
   const known=learned().map(f=>`[${f.c}] ${f.t}`).join('\n')||'（還沒有）';
-  const sys=`你在幫一位主人整理他已故愛貓「${n}」的資料。主人在一個網頁裡跟虛擬的${n}聊天，下面是主人最近說的話（只有主人的話，虛擬貓的回答是 AI 編的，所以不在這裡）。
+  const sys=`你在幫一位主人整理他的貓「${n}」的資料。主人在一個網頁裡跟虛擬的${n}聊天，下面是主人最近說的話（只有主人的話，虛擬貓的回答是 AI 編的，所以不在這裡）。
 請只根據主人明確說出的內容，找出關於「真實的${n}」的新資訊，用台灣繁體中文、每則一句話記下，用「牠」稱呼貓：
 - 習性：作息、行為、小動作（例如：每天早上五點會踩主人的臉叫人起床）
 - 喜好、討厭：食物、玩具、地方、聲音、人
@@ -1385,8 +1401,8 @@ async function maybeLearn(force){
 - 口頭禪與叫聲：牠的叫聲、主人對牠的暱稱、主人常對牠說的話
 - 主人近況：主人提到自己最近的生活（例如最近工作很忙、下週要出差），只記和陪伴有關、不敏感的事
 不要推測、不要把主人的情緒或問句當成事實、不要重複已經記得的事。沒有新資訊就回傳空陣列。
-affection（親人）、temper（脾氣）、energy（活潑）是對個性的微調，範圍 -5 到 5，只有主人明確描述牠的個性時才填非 0，例如「你以前超黏我」affection +3。
-appetite（貪吃程度）、canLove（愛不愛罐頭）、picky（挑食）、drink（愛喝水）、demand（餓了會不會討飯）也是 -3 到 3 的微調，只有主人明確提到時才填非 0，例如「你以前一聽到開罐頭就衝過來」canLove +3、「你都吃一半就跑掉」picky +2。
+affection（親人）、temper（脾氣）、energy（活潑）是對個性的微調，範圍 -5 到 5，只有主人明確描述牠的個性時才填非 0，例如「你超黏我」affection +3。
+appetite（貪吃程度）、canLove（愛不愛罐頭）、picky（挑食）、drink（愛喝水）、demand（餓了會不會討飯）也是 -3 到 3 的微調，只有主人明確提到時才填非 0，例如「你一聽到開罐頭就衝過來」canLove +3、「你都吃一半就跑掉」picky +2。
 likes、dislikes 只在主人明確說到牠喜歡或討厭被摸哪裡時才填，代碼：${ZONES.map(([z,zn])=>z+'='+zn).join('、')}。
 
 已經記得的事：
@@ -1445,7 +1461,7 @@ function drawMem(msg){
       const dt=document.createElement('small');dt.textContent=f.d+(f.s==='me'?'・你寫的':'');
       const del=document.createElement('button');del.type='button';del.textContent='✕';del.setAttribute('aria-label','刪除這條記憶');
       del.onclick=()=>{L.splice(i,1);save();memLabel();drawMem()};li.append(sp,dt,del);ul.appendChild(li)});box.appendChild(ul)})}
-$('openMem').onclick=()=>{const sel=$('memCat');if(!sel.options.length)FACT_CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});drawMem();$('memPanel').hidden=false};
+$('openMem').onclick=()=>{syncAskSet();const sel=$('memCat');if(!sel.options.length)FACT_CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});drawMem();$('memPanel').hidden=false};
 $('memClose').onclick=()=>{$('memPanel').hidden=true};
 $('memLearn').onclick=()=>{$('memMsg').textContent='整理中…';$('memLearn').disabled=true;maybeLearn(true)};
 $('memAdd').addEventListener('submit',e=>{e.preventDefault();const t=$('memText').value.trim();if(!t)return;if(addFact($('memCat').value,t,'me')){save();memLabel()}$('memText').value='';drawMem('記住了')});
@@ -1632,7 +1648,7 @@ function drawWand(){
 /* 行為紀錄 */
 const actAt={};let actAny=0;
 function logAct(key,text,force){const now=performance.now();if(!force&&(now-(actAt[key]||0)<6000||now-actAny<2200))return;actAt[key]=now;actAny=now;
-  talkLog.push(['act',`${S.name||'牠'}${text}`,'',key]);while(talkLog.length>8)talkLog.shift();drawLog()}
+  talkLog.push(['act',`${S.name||'牠'}${text}`,'',key]);while(talkLog.length>8)talkLog.shift();drawLog();maybeAsk(key,text)}
 const TRAIT_FIX={
   foodRun:[['牠沒那麼急',T=>{T.appetite-=2},'放飯時，牠不會一聽到聲音就衝過來']],
   canRun:[['牠沒那麼愛罐頭',T=>{T.canLove-=2},'牠沒有特別愛吃罐頭']],
@@ -1854,6 +1870,73 @@ $('kgTest').onclick=async()=>{const k=$('kgKey').value.trim(),m=$('kgMsg');m.hid
   const r=$('aiMsg').textContent;m.textContent=r;
   if(/^成功/.test(r)){m.textContent=r+' 已經開好說話模式了！';$('kgNext').hidden=true;$('kgClose').textContent='完成';aiLabel()}};
 $('kgOpen').onclick=()=>{$('aiPanel').hidden=true;openKeyGuide()};
+
+/* ===== 每日小問題：看牠做了什麼，偶爾問你真正的牠是不是也這樣 ===== */
+const ASK_EFFECTS=['affection','temper','energy','appetite','canLove','picky','drink','demand','love_tree','love_scratch','love_box','play_chase','play_stalk','play_pounce','play_bat','play_leap','play_hide'];
+function askCfg(){const d={on:true,perDay:5};const c=S.askCfg&&typeof S.askCfg==='object'?S.askCfg:{};S.askCfg={...d,...c};return S.askCfg}
+function askDay(){const t=today();if(!S.askDay||S.askDay.d!==t)S.askDay={d:t,n:0,recent:(S.askDay&&S.askDay.recent)||[]};return S.askDay}
+let askAt=-1e9,askBusy=false,askCur=null;
+function applyEffect(k,d){d=Math.max(-3,Math.min(3,Math.round(+d||0)));if(!d)return;
+  if(['affection','temper','energy'].includes(k))S[k]=Math.max(0,Math.min(100,(S[k]??50)+d*5));
+  else if(['appetite','canLove','picky','drink','demand'].includes(k)){const T=traits();T[k]=Math.max(-5,Math.min(5,T[k]+d))}
+  else if(k.startsWith('love_')){const it=k.slice(5);itemLove(it);S.itemLove[it]=Math.max(.2,Math.min(3,Math.round(itemLove(it)*(1+d*.25)*100)/100))}
+  else if(k.startsWith('play_')){const P=playPrefs(),pk=k.slice(5);if(pk in P)P[pk]=Math.max(.1,Math.min(3,Math.round(P[pk]*(1+d*.25)*100)/100))}}
+const ASK_TPL=[
+  [/^(go|lazy)_scratch$/,'真正的牠平常也愛抓貓抓板嗎？',[['很愛抓','牠很愛抓貓抓板',{love_scratch:2}],['偶爾抓','牠偶爾會抓貓抓板',{}],['都抓沙發','牠不愛貓抓板，都去抓沙發',{love_scratch:-2}]]],
+  [/^(go|lazy)_tree$/,'真正的牠平常喜歡爬高嗎？',[['超愛爬高','牠很喜歡爬到高的地方',{love_tree:2,energy:1}],['普通','牠偶爾會爬高',{}],['不太爬','牠不太爬高',{love_tree:-2}]]],
+  [/^(go|lazy)_box$/,'真正的牠平常喜歡躲紙箱嗎？',[['看到箱子就鑽','牠看到紙箱就會鑽進去',{love_box:2}],['偶爾','牠偶爾會躲紙箱',{}],['不太理紙箱','牠對紙箱沒興趣',{love_box:-2}]]],
+  [/^(canRun|foodSleep)$/,'真正的牠平常聽到開罐頭的聲音會怎樣？',[['馬上衝過來','牠一聽到開罐頭的聲音就會衝過來',{canLove:2}],['慢慢走過來','牠聽到開罐頭會慢慢走過來',{}],['沒什麼反應','牠對罐頭沒什麼特別反應',{canLove:-2}]]],
+  [/^(foodRun|foodLater|foodIgnore|selfEat)$/,'真正的牠平常放飯時會馬上吃嗎？',[['馬上吃','放飯時牠會馬上吃',{appetite:2}],['晚點才吃','牠常常放了飯晚點才去吃',{appetite:-1}],['很挑食','牠很挑食，不喜歡的就不吃',{picky:2}]]],
+  [/^(eatAll|leftover)$/,'真正的牠平常吃飯會吃光嗎？',[['都吃光光','牠吃飯都會吃光',{picky:-2}],['常常剩一點','牠吃飯常常剩一點',{picky:2}],['吃很少','牠食量很小',{appetite:-2}]]],
+  [/^(drink|go_fountain|lazy_fountain)$/,'真正的牠平常愛喝水嗎？',[['很愛喝','牠很愛喝水',{drink:2}],['普通',null,{}],['要哄才喝','牠很少喝水，要哄才會喝',{drink:-2}]]],
+  [/^demand$/,'真正的牠平常肚子餓會怎麼討飯？',[['一直喵喵叫','牠肚子餓時會一直喵喵叫討飯',{demand:2}],['坐在碗旁邊等','牠肚子餓時會安靜坐在碗旁邊等',{demand:-1}],['不太討飯','牠不太會討飯',{demand:-3}]]],
+  [/^(chase|dash)$/,'真正的牠平常玩逗貓棒會一直追嗎？',[['追到停不下來','牠玩逗貓棒會一直追',{play_chase:2,energy:1}],['追一下就累','牠玩逗貓棒追一下就累了',{play_chase:-1,energy:-1}],['只用眼睛看','牠玩逗貓棒通常只用眼睛看',{play_chase:-2,energy:-2}]]],
+  [/^(stalk|pounce)$/,'真正的牠平常會壓低身體扭屁股再撲嗎？',[['常常這樣','牠玩的時候常常壓低身體扭屁股再撲',{play_pounce:2,play_stalk:2}],['偶爾',null,{}],['不會','牠不太會扭屁股撲',{play_pounce:-2}]]],
+  [/^(bat|leap)$/,'真正的牠平常會跳起來抓東西嗎？',[['跳很高','牠會跳很高抓東西',{play_leap:2}],['只會站起來撥','牠比較會站起來用爪子撥，不太跳',{play_leap:-1,play_bat:2}],['都不太動','牠玩的時候不太動',{energy:-2}]]],
+  [/^(hide|search)$/,'真正的牠平常會躲起來埋伏嗎？',[['很愛埋伏','牠很愛躲起來埋伏再衝出來',{play_hide:2}],['偶爾',null,{}],['不會','牠不太會躲起來埋伏',{play_hide:-2}]]],
+];
+function templateQ(key,text){const n=S.name||'牠';for(const[re,q,opts]of ASK_TPL)if(re.test(key))return{question:`${n}剛剛${text.replace(n,'')}。${q}`,options:opts.map(([label,fact,eff])=>({label,fact:fact||'',effects:Object.entries(eff).map(([key,delta])=>({key,delta}))}))};
+  return{question:`${n}剛剛${text.replace(n,'')}。真正的牠也會這樣嗎？`,options:[{label:'會，很像牠',fact:`牠真的會：${text.replace(n,'')}`,effects:[]},{label:'不太會',fact:`牠不太會：${text.replace(n,'')}`,effects:[]}]}}
+const ASK_SCHEMA={type:'OBJECT',properties:{question:{type:'STRING'},options:{type:'ARRAY',items:{type:'OBJECT',properties:{label:{type:'STRING'},fact:{type:'STRING'},
+  effects:{type:'ARRAY',items:{type:'OBJECT',properties:{key:{type:'STRING',enum:ASK_EFFECTS},delta:{type:'INTEGER'}},required:['key','delta']}}},required:['label','fact']}}},required:['question','options']};
+async function aiQuestion(key,text){const n=S.name||'貓咪',D=askDay();
+  const sys=`你在幫一位主人用小問題，慢慢讓網頁裡的虛擬${n}更像他真正的貓「${n}」。網頁裡的虛擬${n}剛剛做了一個動作，請根據這個動作，用台灣繁體中文問主人一個溫柔、具體、好回答的問題，了解真正的${n}會不會這樣、或是會怎麼做。
+- 問題一句話，開頭先說${n}剛剛做了什麼，例如「${n}剛剛抓了貓抓板，真正的牠平常最愛在哪裡磨爪？」
+- 給 2 到 4 個簡短選項（每個 12 字以內），涵蓋不同可能
+- 每個選項附上一句要記住的事實（用「牠」稱呼貓），以及對行為的微調 effects（-3 到 3，沒有就空陣列）。可用的 key：affection 親人、temper 脾氣、energy 活潑、appetite 貪吃、canLove 愛罐頭、picky 挑食、drink 愛喝水、demand 會討飯、love_tree/love_scratch/love_box 愛不愛貓跳台／貓抓板／紙箱、play_chase/play_stalk/play_pounce/play_bat/play_leap/play_hide 玩逗貓棒時追、偷偷靠近、撲、站起來撥、跳起來抓、躲起來埋伏
+- 不要假設貓已經不在了，不要用「以前」「生前」這類字，用「平常」「真正的${n}」來問
+- 不要問生病、死亡這類會讓主人難過的事
+- 不要重複這些最近問過的問題：${(D.recent||[]).slice(-8).join('／')||'（沒有）'}
+
+${catProfile()}${learnedPrompt()}`;
+  return gemParts(sys,[{text:`剛剛的動作：${text}`}],ASK_SCHEMA,700)}
+function maybeAsk(key,text){const C=askCfg(),D=askDay();
+  if(!C.on||askBusy||askCur||D.n>=C.perDay||view!=='home'||document.hidden)return;
+  if(performance.now()-askAt<150000||Math.random()>.4)return;
+  askBusy=true;askAt=performance.now();
+  setTimeout(async()=>{let q=null;
+    if(aiKey()){try{q=await aiQuestion(key,text)}catch(e){q=null}}
+    if(!q||!q.question||!Array.isArray(q.options)||!q.options.length)q=templateQ(key,text);
+    q.options=q.options.slice(0,4);askBusy=false;showAsk(q)},1500)}
+function showAsk(q){const D=askDay();D.n++;D.recent=[...(D.recent||[]),q.question].slice(-12);save();askCur=q;
+  $('askQ').textContent=q.question;$('askLeft').textContent=`今天第 ${D.n} 題，最多 ${askCfg().perDay} 題`;
+  const box=$('askOpts');box.innerHTML='';
+  q.options.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=o.label;b.onclick=()=>answerAsk(o);box.appendChild(b)});
+  $('askText').value='';$('askCard').hidden=false}
+function closeAsk(){$('askCard').hidden=true;askCur=null}
+function answerAsk(o,free){const q=askCur;if(!q)return;const n=S.name||'牠';
+  if(o){if(o.fact)addFact('習性',o.fact,'me');(o.effects||[]).forEach(e=>{if(ASK_EFFECTS.includes(e.key))applyEffect(e.key,e.delta)})}
+  if(free)addFact('習性',`${q.question.replace(/^.*?。/,'')}主人說：${free}`,'me');
+  talkLog.push(['ev',`你回答：${o?o.label:''}${free?(o?'，':'')+free:''}`]);while(talkLog.length>8)talkLog.shift();drawLog();
+  save();memLabel();render();closeAsk();note(`記住了，${n}會越來越像牠`,3)}
+$('askSend').onclick=()=>{const v=$('askText').value.trim();if(!v){$('askText').focus();return}answerAsk(null,v)};
+$('askText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('askSend').click()}});
+$('askSkip').onclick=closeAsk;
+$('askStop').onclick=()=>{const D=askDay();D.n=askCfg().perDay;save();closeAsk();note('今天不會再問了',2)};
+function syncAskSet(){const C=askCfg();$('askOn').checked=!!C.on;$('askPer').value=String(C.perDay);$('askPer').disabled=!C.on}
+$('askOn').onchange=()=>{askCfg().on=$('askOn').checked;syncAskSet();save();if(!askCfg().on)closeAsk()};
+$('askPer').onchange=()=>{askCfg().perDay=+$('askPer').value;save()};
+$('askSet').onclick=()=>{$('openMem').click()};
 
 let raf=0,lastTs=0;
 function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;if(wandOn)wandPhysics(dt);step(dt);apply(dt);raf=requestAnimationFrame(loop)}
