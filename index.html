@@ -62,6 +62,9 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .cananim{position:absolute;z-index:60;pointer-events:none;transform:scale(.4);opacity:0;transition:transform .35s,opacity .35s}
 .cananim.s1{transform:scale(1);opacity:1}.cananim .lid{transform-origin:3px 8px;transition:transform .35s}.cananim.s2 .lid{transform:rotate(-125deg)}
 .cananim.s3{transform:translateX(20%) translateY(10%) rotate(115deg);transition:transform .4s}.cananim .spill{opacity:0}.cananim.s3 .spill{opacity:1}
+.crumb{position:absolute;width:5px;height:5px;border-radius:50%;background:#a86b3f;z-index:65;pointer-events:none;animation:crumb .75s ease-out forwards}
+.crumb.wet{background:#c98b6b;width:4px;height:4px}
+@keyframes crumb{0%{transform:translate(0,0)}40%{transform:translate(calc(var(--dx)*.5),-16px)}100%{transform:translate(var(--dx),8px);opacity:0}}
 .heart.pop{color:#2e3936;font-size:18px;background:#fff;border-radius:10px;padding:2px 8px;font-family:var(--font-display)}
 .room .wandbtn{top:30%}.room .canbtn{top:54%}.room .takebtn{top:78%}
 @media (max-width:480px){.wandbtn{padding:5px 6px 4px;font-size:11px;border-radius:14px;right:8px}.wandbtn svg{width:22px;height:22px}}
@@ -586,6 +589,7 @@ function featureParts(v='front',opt={}){
     F.face=`<ellipse cx="104" cy="148" rx="13" ry="8" fill="#f4a6a8"/><ellipse cx="196" cy="148" rx="13" ry="8" fill="#f4a6a8"/>`;
     F.face+=`<g class="eyes">${eye(120,130,S.eyeL)}${eye(180,130,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
     F.face+=`<ellipse cx="150" cy="142" rx="5.5" ry="4" fill="${S.nose}"/>`;
+    F.face+=`<path class="tongueF" d="M145,151 q5,10 10,0Z" fill="#f08a96" opacity="0"/>`;
     F.face+=`<path d="M138,148 q6,8 12,0 q6,8 12,0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
     F.face+=wpath(whisk(150-74*g.hf,140,-1,S.whL,L)+whisk(150+74*g.hf,140,1,wR,L));
   }
@@ -926,7 +930,7 @@ function startWalk(target,sleep,after,fast){if(H.inBox){H.inBox=false;H.hop=.5}
   H.state='walk';H.target=target;H.goSleep=!!sleep;H.onArrive=after||null;H.runFast=!!fast;setHView('side');if(H.face!=='normal')setFace('normal')}
 function walkAway(){let t=H.x>.5?H.x-.35-Math.random()*.2:H.x+.35+Math.random()*.2;startWalk(Math.min(.96,Math.max(.04,t)))}
 function step(dt){
-  needsTick(dt);H.timer-=dt;if(H.hop>0)H.hop=Math.max(0,H.hop-dt);if(H.wag>0)H.wag-=dt;H.tilt*=Math.exp(-dt*2.5);
+  needsTick(dt);H.timer-=dt;if(H.lickT>0)H.lickT-=dt;if(H.hop>0)H.hop=Math.max(0,H.hop-dt);if(H.wag>0)H.wag-=dt;H.tilt*=Math.exp(-dt*2.5);
   if(H.swat>0)H.swat-=dt;if(H.trap>0)H.trap-=dt;if(H.cooldown>0)H.cooldown-=dt;if(H.statusT>0)H.statusT-=dt;
   H.petRecent*=Math.exp(-dt/5);H.lean*=Math.exp(-dt*2);
   H.mood+=(.6-H.mood)*dt*.02;H.mood=Math.max(0,Math.min(1,H.mood));
@@ -967,14 +971,21 @@ function step(dt){
   else if(H.state==='scratch'&&H.timer<=0)sitDown('front');
   else if(H.state==='eat'){const it=H.eatSrc||'bowl',N=needs(),a=foodAmt(it),take=Math.min(a,(it==='plate'?.12:.09)*dt);setFood(it,a-take);N.full=Math.min(1,N.full+take*(it==='plate'?.7:.55));
     if(Math.random()<dt*.35)say(it==='plate'?'吧唧吧唧':'咔滋咔滋',900);
-    if(foodAmt(it)<=.001){setFood(it,0);save();sitDown('front');setFace('happy',1.5);say('呼嚕～',1200);logAct('eatAll',`把${it==='plate'?'罐頭':'飼料'}吃光光了`,true)}
-    else if(H.timer<=0||N.full>.97){save();sitDown('front');logAct('leftover',`吃了一些就走開了，${it==='plate'?'盤子':'碗'}裡還剩一點`,true)}}
+    if(!RM&&Math.random()<dt*(it==='plate'?1.2:2.6))crumb(it);
+    if(foodAmt(it)<=.001){setFood(it,0);save();sitDown('front');setFace('happy',1.5);H.lickT=1.6;say('（舔舔嘴巴）呼嚕～',1500);logAct('eatAll',`把${it==='plate'?'罐頭':'飼料'}吃光光了`,true)}
+    else if(H.timer<=0||N.full>.97){save();sitDown('front');H.lickT=1.2;logAct('leftover',`吃了一些就走開了，${it==='plate'?'盤子':'碗'}裡還剩一點`,true)}}
   else if(H.state==='drink'){const N=needs();N.water=Math.min(1,N.water+dt*.12);if(H.timer<=0||N.water>=.99){save();sitDown('front')}}
   else if(H.state==='sniff'&&H.timer<=0)walkAway();
   else if(H.state==='beg'){if(foodAmt('bowl')>.01||foodAmt('plate')>.01){const src=foodAmt('plate')>.01?'plate':'bowl';doAct('eat',src,{fast:true})}
     else if(H.timer<=0)sitDown('front');else if(Math.random()<dt*.6)say(pick(['喵～','喵嗚～','（盯）','喵！']),1000)}
   else if(H.state==='box'&&H.timer<=0){H.inBox=false;H.hop=.55;sitDown('front')}
 }
+function eatHead(t,m){if(!m)return 18;
+  if(H.eatSrc==='plate')return 23+Math.sin(t*12)*3;
+  const c=t%1.1,dip=c<.4?Math.sin(c/.4*Math.PI):0;return 12+13*dip+(c>=.4?Math.sin(t*30)*2:0)}
+function crumb(it){const b=relRect(IT[it][0]);if(!b)return;const c=document.createElement('span');c.className='crumb'+(it==='plate'?' wet':'');
+  c.style.left=(b.l+(b.r-b.l)*(.3+Math.random()*.4))+'px';c.style.top=(b.t+(b.b-b.t)*.15)+'px';c.style.setProperty('--dx',((Math.random()-.5)*34)+'px');
+  room.appendChild(c);setTimeout(()=>c.remove(),800)}
 function apply(dt){
   const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w),t=H.t,v=H.view;
   const st=H.state,walking=['walk','chase','stalk','dash','search'].includes(st)||(st==='hide'&&Math.abs(H.x-(H.hideX??H.x))>.005),hiding=st==='hide'&&!walking,sleeping=st==='sleep',dir=walking?(Math.sign(H.target-H.x)||1):(H.facing||1),ph=t*(st==='stalk'?4.5:st==='dash'?15:st==='chase'?12:9),m=RM?0:1;
@@ -989,7 +1000,7 @@ function apply(dt){
     if(scr){setT('legNF',`rotate(${-105+k*18} 193 232)`);setT('legFF',`rotate(${-95-k*18} 213 232)`);setT('legNB','');setT('legFB','')}
     else{setT('legNF',`rotate(${a} 193 232)`);setT('legFB',`rotate(${a} 117 232)`);
     setT('legNB',`rotate(${-a} 97 232)`);setT('legFF',`rotate(${-a} 213 232)`)}
-    if(st==='stalk'||st==='ready')setT('head',`translate(0 10) rotate(${st==='ready'?4:2} 200 180)`);else setT('head',st==='drink'?`rotate(${22+Math.sin(t*16)*4*m} 200 180)`:eat?`rotate(${16+Math.sin(t*8)*3*m} 200 180)`:scr?'rotate(-6 200 180)':`rotate(${walking?Math.sin(ph*2)*1.5*m:0} 200 180)`);
+    if(st==='stalk'||st==='ready')setT('head',`translate(0 10) rotate(${st==='ready'?4:2} 200 180)`);else setT('head',st==='drink'?`rotate(${22+Math.sin(t*16)*4*m} 200 180)`:st==='eat'?`rotate(${eatHead(t,m)} 200 180)`:st==='sniff'?`rotate(${14+Math.sin(t*7)*2*m} 200 180)`:eat?`rotate(${16+Math.sin(t*8)*3*m} 200 180)`:scr?'rotate(-6 200 180)':`rotate(${walking?Math.sin(ph*2)*1.5*m:0} 200 180)`);
     setT('body',`translate(148 252) scale(1 ${1+(walking?0:.016*Math.sin(t*2.4)*m)}) translate(-148 -252)`);
   }else{
     const tilt=(v==='back'?H.look*5:H.look*6)+H.tilt+H.lean*12;
@@ -1020,7 +1031,8 @@ function apply(dt){
   hc.style.zIndex=hiding?'0':String(CATZ);
   if(H.wriggle>0)rot+=Math.sin(t*28)*9*(m||.4);
   const hk=H.hugK,sc=1+.25*hk;sx*=sc;sy*=sc;if(H.hug){y+=(H.carry||0)*w;rot+=Math.max(-14,Math.min(14,(H.dragV||0)*.012))*(m||.4);if(H.warned)rot+=Math.sin(t*22)*4*(m||.4)}
-  {const tg=HP.side&&HP.side.face&&HP.side.face.querySelector('.tongue');if(tg){if(st==='drink'&&v==='side'){const q=m?Math.max(0,Math.sin(t*16)):.6;tg.setAttribute('opacity',q>.15?'1':'0');tg.setAttribute('transform',`translate(274 156) scale(1 ${.5+q*.9}) translate(-274 -156)`)}else tg.setAttribute('opacity','0')}}
+  {const tg=HP.side&&HP.side.face&&HP.side.face.querySelector('.tongue');if(tg){if((st==='drink'||(st==='eat'&&H.eatSrc==='plate'))&&v==='side'){const q=m?Math.max(0,Math.sin(t*(st==='drink'?16:12))):.6;tg.setAttribute('opacity',q>.15?'1':'0');tg.setAttribute('transform',`translate(274 156) scale(1 ${.5+q*.9}) translate(-274 -156)`)}else tg.setAttribute('opacity','0')}}
+  {const tf=HP.front&&HP.front.face&&HP.front.face.querySelector('.tongueF');if(tf){if((H.lickT||0)>0&&v==='front'){tf.setAttribute('opacity','1');tf.setAttribute('transform',`translate(${Math.sin(t*9)*5*(m||.3)} 0)`)}else tf.setAttribute('opacity','0')}}
   const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';hCat.style.transformOrigin='35% 90%';
   hCat.style.transform=(flip?'scaleX(-1) ':'')+(v==='side'&&H.state==='scratch'?'rotate(-14deg)':'');
   hc.style.bottom=(rh*.11-w*.107)+'px';
@@ -1544,7 +1556,7 @@ function doAct(k,src,o={}){const R=roomCfg();
   if(k==='tree')startWalk(R.tree.x,false,()=>{setHView('front');jumpTo(.56,()=>jumpTo(1.1,()=>{sitDown(Math.random()<.3?'back':'front');H.timer=8+Math.random()*10;note(`${S.name||'牠'}跳上貓跳台了`,3)}),{pause:.35})});
   if(k==='scratch'){const[t,face]=sideSpot('scratch',.42);startWalk(t,false,()=>{H.state='scratch';H.facing=face;H.timer=3.5+Math.random()*3;setHView('side');if(Math.random()<.5)say('咔咔咔',1200)})}
   if(k==='box')startWalk(R.box.x,false,()=>{setHView('front');jumpTo(.15,()=>{H.y=0;H.inBox=true;H.state='box';H.timer=8+Math.random()*8;setHView('front')})});
-  if(k==='eat'){const it=src==='plate'?'plate':'bowl';const[t,face]=sideSpot(it,.4);startWalk(t,false,()=>{H.facing=face;setHView('side');
+  if(k==='eat'){const it=src==='plate'?'plate':'bowl';const[t,face]=sideSpot(it,.3);startWalk(t,false,()=>{H.facing=face;setHView('side');
       if(foodAmt(it)<=.01){H.state='sit';H.waitFood=it;H.timer=8;return}startEat(it)},o.fast)}
   if(k==='sniff'){const it=src==='plate'?'plate':'bowl';const[t,face]=sideSpot(it,.4);startWalk(t,false,()=>{H.state='sniff';H.facing=face;setHView('side');H.timer=1.5;say('嗅嗅',900)})}
   if(k==='drink'){const[t,face]=sideSpot('fountain',.5);startWalk(t,false,()=>{H.state='drink';H.facing=face;setHView('side');H.timer=3+Math.random()*3;say('啪搭啪搭',1500)})}
