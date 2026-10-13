@@ -30,6 +30,25 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);
 header h1{font-family:var(--font-display);font-weight:400;font-size:28px;margin:0;letter-spacing:.02em;text-wrap:balance}
 header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .stage-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.top{max-width:1060px;margin:0 auto 18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.views{display:flex;gap:4px;background:var(--chip);padding:4px;border-radius:999px;border:1px solid var(--line)}
+.view-btn{font:inherit;font-size:15px;border:0;background:transparent;color:var(--muted);padding:7px 18px;border-radius:999px;cursor:pointer}
+.view-btn[aria-pressed="true"]{background:var(--panel);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.home{max-width:1060px;margin:0 auto}
+.room{position:relative;width:100%;aspect-ratio:16/9;border-radius:28px;overflow:hidden;background:#86c4b8}
+@media (max-width:600px){.room{aspect-ratio:1/1}}
+.window{position:absolute;left:8%;top:10%;width:22%;aspect-ratio:4/5;background:#d5eef6;border:8px solid #fbf6ee;border-radius:14px}
+.window span{position:absolute;inset:0}.window span::before,.window span::after{content:"";position:absolute;background:#fbf6ee}
+.window span::before{left:50%;top:0;bottom:0;width:6px;transform:translateX(-50%)}.window span::after{top:50%;left:0;right:0;height:6px;transform:translateY(-50%)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:30%;background:#efdcc2;border-top:10px solid #fbf6ee}
+.bed{position:absolute;bottom:7%;height:12%;background:#e5868e;border-radius:50%;box-shadow:inset 0 -10px 0 rgba(0,0,0,.08)}
+.homecat{position:absolute;left:0;transform-origin:50% 100%;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.homecat:focus-visible{outline:2.5px solid #fff;outline-offset:4px;border-radius:12px}
+.catbox{position:relative;width:100%;aspect-ratio:1}
+.catbox #hPaint{-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.shadow{position:absolute;left:24%;width:52%;top:83%;height:8%;background:rgba(40,60,50,.16);border-radius:50%}
+.bubble{position:absolute;left:58%;top:-4%;background:#fff;color:#3b3434;font-family:var(--font-display);font-size:18px;padding:6px 14px;border-radius:18px;white-space:nowrap;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.homehint{text-align:center;color:var(--muted);font-size:14px;margin:12px 0 0}
 .stage{position:relative;width:100%;max-width:560px;aspect-ratio:1;background:var(--stage);border-radius:28px;overflow:hidden;margin-inline:auto}
 .wrap{position:absolute;inset:7%;transform-origin:50% 88%;transition:transform .25s ease}
 .layer{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -73,18 +92,25 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 </head>
 <body>
 
-<div class="app">
+<header class="top">
+  <div>
+    <h1>捏貓工作室</h1>
+    <p>一步步把牠調回來：毛色、花紋、豆豆眼、耳朵和鬍鬚。</p>
+    <div class="auth">
+      <img id="avatar" alt="" hidden>
+      <span id="authStatus">尚未登入，設定只存在這台裝置</span>
+      <button class="btn" id="loginBtn">用 Google 登入</button>
+      <button class="btn" id="logoutBtn" hidden>登出</button>
+    </div>
+  </div>
+  <nav class="views" aria-label="切換畫面">
+    <button class="view-btn" data-view="maker">捏貓</button>
+    <button class="view-btn" data-view="home">貓咪的家</button>
+  </nav>
+</header>
+
+<div class="app" id="viewMaker">
   <div class="stage-col">
-    <header>
-      <h1>捏貓工作室</h1>
-      <p>一步步把牠調回來：毛色、花紋、豆豆眼、耳朵和鬍鬚。</p>
-      <div class="auth">
-        <img id="avatar" alt="" hidden>
-        <span id="authStatus">尚未登入，設定只存在這台裝置</span>
-        <button class="btn" id="loginBtn">用 Google 登入</button>
-        <button class="btn" id="logoutBtn" hidden>登出</button>
-      </div>
-    </header>
     <div class="stage" id="stage">
       <div class="wrap" id="wrap">
         <svg class="layer" id="base" viewBox="0 0 300 300" aria-hidden="true"></svg>
@@ -166,6 +192,24 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<section class="home" id="viewHome" hidden>
+  <div class="room" id="room">
+    <div class="window" aria-hidden="true"><span></span></div>
+    <div class="floor" aria-hidden="true"></div>
+    <div class="bed" id="bed" aria-hidden="true"></div>
+    <div class="homecat" id="homecat" role="button" tabindex="0" aria-label="摸摸牠">
+      <div class="bubble" id="bubble" hidden></div>
+      <div class="shadow" aria-hidden="true"></div>
+      <div class="catbox">
+        <svg class="layer" id="hBase" viewBox="0 0 300 300" aria-hidden="true"></svg>
+        <canvas class="layer" id="hPaint" width="600" height="600" aria-hidden="true"></canvas>
+        <svg class="layer" id="hTop" viewBox="0 0 300 300" aria-hidden="true"></svg>
+      </div>
+    </div>
+  </div>
+  <p class="homehint"><span id="homeStatus">牠在家裡</span>・點一下牠試試看</p>
+</section>
+
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -225,7 +269,7 @@ function shapes(fill){
     if(S.fur==='long')[-26,-9,9,26].forEach(dx=>s+=`<circle cx="${150+dx}" cy="190" r="12" fill="${fill}"/>`)}
   return s;
 }
-function topLayer(){
+function topLayer(opt={}){
   const hf=1+(S.fat-1)*.35,dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#3b3434',shade=mix(S.base,dark?'#ffffff':'#000000',.13);
   let s='';
   [['L',S.earL],['R',S.earR]].forEach(([side,t])=>{const e=EAR[t];if(!e)return;const m=side==='R'?MIRROR+' ':'';
@@ -235,7 +279,8 @@ function topLayer(){
   s+=`<path d="M136,228 L136,256 M164,228 L164,256" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>`;
   s+=`<ellipse cx="104" cy="148" rx="13" ry="8" fill="#f4a6a8"/><ellipse cx="196" cy="148" rx="13" ry="8" fill="#f4a6a8"/>`;
   const r={S:6,M:8.5,L:11}[S.eyeSize];
-  s+=`<g class="eyes"><circle cx="120" cy="130" r="${r}" fill="${S.eyeL}"/><circle cx="180" cy="130" r="${r}" fill="${S.eyeLink?S.eyeL:S.eyeR}"/></g>`;
+  if(opt.closed)s+=`<path d="M${120-r},129 q${r},${r} ${2*r},0 M${180-r},129 q${r},${r} ${2*r},0" stroke="${ink}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+  else s+=`<g class="eyes"><circle cx="120" cy="130" r="${r}" fill="${S.eyeL}"/><circle cx="180" cy="130" r="${r}" fill="${S.eyeLink?S.eyeL:S.eyeR}"/></g>`;
   s+=`<ellipse cx="150" cy="142" rx="5.5" ry="4" fill="${S.nose}"/>`;
   s+=`<path d="M138,148 q6,8 12,0 q6,8 12,0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
   const L={short:24,mid:36,long:50}[S.whLen];
@@ -247,8 +292,9 @@ function topLayer(){
 }
 function render(){
   base.innerHTML=shapes(S.base);topL.innerHTML=topLayer();
-  const m=`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">${shapes('#000')}</svg>`)}")`;
+  const m=maskURL();
   cv.style.webkitMaskImage=m;cv.style.maskImage=m;
+  if(view==='home')drawHomeCat();
   wrap.style.transform=`scale(${S.size})`;
   $('eyeRrow').hidden=S.eyeLink;$('eyeLlbl').textContent=S.eyeLink?'眼睛顏色':'左眼顏色';
   $('earRrow').hidden=S.earLink;$('earLlbl').textContent=S.earLink?'耳朵形狀':'左耳形狀';
@@ -381,12 +427,75 @@ function setupFirebase(){
   });
 }
 
+/* ===== 貓咪的家 ===== */
+function maskURL(){return`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">${shapes('#000')}</svg>`)}")`}
+const room=$('room'),hc=$('homecat'),hPaint=$('hPaint'),hctx=hPaint.getContext('2d'),bubble=$('bubble'),bed=$('bed');
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const BED=.8;
+const H={x:.3,target:.3,state:'sit',timer:2,t:0,hop:0,closed:false,goSleep:false};
+function drawHomeCat(){
+  $('hBase').innerHTML=shapes(S.base);$('hTop').innerHTML=topLayer({closed:H.closed});
+  const m=maskURL();hPaint.style.webkitMaskImage=m;hPaint.style.maskImage=m;
+  hctx.clearRect(0,0,600,600);hctx.drawImage(cv,0,0);
+  hc.style.width=`calc(clamp(130px, 26%, 250px) * ${S.size})`;
+}
+function setClosed(c){if(H.closed!==c){H.closed=c;$('hTop').innerHTML=topLayer({closed:c})}}
+function say(t,ms){bubble.textContent=t;bubble.hidden=false;clearTimeout(say.t);if(ms)say.t=setTimeout(()=>{bubble.hidden=true},ms)}
+function wake(){H.state='sit';H.timer=3+Math.random()*3;H.goSleep=false;setClosed(false);bubble.hidden=true}
+function step(dt){
+  H.timer-=dt;if(H.hop>0)H.hop=Math.max(0,H.hop-dt);
+  if(H.state==='walk'){
+    const d=H.target-H.x,sp=.1*dt;
+    if(Math.abs(d)<=sp){H.x=H.target;
+      if(H.goSleep){H.goSleep=false;H.state='sleep';H.timer=14+Math.random()*12;setClosed(true);say('Zzz…')}
+      else{H.state='sit';H.timer=2.5+Math.random()*4}}
+    else H.x+=Math.sign(d)*sp;
+  }else if(H.state==='sit'&&H.timer<=0){
+    const r=Math.random();
+    if(r<.6){H.state='walk';H.target=.04+Math.random()*.92}
+    else if(r<.85){H.state='walk';H.target=BED;H.goSleep=true}
+    else H.timer=2+Math.random()*3;
+  }else if(H.state==='sleep'&&H.timer<=0)wake();
+}
+function apply(){
+  const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w);
+  let bob=0,tilt=0,sy=1,sx=1,y=0;
+  if(H.state==='walk'&&!RM){const ph=H.t*9;bob=Math.abs(Math.sin(ph))*w*.035;tilt=Math.sign(H.target-H.x)*Math.sin(ph)*2.5}
+  else if(H.state==='sleep'){sy=.9+(RM?0:.012*Math.sin(H.t*1.6));sx=1.05}
+  else if(!RM)sy=1+.014*Math.sin(H.t*2.4);
+  if(H.hop>0){const p=1-H.hop/.55;y=Math.sin(p*Math.PI)*w*.22}
+  hc.style.bottom=(rh*.11-w*.127)+'px';
+  hc.style.transform=`translate(${px}px,${-(bob+y)}px) rotate(${tilt}deg) scale(${sx},${sy})`;
+  bed.style.left=(BED*(rw-w)+w*.04)+'px';bed.style.width=(w*.92)+'px';
+  const n=S.name||'牠',txt=H.state==='walk'?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):H.state==='sleep'?`${n}睡著了`:`${n}坐著發呆`;
+  if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
+}
+let raf=0,lastTs=0;
+function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply();raf=requestAnimationFrame(loop)}
+function poke(){
+  if(H.state==='sleep'){wake();say('喵？',1500);return}
+  H.hop=.55;const lines=['喵～','喵！','呼嚕呼嚕','嗯喵？'];say(lines[Math.floor(Math.random()*lines.length)],1400);
+}
+hc.addEventListener('click',poke);
+hc.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();poke()}});
+
+let view='maker';
+function showView(v){
+  view=v;$('viewMaker').hidden=v!=='maker';$('viewHome').hidden=v!=='home';
+  document.querySelectorAll('.view-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
+  try{localStorage.setItem(KEY+'-view',v)}catch(e){}
+  if(v==='home'){drawHomeCat();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}}
+}
+document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+
 (async function init(){
   let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY))}catch(e){}
   let t='color';try{t=localStorage.getItem(KEY+'-tab')||'color'}catch(e){}
   showTab(t);
   if(saved&&saved.S)await applyData(saved.S,saved.paint);
   else{$('catName').value=S.name;stamp('patch');(undoStack.length=0,redoStack.length=0,histUI());render()}
+  let v='maker';try{v=localStorage.getItem(KEY+'-view')||'maker'}catch(e){}
+  showView(v);
   setupFirebase();
 })();
 </script>
