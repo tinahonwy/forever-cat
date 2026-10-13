@@ -53,6 +53,20 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .bubble{position:absolute;left:58%;top:-4%;background:#fff;color:#3b3434;font-family:var(--font-display);font-size:18px;padding:6px 14px;border-radius:18px;white-space:nowrap;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.1)}
 .viewpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:560px;width:100%;margin-inline:auto}
 .vhint{font-size:13px;color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.guide{position:fixed;inset:0;z-index:50;background:rgba(20,30,28,.45);display:flex;align-items:center;justify-content:center;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.gcard{background:var(--panel);color:var(--fg);border-radius:24px;padding:20px;width:100%;max-width:440px;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.ghead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+.gx{font:inherit;font-size:13px;background:none;border:0;color:var(--muted);cursor:pointer;padding:4px}
+.gcard h2{font-family:var(--font-display);font-weight:400;font-size:22px;line-height:1.4;margin:0;text-wrap:balance}
+.gsub{margin:-6px 0 0;color:var(--muted);font-size:14px}.gsub:empty{display:none}
+.gopts{display:flex;flex-direction:column;gap:8px}
+.gopts.multi{flex-direction:row;flex-wrap:wrap}
+.gopt{font:inherit;font-size:16px;text-align:left;background:var(--chip);color:var(--fg);border:1.5px solid transparent;border-radius:14px;padding:12px 16px;cursor:pointer}
+.gopts.multi .gopt{padding:8px 16px;border-radius:999px;font-size:15px}
+.gopt[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.gfoot{display:flex;justify-content:space-between;gap:8px}
+.gsum{background:var(--chip);border-radius:14px;padding:12px 16px;font-size:15px;line-height:1.8}
 .homehint{text-align:center;color:var(--muted);font-size:14px;margin:12px 0 0}
 .homehint.small{font-size:12.5px;margin-top:4px}
 #homeStatus{color:var(--fg);font-size:15px}
@@ -201,6 +215,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
     <div class="pane" data-pane="persona">
       <p class="hint">這些會影響牠在「貓咪的家」裡的反應：被摸、被抱、走動和睡覺。</p>
+      <button class="btn primary" id="openGuide">用問答幫我設定個性</button>
       <div class="row"><span class="lbl">親人程度 <span id="affVal"></span></span><input type="range" id="affection" min="0" max="100" step="1"></div>
       <div class="row"><span class="lbl">脾氣・傲嬌 <span id="tempVal"></span></span><input type="range" id="temper" min="0" max="100" step="1"></div>
       <div class="row"><span class="lbl">活潑程度 <span id="enVal"></span></span><input type="range" id="energy" min="0" max="100" step="1"></div>
@@ -210,6 +225,16 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
 
     <div class="foot"><span id="saved">設定會自動存在這台裝置</span><button class="btn warn" id="resetAll">全部重來</button></div>
+  </div>
+</div>
+
+<div class="guide" id="guide" hidden role="dialog" aria-modal="true" aria-labelledby="gQ">
+  <div class="gcard">
+    <div class="ghead"><span id="gProg"></span><button class="gx" id="gClose" aria-label="之後再說">之後再說</button></div>
+    <h2 id="gQ"></h2>
+    <p class="gsub" id="gSub"></p>
+    <div class="gopts" id="gOpts"></div>
+    <div class="gfoot"><button class="btn" id="gBack">上一題</button><button class="btn primary" id="gNext">下一步</button></div>
   </div>
 </div>
 
@@ -250,7 +275,7 @@ const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
   brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,backEdited:false,
-  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood'};
+  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood',personaSet:false};
 const KEY='neko-maker-v1';
 let S={...DEF},tab='color',mview='front',booting=true;
 const $=id=>document.getElementById(id);
@@ -582,6 +607,44 @@ function setupFirebase(){
   });
 }
 
+/* ===== 引導式個性問答 ===== */
+const GUIDE=[
+  {q:n=>`你回家的時候，${n}通常會？`,opts:[['跑到門口迎接你',{aff:85}],['遠遠看你一眼',{aff:55}],['繼續睡，假裝沒聽到',{aff:30}]]},
+  {q:n=>`有客人來家裡時，${n}會？`,opts:[['躲起來不見貓',{affD:-15}],['在旁邊偷偷觀察',{affD:0}],['主動過去聞聞、討摸',{affD:15}]]},
+  {q:n=>`摸${n}摸太久的時候，牠會？`,opts:[['一直呼嚕，摸多久都可以',{temp:15}],['尾巴開始甩來甩去',{temp:50}],['回頭咬你一口',{temp:85}]]},
+  {q:n=>`拿逗貓棒跟${n}玩，牠會？`,opts:[['追到停不下來',{en:85}],['玩一下就躺平',{en:50}],['只用眼睛追',{en:20}]]},
+  {q:n=>`${n}最喜歡被摸哪裡？`,sub:'可以複選',multi:'likes'},
+  {q:n=>`${n}討厭被摸哪裡？`,sub:'可以複選，沒有就直接下一步',multi:'dislikes'},
+  {q:n=>`把${n}抱起來的時候，牠會？`,opts:[['乖乖讓你抱，還會呼嚕',{hug:'love'}],['看心情，有時候給抱',{hug:'mood'}],['扭來扭去，馬上跳走',{hug:'hate'}]]}
+];
+const G={i:0,ans:[],likes:[],dislikes:[]};
+function openGuide(){G.i=0;G.ans=[];G.likes=[...(S.likes||[])];G.dislikes=[...(S.dislikes||[])];$('guide').hidden=false;drawGuide()}
+function guideResult(){const pick=k=>{for(let i=0;i<GUIDE.length;i++){const a=G.ans[i];if(a!=null&&GUIDE[i].opts){const v=GUIDE[i].opts[a][1][k];if(v!=null)return v}}return null};
+  const cl=v=>Math.max(0,Math.min(100,v));
+  return{affection:cl((pick('aff')??60)+(pick('affD')??0)),temper:pick('temp')??40,energy:pick('en')??50,hugPref:pick('hug')??'mood',likes:G.likes,dislikes:G.dislikes}}
+function drawGuide(){
+  const n=S.name||'牠',done=G.i>=GUIDE.length,box=$('gOpts');box.innerHTML='';box.className='gopts';
+  $('gProg').textContent=done?'完成':`${G.i+1} / ${GUIDE.length}`;$('gBack').hidden=G.i===0;
+  if(done){const r=guideResult(),w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>l.map(z=>ZONES.find(x=>x[0]===z)[1]).join('、')||'沒有特別';
+    $('gQ').textContent=`${n}是這樣的貓`;$('gSub').textContent='之後隨時可以在「個性」分頁微調';
+    const d=document.createElement('div');d.className='gsum';
+    d.innerHTML=`${w3(r.affection,'怕生','普通親人','超級親人')}・${w3(r.temper,'脾氣溫和','有點傲嬌','很有脾氣')}・${w3(r.energy,'懶洋洋','普通活潑','活力過剩')}<br>喜歡被摸：${zn(r.likes)}<br>討厭被摸：${zn(r.dislikes)}<br>抱抱：${{love:'很愛抱抱',mood:'看心情',hate:'不喜歡被抱'}[r.hugPref]}`;
+    box.appendChild(d);$('gNext').textContent='完成';$('gNext').hidden=false;return}
+  const Q=GUIDE[G.i];$('gQ').textContent=Q.q(n);$('gSub').textContent=Q.sub||'';$('gNext').textContent='下一步';
+  if(Q.multi){box.classList.add('multi');ZONES.forEach(([z,zn])=>{const b=document.createElement('button');b.className='gopt';b.textContent=zn;
+      b.setAttribute('aria-pressed',G[Q.multi].includes(z));
+      b.onclick=()=>{const k=Q.multi,o=k==='likes'?'dislikes':'likes';G[k]=G[k].includes(z)?G[k].filter(x=>x!==z):[...G[k],z];G[o]=G[o].filter(x=>x!==z);b.setAttribute('aria-pressed',G[k].includes(z))};box.appendChild(b)});
+    $('gNext').hidden=false;
+  }else{Q.opts.forEach(([t],k)=>{const b=document.createElement('button');b.className='gopt';b.textContent=t;b.setAttribute('aria-pressed',G.ans[G.i]===k);
+      b.onclick=()=>{G.ans[G.i]=k;drawGuide();setTimeout(()=>{G.i++;drawGuide()},220)};box.appendChild(b)});
+    $('gNext').hidden=G.ans[G.i]==null;
+  }
+}
+$('gNext').onclick=()=>{if(G.i>=GUIDE.length){Object.assign(S,guideResult(),{personaSet:true});$('guide').hidden=true;render();if(view==='home')note(`${S.name||'牠'}的個性設定好了`,3);return}G.i++;drawGuide()};
+$('gBack').onclick=()=>{if(G.i>0){G.i--;drawGuide()}};
+$('gClose').onclick=()=>{$('guide').hidden=true;S.personaSet=true;save()};
+$('openGuide').onclick=openGuide;
+
 /* ===== 貓咪的家 ===== */
 const room=$('room'),hc=$('homecat'),bubble=$('bubble'),bed=$('bed'),hCat=$('hCat');
 const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -761,7 +824,7 @@ function showView(v){
   view=v;$('viewMaker').hidden=v!=='maker';$('viewHome').hidden=v!=='home';
   document.querySelectorAll('.view-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
   try{localStorage.setItem(KEY+'-view',v)}catch(e){}
-  if(v==='home'){drawHomeCat();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}}
+  if(v==='home'){drawHomeCat();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
 }
 document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.dataset.view));
 
@@ -772,8 +835,7 @@ document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.datas
   if(saved&&saved.S)await applyData(saved.S,saved);
   else{$('catName').value=S.name;stamp('patch');hist.front.u.length=0;histUI();autoDerive();render()}
   let v='maker';try{v=localStorage.getItem(KEY+'-view')||'maker'}catch(e){}
-  showView(v);
-  booting=false;save();
+  booting=false;showView(v);save();
   setupFirebase();
 })();
 </script>
