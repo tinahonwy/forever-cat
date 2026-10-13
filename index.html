@@ -72,6 +72,10 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .gtext{width:100%;font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px dashed var(--line);border-radius:14px;padding:10px 14px;resize:vertical}
 .gtext:focus{outline:none;border-color:var(--accent);border-style:solid}
 .gsum{background:var(--chip);border-radius:14px;padding:12px 16px;font-size:15px;line-height:1.8}
+.keyrow{display:flex;gap:8px}.keyrow input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px}
+#aiModel{font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px}
+.gsub a{color:var(--accent)}
+#openAI{color:var(--fg)}
 .talk{max-width:640px;margin:16px auto 0;display:flex;flex-direction:column;gap:10px}
 .phrases{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .phrase{font:inherit;font-size:15px;background:var(--panel);color:var(--fg);border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
@@ -263,6 +267,20 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<div class="guide" id="aiPanel" hidden role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+  <div class="gcard">
+    <div class="ghead"><span>AI 說話設定</span><button class="gx" id="aiClose" type="button">關閉</button></div>
+    <h2 id="aiTitle">讓牠用自己的語氣跟你說話</h2>
+    <div class="row"><span class="lbl">模式</span><div class="chips"><button class="chip" id="aiModeCat" type="button">貓語模式</button><button class="chip" id="aiModeAI" type="button">說話模式（AI）</button></div></div>
+    <div class="row"><label class="lbl" for="aiKey">Gemini API 金鑰</label>
+      <div class="keyrow"><input id="aiKey" type="password" autocomplete="off" spellcheck="false" placeholder="貼上金鑰（AQ. 或 AIza 開頭）"><button class="btn" id="aiShow" type="button">顯示</button></div></div>
+    <div class="row"><label class="lbl" for="aiModel">模型</label><select id="aiModel"></select></div>
+    <div class="btns"><button class="btn primary" id="aiSave" type="button">儲存並測試</button><button class="btn" id="aiForget" type="button">清除對話記憶</button></div>
+    <p class="gsum" id="aiMsg" role="status"></p>
+    <p class="gsub">金鑰只存在這台裝置的瀏覽器，不會上傳到 GitHub 或雲端，換裝置要重新貼一次。清空金鑰欄再按儲存就會刪除。還沒有金鑰？到 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免費申請。</p>
+  </div>
+</div>
+
 <section class="home" id="viewHome" hidden>
   <div class="room" id="room">
     <div class="window" aria-hidden="true"><span></span></div>
@@ -287,9 +305,9 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="phrases" id="phrases"></div>
     <form class="sayform" id="sayForm" autocomplete="off">
       <input id="sayInput" maxlength="100" placeholder="跟牠說說話…" aria-label="跟牠說的話">
-      <button class="btn primary" type="submit">說</button>
+      <button class="btn primary" type="submit" id="sayBtn">說</button>
     </form>
-    <div class="ptools"><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
+    <div class="ptools"><button class="linkbtn" id="openAI" type="button">說話模式：貓語</button><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
     <ol class="tlog" id="talkLog" aria-live="polite"></ol>
   </div>
 </section>
@@ -314,7 +332,7 @@ const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
   brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,backEdited:false,
-  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood',personaSet:false,persNotes:{},guideAns:[],phrases:['我回來了','早安','晚安','想你','要吃罐罐嗎','乖乖']};
+  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood',personaSet:false,persNotes:{},guideAns:[],phrases:['我回來了','早安','晚安','想你','要吃罐罐嗎','乖乖'],talkMode:'cat'};
 const KEY='neko-maker-v1';
 let S={...DEF},tab='color',mview='front',booting=true;
 const $=id=>document.getElementById(id);
@@ -925,27 +943,30 @@ function respond(text){
   };
   const r=(asleep&&!['morning','food','home','night'].includes(it)&&Math.random()<.7)?{m:'',th:['（睡夢中耳朵動了一下）'],a:'none',d:`${n}睡得很熟`}:R[it]();
   const th=r.th&&(Math.random()<.6||!r.m)?pick(r.th):null;
-  const fx=()=>{if(r.f)setFace(r.f,2.2);if(r.lean)H.lean=Math.random()<.5?-1:1;if(r.heart)heart();if(r.hop)H.hop=.55;H.wag=1.4;sayBoth(r.m,th)};
+  perform(r,th,asleep);
+  H.mood=Math.min(1,H.mood+.04);note(r.d,3.5);
+  return{m:r.m,th,d:r.d};
+}
+function perform(r,th,asleep,ms){
+  const fx=()=>{if(r.f)setFace(r.f,2.2);if(r.lean)H.lean=Math.random()<.5?-1:1;if(r.heart)heart();if(r.hop)H.hop=.55;H.wag=1.4;sayBoth(r.m,th,ms)};
   if(!asleep)H.tilt=(Math.random()<.5?-1:1)*6;
   switch(r.a){
     case'come':comeOver(fx);break;
-    case'back':if(H.state==='walk')sitDown('front');else setHView('front');sayBoth(r.m,th);setTimeout(()=>{if(H.state==='sit'&&!H.hug){setHView('back');H.timer=5}},900);break;
-    case'bed':if(H.hug){fx();break}sayBoth(r.m,th);startWalk(BED,true);break;
-    case'wake':wake();H.hop=.55;sayBoth(r.m,th);break;
-    case'blink':if(H.state==='walk')sitDown('front');else if(!asleep)setHView('front');if(!asleep)setFace('closed',1.4);sayBoth(r.m,th);break;
-    case'none':sayBoth(r.m,th);break;
+    case'back':if(H.state==='walk')sitDown('front');else setHView('front');sayBoth(r.m,th,ms);setTimeout(()=>{if(H.state==='sit'&&!H.hug){setHView('back');H.timer=5}},900);break;
+    case'bed':if(H.hug){fx();break}sayBoth(r.m,th,ms);startWalk(BED,true);break;
+    case'wake':wake();H.hop=.55;sayBoth(r.m,th,ms);break;
+    case'blink':if(H.state==='walk')sitDown('front');else if(!asleep)setHView('front');if(!asleep)setFace('closed',1.4);sayBoth(r.m,th,ms);break;
+    case'none':sayBoth(r.m,th,ms);break;
     default:if(H.state==='sit'&&H.view==='back')setHView('front');fx();
   }
-  H.mood=Math.min(1,H.mood+.04);note(r.d,3.5);
-  return{m:r.m,th,d:r.d};
 }
 const talkLog=[];
 function drawLog(){const ol=$('talkLog');ol.innerHTML='';talkLog.forEach(([w,t,d])=>{const li=document.createElement('li');li.className=w;
   const who=document.createElement('b');who.textContent=w==='me'?'你':(S.name||'牠');li.append(who,document.createTextNode(t));
   if(d){const s=document.createElement('small');s.textContent=d;li.appendChild(s)}ol.appendChild(li)})}
 let lastSaid='';
-function send(text){text=(text||'').trim();if(!text)return;
-  talkLog.push(['me',text]);const r=respond(text);talkLog.push(['cat',[r.m,r.th].filter(Boolean).join(' ')||'…',r.d]);
+async function send(text){text=(text||'').trim();if(!text||aiBusy)return;
+  talkLog.push(['me',text]);drawLog();const r=(aiOn()&&intentOf(text)!=='danger')?await aiSend(text):respond(text);talkLog.push(['cat',[r.m,r.th].filter(Boolean).join(' ')||'…',r.d]);
   while(talkLog.length>6)talkLog.shift();drawLog();
   lastSaid=text;const sp=$('savePhrase');if(!phrases().includes(text)){sp.textContent=`＋ 把「${text.length>10?text.slice(0,10)+'…':text}」存成快捷按鈕`;sp.hidden=false;clearTimeout(send.t);send.t=setTimeout(()=>{sp.hidden=true},9000)}else sp.hidden=true}
 let editing=false;
@@ -968,6 +989,100 @@ $('savePhrase').onclick=()=>{if(lastSaid&&!phrases().includes(lastSaid)){phrases
 $('sayForm').addEventListener('submit',e=>{e.preventDefault();const i=$('sayInput');send(i.value);i.value=''});
 $('careClose').onclick=()=>{$('care').hidden=true};
 
+/* ===== AI 說話模式（Gemini，金鑰只存在這台裝置） ===== */
+const AIKEY='neko-gemini-key',AIMODEL='neko-gemini-model',CHATKEY='neko-chat-v1';
+const AI_MODELS=[['gemini-3.1-flash-lite','3.1 Flash-Lite（最省、預設）'],['gemini-3.5-flash-lite','3.5 Flash-Lite'],['gemini-3.6-flash','3.6 Flash（比較聰明）']];
+const ls={get:k=>{try{return localStorage.getItem(k)||''}catch(e){return''}},set:(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){}}};
+const aiKey=()=>ls.get(AIKEY).trim(),aiModel=()=>ls.get(AIMODEL)||AI_MODELS[0][0];
+let chatHist=[];try{chatHist=JSON.parse(ls.get(CHATKEY)||'[]')}catch(e){chatHist=[]}
+function pushHist(role,text){chatHist.push({role,text,t:Date.now()});if(chatHist.length>24)chatHist=chatHist.slice(-24);ls.set(CHATKEY,JSON.stringify(chatHist))}
+function aiOn(){return S.talkMode==='ai'&&!!aiKey()}
+function catProfile(){
+  const w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>(l||[]).map(z=>(ZONES.find(x=>x[0]===z)||[,z])[1]).join('、')||'沒有特別';
+  const notes=Object.values(S.persNotes||{}).filter(Boolean);
+  const h=new Date().getHours(),tod=h<5?'深夜':h<11?'早上':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';
+  const st=H.hug?'正被主人抱著':H.state==='sleep'?'正在貓窩睡覺':H.state==='walk'?'在房間裡走動':H.view==='back'?'坐著，屁股對著主人':'坐著發呆';
+  return [`名字：${S.name||'貓咪'}`,
+    `個性：${w3(S.affection,'怕生','普通親人','超級親人')}、${w3(S.temper,'脾氣溫和','有點傲嬌','很有脾氣')}、${w3(S.energy,'懶洋洋','普通活潑','活力過剩')}`,
+    `喜歡被摸：${zn(S.likes)}；討厭被摸：${zn(S.dislikes)}；抱抱：${{love:'很愛抱抱',mood:'看心情',hate:'不喜歡被抱'}[S.hugPref]||'看心情'}`,
+    notes.length?`主人寫下的真實習慣：\n- ${notes.join('\n- ')}`:'',
+    `現在：${tod}，你${st}，心情${H.mood>.7?'很好':H.mood>.4?'普通':'有點差'}。`].filter(Boolean).join('\n')}
+function systemPrompt(){return `你是一隻名叫「${S.name||'貓咪'}」的貓，住在主人為你做的小小網頁房間裡。主人很愛你，這裡是讓主人可以繼續陪伴你的地方。
+
+${catProfile()}
+
+說話規則：
+- 用台灣繁體中文，用貓的視角說話：以自己為中心、在意吃和睡，語氣符合上面的個性（傲嬌就嘴硬，黏人就撒嬌）。
+- 每次只說一句很短的話，最多 25 個字。可以夾一個喵或呼嚕，也可以用括號寫一個小動作。
+- 盡量自然地用上主人寫的習慣，但不要每句都提。
+- 你不知道人類世界很複雜的事，聽不懂時就用貓的方式回應。
+- 不要談論死亡、天堂、彩虹橋，也不要替自己做「我不怪你」「我在天上很好」這類宣告。主人說到這些時，就用貓的方式陪著他，例如靠過去、說「我在這裡」。
+- 如果主人真心問你是不是真的牠，溫柔誠實地說你是主人用回憶做出來陪他的小貓。
+- 主人難過時溫柔陪伴，也可以像貓一樣提醒他去吃飯、睡覺、找朋友聊聊。
+- 只回傳 JSON。action 是你要做的動作：come（走到主人面前）、wag（甩尾巴）、hop（開心跳一下）、blink（慢慢眨眼）、back（屁股轉向主人）、bed（走去貓窩睡）、ear（耳朵轉向主人）、none。face 是表情：normal、happy、closed、annoyed。`}
+async function askGemini(text){
+  const contents=chatHist.slice(-12).map(m=>({role:m.role==='me'?'user':'model',parts:[{text:m.text}]}));
+  contents.push({role:'user',parts:[{text}]});
+  const body={systemInstruction:{parts:[{text:systemPrompt()}]},contents,
+    generationConfig:{temperature:1,maxOutputTokens:200,responseMimeType:'application/json',
+      responseSchema:{type:'OBJECT',properties:{say:{type:'STRING'},action:{type:'STRING',enum:['come','wag','hop','blink','back','bed','ear','none']},face:{type:'STRING',enum:['normal','happy','closed','annoyed']}},required:['say','action','face']}}};
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(aiModel())}:generateContent`,
+      {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':aiKey()},body:JSON.stringify(body),signal:ctl.signal});
+    const j=await res.json().catch(()=>({}));
+    if(!res.ok){const e=new Error((j.error&&j.error.message)||('HTTP '+res.status));e.status=res.status;throw e}
+    const raw=(((j.candidates||[])[0]||{}).content||{}).parts?.map(p=>p.text||'').join('')||'';
+    let o;try{o=JSON.parse(raw)}catch(e){o={say:raw.replace(/[{}"]/g,'').slice(0,40),action:'ear',face:'normal'}}
+    if(!o.say)throw Object.assign(new Error('空的回應'),{status:0});
+    return o;
+  }finally{clearTimeout(to)}
+}
+function aiErrText(e){const s=e.status;
+  if(e.name==='AbortError')return'AI 太久沒回應';
+  if(s===400||s===401||s===403)return'金鑰不被接受（'+String(e.message||'').slice(0,60)+'），請到「AI 說話設定」檢查';
+  if(s===404)return'找不到這個模型，請到設定換一個';
+  if(s===429)return'今天的免費額度用完了或說太快，先用貓語回你';
+  return'連不上 AI（'+(e.message||'網路問題')+'）'}
+let aiBusy=false;
+async function aiSend(text){
+  const n=S.name||'牠',asleep=H.state==='sleep';
+  aiBusy=true;$('sayBtn').disabled=true;
+  if(!asleep){H.tilt=(Math.random()<.5?-1:1)*6;if(H.view==='back'&&H.state==='sit')setHView('front')}
+  sayBoth('…',null,20000);note(`${n}在想要怎麼回你`,20);
+  try{
+    const o=await askGemini(text);
+    pushHist('me',text);pushHist('cat',o.say);
+    const r={m:o.say,a:o.action,f:o.face==='normal'?null:o.face,heart:o.face==='happy'&&Math.random()<.5,d:''};
+    if(r.a==='hop'){r.a='wag';r.hop=1}
+    if(asleep&&!['none','bed','come'].includes(r.a))wake();
+    perform(r,null,asleep,2600+o.say.length*110);note(`${n}回你了`,.01);
+    return{m:o.say,th:null,d:''};
+  }catch(e){
+    const r=respond(text);const msg=aiErrText(e);note(msg,5);
+    return{...r,d:msg};
+  }finally{aiBusy=false;$('sayBtn').disabled=false}
+}
+
+/* 設定視窗 */
+function openAI(){const k=aiKey();$('aiKey').value=k;$('aiKey').type='password';$('aiShow').textContent='顯示';
+  const sel=$('aiModel');sel.innerHTML='';AI_MODELS.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)});sel.value=aiModel();
+  $('aiModeCat').setAttribute('aria-pressed',S.talkMode!=='ai');$('aiModeAI').setAttribute('aria-pressed',S.talkMode==='ai');
+  $('aiMsg').textContent=k?'這台裝置已經存了金鑰':'還沒有金鑰';$('aiPanel').hidden=false}
+function aiLabel(){$('openAI').textContent=aiOn()?'說話模式：AI':'說話模式：貓語'}
+$('openAI').onclick=openAI;
+$('aiClose').onclick=()=>{$('aiPanel').hidden=true};
+$('aiShow').onclick=()=>{const i=$('aiKey');i.type=i.type==='password'?'text':'password';$('aiShow').textContent=i.type==='password'?'顯示':'隱藏'};
+$('aiModeCat').onclick=()=>{S.talkMode='cat';save();openAI();aiLabel()};
+$('aiModeAI').onclick=()=>{if(!$('aiKey').value.trim()&&!aiKey()){$('aiMsg').textContent='先貼上金鑰並按「儲存」，才能開說話模式';return}S.talkMode='ai';save();openAI();aiLabel()};
+$('aiSave').onclick=async()=>{const k=$('aiKey').value.trim();ls.set(AIKEY,k);ls.set(AIMODEL,$('aiModel').value);
+  if(!k){$('aiMsg').textContent='已清除這台裝置的金鑰';if(S.talkMode==='ai'){S.talkMode='cat';save()}aiLabel();return}
+  $('aiMsg').textContent='已儲存，正在測試…';
+  try{const o=await askGemini('（主人剛打開房間）');$('aiMsg').textContent=`成功！${S.name||'牠'}說：「${o.say}」`;
+    if(S.talkMode!=='ai'){S.talkMode='ai';save();$('aiModeCat').setAttribute('aria-pressed',false);$('aiModeAI').setAttribute('aria-pressed',true)}}
+  catch(e){$('aiMsg').textContent=aiErrText(e)}aiLabel()};
+$('aiForget').onclick=()=>{chatHist=[];ls.set(CHATKEY,'');$('aiMsg').textContent='已清除這台裝置上的對話記憶'};
+
 let raf=0,lastTs=0;
 function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
 
@@ -976,7 +1091,7 @@ function showView(v){
   view=v;$('viewMaker').hidden=v!=='maker';$('viewHome').hidden=v!=='home';
   document.querySelectorAll('.view-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
   try{localStorage.setItem(KEY+'-view',v)}catch(e){}
-  if(v==='home'){drawHomeCat();if(!editing)drawPhrases();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
+  if(v==='home'){drawHomeCat();if(!editing)drawPhrases();aiLabel();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
 }
 document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.dataset.view));
 
