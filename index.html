@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>捏貓工作室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: the cat sits on a teal stage (left / top on phone); a tabbed workbench of chips and swatches beside it */
+:root{
+  --bg:#eef2f0;--panel:#ffffff;--line:#d8e1dd;--fg:#2e3936;--muted:#687873;
+  --accent:#d6606a;--accent-soft:#fbe4e5;--chip:#f2f6f4;--stage:#7fc1b5;--stage-ink:#2f5f57;
+  --font-display:"Huninn","Noto Sans TC",system-ui,sans-serif;
+  --font-body:"Noto Sans TC",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#18201e;--panel:#222c29;--line:#33413c;--fg:#e5ede9;--muted:#9aaca5;
+  --accent:#f08c94;--accent-soft:#3d2a2d;--chip:#2a3632;--stage:#5f9f94;--stage-ink:#e3f3ef;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#18201e;--panel:#222c29;--line:#33413c;--fg:#e5ede9;--muted:#9aaca5;
+  --accent:#f08c94;--accent-soft:#3d2a2d;--chip:#2a3632;--stage:#5f9f94;--stage-ink:#e3f3ef;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.6;padding-block:20px 40px;padding-inline:16px}
+.auth{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;color:var(--muted)}
+.auth img{width:28px;height:28px;border-radius:50%}
+.app{max-width:1060px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:28px;align-items:start}
+@media (max-width:820px){.app{grid-template-columns:minmax(0,1fr)}}
+header h1{font-family:var(--font-display);font-weight:400;font-size:28px;margin:0;letter-spacing:.02em;text-wrap:balance}
+header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
+.stage-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.stage{position:relative;width:100%;max-width:560px;aspect-ratio:1;background:var(--stage);border-radius:28px;overflow:hidden;margin-inline:auto}
+.wrap{position:absolute;inset:7%;transform-origin:50% 88%;transition:transform .25s ease}
+.layer{position:absolute;inset:0;width:100%;height:100%;display:block}
+#top{pointer-events:none}
+#paint{-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;touch-action:auto}
+.painting #paint{cursor:crosshair;touch-action:none}
+.eyes{transform-box:fill-box;transform-origin:center;animation:blink 5.5s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96.5%{transform:scaleY(.12)}}
+@media (prefers-reduced-motion:reduce){.eyes{animation:none}.wrap{transition:none}}
+.badge{position:absolute;left:14px;top:14px;background:rgba(255,255,255,.88);color:#2f5f57;font-size:12px;padding:4px 10px;border-radius:999px}
+.badge[hidden]{display:none}
+.namecard{display:flex;align-items:center;gap:10px;max-width:560px;width:100%;margin-inline:auto}
+.namecard label{font-size:13px;color:var(--muted);white-space:nowrap}
+.namecard input{flex:1;min-width:0;font:inherit;font-family:var(--font-display);font-size:20px;color:var(--fg);background:transparent;border:0;border-bottom:2px dashed var(--line);padding:4px 2px}
+.namecard input:focus{outline:none;border-bottom-color:var(--accent)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;min-width:0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab{font:inherit;font-size:14px;border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--panel)}
+.pane{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-direction:column;gap:7px}
+.row>.lbl{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.chips,.swatches{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font:inherit;font-size:14px;background:var(--chip);color:var(--fg);border:1.5px solid transparent;padding:5px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.sw{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);cursor:pointer;padding:0;position:relative}
+.sw[aria-pressed="true"]{outline:2.5px solid var(--accent);outline-offset:2px}
+.custom{width:30px;height:30px;border-radius:50%;border:1.5px dashed var(--muted);padding:0;background:none;cursor:pointer;overflow:hidden}
+.custom::-webkit-color-swatch-wrapper{padding:0}.custom::-webkit-color-swatch{border:0;border-radius:50%}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:420px){.split{grid-template-columns:minmax(0,1fr)}}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.hint{font-size:13px;color:var(--muted);background:var(--chip);padding:8px 12px;border-radius:12px;margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:inherit;font-size:14px;border:1.5px solid var(--line);background:var(--panel);color:var(--fg);padding:6px 14px;border-radius:12px;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.warn{color:var(--accent);border-color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="stage-col">
+    <header>
+      <h1>捏貓工作室</h1>
+      <p>一步步把牠調回來：毛色、花紋、豆豆眼、耳朵和鬍鬚。</p>
+      <div class="auth">
+        <img id="avatar" alt="" hidden>
+        <span id="authStatus">尚未登入，設定只存在這台裝置</span>
+        <button class="btn" id="loginBtn">用 Google 登入</button>
+        <button class="btn" id="logoutBtn" hidden>登出</button>
+      </div>
+    </header>
+    <div class="stage" id="stage">
+      <div class="wrap" id="wrap">
+        <svg class="layer" id="base" viewBox="0 0 300 300" aria-hidden="true"></svg>
+        <canvas class="layer" id="paint" width="600" height="600" aria-label="花紋畫布"></canvas>
+        <svg class="layer" id="top" viewBox="0 0 300 300" aria-hidden="true"></svg>
+      </div>
+      <span class="badge" id="badge" hidden>用手指或滑鼠在貓身上畫花紋</span>
+    </div>
+    <div class="namecard">
+      <label for="catName">牠的名字</label>
+      <input id="catName" maxlength="12" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="color">毛色花紋</button>
+      <button class="tab" role="tab" data-tab="eyes">眼睛鼻子</button>
+      <button class="tab" role="tab" data-tab="ears">耳朵</button>
+      <button class="tab" role="tab" data-tab="body">毛與體型</button>
+      <button class="tab" role="tab" data-tab="whisk">鬍鬚</button>
+    </div>
+
+    <div class="pane" data-pane="color">
+      <div class="row"><span class="lbl">底色</span><div class="swatches" id="sw-base"></div></div>
+      <p class="hint">在左邊的貓身上直接畫花紋，畫到身體外面的部分會自動隱藏。</p>
+      <div class="row"><span class="lbl">筆刷顏色</span><div class="swatches" id="sw-brush"></div></div>
+      <div class="row"><span class="lbl">筆刷大小 <span id="bsVal"></span></span><input type="range" id="brushSize" min="6" max="60" step="1"></div>
+      <div class="split">
+        <div class="row"><span class="lbl">工具（畫錯可用橡皮擦）</span><div class="chips" id="c-tool"></div></div>
+        <div class="row"><span class="lbl">筆觸</span><div class="chips" id="c-soft"></div></div>
+      </div>
+      <div class="row"><span class="lbl">左右對稱</span><div class="chips" id="c-sym"></div></div>
+      <div class="row"><span class="lbl">花紋印章</span>
+        <div class="btns">
+          <button class="btn" data-stamp="tabby">虎斑紋</button>
+          <button class="btn" data-stamp="mask">白口罩</button>
+          <button class="btn" data-stamp="chest">白胸口</button>
+          <button class="btn" data-stamp="patch">大斑塊</button>
+        </div>
+      </div>
+      <div class="btns"><button class="btn" id="undo">↶ 上一步</button><button class="btn" id="redo">下一步 ↷</button><button class="btn warn" id="clearPaint">清除花紋</button></div>
+    </div>
+
+    <div class="pane" data-pane="eyes">
+      <div class="row"><span class="lbl">豆豆眼大小</span><div class="chips" id="c-eyeSize"></div></div>
+      <div class="row"><span class="lbl">異色瞳</span><div class="chips" id="c-eyeLink"></div></div>
+      <div class="row"><span class="lbl" id="eyeLlbl">眼睛顏色</span><div class="swatches" id="sw-eyeL"></div></div>
+      <div class="row" id="eyeRrow"><span class="lbl">右眼顏色</span><div class="swatches" id="sw-eyeR"></div></div>
+      <div class="row"><span class="lbl">鼻子顏色</span><div class="swatches" id="sw-nose"></div></div>
+    </div>
+
+    <div class="pane" data-pane="ears">
+      <div class="row"><span class="lbl">左右耳</span><div class="chips" id="c-earLink"></div></div>
+      <div class="row"><span class="lbl" id="earLlbl">耳朵形狀</span><div class="chips" id="c-earL"></div></div>
+      <div class="row" id="earRrow"><span class="lbl">右耳形狀</span><div class="chips" id="c-earR"></div></div>
+      <p class="hint">剪耳是 TNR 的剪耳標記；有受過傷的貓，可以把單邊設成「沒有耳朵」。</p>
+    </div>
+
+    <div class="pane" data-pane="body">
+      <div class="row"><span class="lbl">毛長</span><div class="chips" id="c-fur"></div></div>
+      <div class="row"><span class="lbl">尾巴</span><div class="chips" id="c-tail"></div></div>
+      <div class="row"><span class="lbl">體型大小 <span id="sizeVal"></span></span><input type="range" id="size" min="0.82" max="1.12" step="0.01"></div>
+      <div class="row"><span class="lbl">胖瘦 <span id="fatVal"></span></span><input type="range" id="fat" min="0.8" max="1.35" step="0.01"></div>
+    </div>
+
+    <div class="pane" data-pane="whisk">
+      <div class="row"><span class="lbl">鬍鬚顏色</span><div class="swatches" id="sw-whColor"></div></div>
+      <div class="split">
+        <div class="row"><span class="lbl">長度</span><div class="chips" id="c-whLen"></div></div>
+        <div class="row"><span class="lbl">形狀</span><div class="chips" id="c-whCurl"></div></div>
+      </div>
+      <div class="row"><span class="lbl">左右根數</span><div class="chips" id="c-whLink"></div></div>
+      <div class="row"><span class="lbl" id="whLlbl">每邊根數</span><div class="chips" id="c-whL"></div></div>
+      <div class="row" id="whRrow"><span class="lbl">右邊根數</span><div class="chips" id="c-whR"></div></div>
+    </div>
+
+    <div class="foot"><span id="saved">設定會自動存在這台裝置</span><button class="btn warn" id="resetAll">全部重來</button></div>
+  </div>
+</div>
+
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {getFirestore,doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+/* ===== 把 Firebase 主控台給你的設定貼在這裡 ===== */
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+/* =============================================== */
+
+const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434',eyeLink:true,nose:'#e88a90',
+  earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
+  whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
+  brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false};
+const KEY='neko-maker-v1';
+let S={...DEF},tab='color';
+const $=id=>document.getElementById(id);
+const base=$('base'),topL=$('top'),cv=$('paint'),ctx=cv.getContext('2d'),wrap=$('wrap');
+
+const BASES=[['奶油','#f6efe3'],['白','#fbf9f5'],['橘','#f6c27f'],['深橘','#e9a35b'],['奶茶','#d9b48f'],['灰','#a3a3a8'],['藍灰','#8d97a5'],['銀','#d3d6da'],['棕','#9b7458'],['黑','#3d3838']];
+const BRUSH=[['橘','#f2b06b'],['深橘','#d98f45'],['黑','#3d3838'],['灰','#8f8f95'],['棕','#8a6448'],['白','#fbf9f5'],['奶油','#f6efe3'],['奶茶','#d9b48f']];
+const EYES=[['黑','#3b3434'],['藍','#4a90c8'],['綠','#4f8a4a'],['黃','#d9a62e'],['琥珀','#c9832f'],['銅','#a8592c'],['淺綠','#9cb94a']];
+const NOSES=[['粉紅','#e88a90'],['淺粉','#f2b5b8'],['磚紅','#c96a5a'],['黑','#3b3434'],['灰','#8a8486']];
+const WHC=[['黑','#3b3434'],['白','#ffffff'],['灰','#9a9a9e'],['米','#e8dcc4']];
+const EARS=[['normal','立耳'],['big','大耳'],['round','小圓耳'],['fold','折耳'],['curl','捲耳'],['tipped','剪耳'],['none','沒有耳朵']];
+const EAR={
+  normal:{d:'M70,98 L80,26 L132,62 Z',a:[90,52]},
+  big:{d:'M62,104 L70,6 L138,58 Z',a:[86,42]},
+  round:{d:'M74,94 C70,60 84,40 104,44 C118,48 128,56 130,64 Z',a:[96,60]},
+  curl:{d:'M70,98 C72,60 78,36 94,24 C104,18 112,26 104,34 C98,40 104,52 132,62 Z',a:[90,58]},
+  tipped:{d:'M70,98 L77,48 L96,40 L132,62 Z',a:[92,62]},
+  fold:{d:'M86,72 C94,54 120,50 134,60 C126,72 108,80 90,84 Z'}
+};
+const MIRROR='translate(300,0) scale(-1,1)';
+
+function rgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return[n>>16&255,n>>8&255,n&255]}
+function lum(h){const[r,g,b]=rgb(h);return(.299*r+.587*g+.114*b)/255}
+function mix(a,b,t){const A=rgb(a),B=rgb(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+function rgba(h,a){const[r,g,b]=rgb(h);return`rgba(${r},${g},${b},${a})`}
+
+function shapes(fill){
+  const hf=1+(S.fat-1)*.35,brx=62*S.fat,tw={none:12,short:16,medium:22,long:28}[S.fur];
+  const fr={medium:7,long:11}[S.fur]||0;let s='';
+  const tail={long:'M196,250 C240,252 252,214 240,184',short:'M198,250 C214,252 222,244 220,234',kirin:'M196,250 C232,252 242,228 234,212 C230,204 240,198 244,206'}[S.tail];
+  if(tail)s+=`<path d="${tail}" stroke="${fill}" stroke-width="${tw}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s+=`<ellipse cx="150" cy="208" rx="${brx}" ry="54" fill="${fill}"/>`;
+  if(fr)[-40,-18,4,26].forEach(a=>{const r=a*Math.PI/180,x=brx*Math.cos(r),y=208+54*Math.sin(r);s+=`<circle cx="${150+x}" cy="${y}" r="${fr}" fill="${fill}"/><circle cx="${150-x}" cy="${y}" r="${fr}" fill="${fill}"/>`});
+  [['L',S.earL],['R',S.earR]].forEach(([side,t])=>{if(EAR[t]&&t!=='fold')s+=`<path d="${EAR[t].d}" fill="${fill}" stroke="${fill}" stroke-width="8" stroke-linejoin="round"${side==='R'?` transform="${MIRROR}"`:''}/>`});
+  s+=`<ellipse cx="150" cy="122" rx="${88*hf}" ry="70" fill="${fill}"/>`;
+  if(fr){[14,34,54].forEach(a=>{const r=a*Math.PI/180,x=88*hf*Math.cos(r),y=122+70*Math.sin(r);s+=`<circle cx="${150+x}" cy="${y}" r="${fr+1}" fill="${fill}"/><circle cx="${150-x}" cy="${y}" r="${fr+1}" fill="${fill}"/>`});
+    if(S.fur==='long')[-26,-9,9,26].forEach(dx=>s+=`<circle cx="${150+dx}" cy="190" r="12" fill="${fill}"/>`)}
+  return s;
+}
+function topLayer(){
+  const hf=1+(S.fat-1)*.35,dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#3b3434',shade=mix(S.base,dark?'#ffffff':'#000000',.13);
+  let s='';
+  [['L',S.earL],['R',S.earR]].forEach(([side,t])=>{const e=EAR[t];if(!e)return;const m=side==='R'?MIRROR+' ':'';
+    if(t==='fold')s+=`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round" transform="${m}"/>`;
+    else s+=`<path d="${e.d}" fill="#f6b3b8" stroke="#f6b3b8" stroke-width="3" stroke-linejoin="round" transform="${m}translate(${e.a[0]},${e.a[1]}) scale(.45) translate(${-e.a[0]},${-e.a[1]})"/>`});
+  if(S.fur==='none')s+=`<path d="M132,72 q18,-7 36,0 M138,82 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  s+=`<path d="M136,228 L136,256 M164,228 L164,256" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>`;
+  s+=`<ellipse cx="104" cy="148" rx="13" ry="8" fill="#f4a6a8"/><ellipse cx="196" cy="148" rx="13" ry="8" fill="#f4a6a8"/>`;
+  const r={S:6,M:8.5,L:11}[S.eyeSize];
+  s+=`<g class="eyes"><circle cx="120" cy="130" r="${r}" fill="${S.eyeL}"/><circle cx="180" cy="130" r="${r}" fill="${S.eyeLink?S.eyeL:S.eyeR}"/></g>`;
+  s+=`<ellipse cx="150" cy="142" rx="5.5" ry="4" fill="${S.nose}"/>`;
+  s+=`<path d="M138,148 q6,8 12,0 q6,8 12,0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  const L={short:24,mid:36,long:50}[S.whLen];
+  const wh=(side,n)=>{let p='';for(let i=0;i<n;i++){const ang=(n===1?0:-14+28*i/(n-1))*Math.PI/180,y0=140+(i-(n-1)/2)*6,sx=150+side*74*hf,ex=sx+side*L*Math.cos(ang),ey=y0+L*Math.sin(ang);
+    if(S.whCurl){const mx=(sx+ex)/2,my=(y0+ey)/2-9;p+=`M${sx},${y0} Q${mx},${my} ${ex},${ey+3} `}else p+=`M${sx},${y0} L${ex},${ey} `}return p};
+  const d=wh(-1,S.whL)+wh(1,S.whLink?S.whL:S.whR);
+  if(d)s+=`<path d="${d}" stroke="${S.whColor}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  return s;
+}
+function render(){
+  base.innerHTML=shapes(S.base);topL.innerHTML=topLayer();
+  const m=`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">${shapes('#000')}</svg>`)}")`;
+  cv.style.webkitMaskImage=m;cv.style.maskImage=m;
+  wrap.style.transform=`scale(${S.size})`;
+  $('eyeRrow').hidden=S.eyeLink;$('eyeLlbl').textContent=S.eyeLink?'眼睛顏色':'左眼顏色';
+  $('earRrow').hidden=S.earLink;$('earLlbl').textContent=S.earLink?'耳朵形狀':'左耳形狀';
+  $('whRrow').hidden=S.whLink;$('whLlbl').textContent=S.whLink?'每邊根數':'左邊根數';
+  $('bsVal').textContent=S.brushSize;$('sizeVal').textContent=Math.round(S.size*100)+'%';$('fatVal').textContent=S.fat<.92?'偏瘦':S.fat>1.15?'圓滾滾':S.fat>1.04?'微胖':'標準';
+  refreshControls();save();
+}
+
+/* controls */
+const controls=[];
+function swatches(id,list,key,onSet){const el=$(id);
+  list.forEach(([n,c])=>{const b=document.createElement('button');b.className='sw';b.style.background=c;b.setAttribute('aria-label',n);b.title=n;
+    b.onclick=()=>{set(key,c,onSet)};el.appendChild(b);controls.push(()=>b.setAttribute('aria-pressed',S[key].toLowerCase()===c.toLowerCase())) });
+  const inp=document.createElement('input');inp.type='color';inp.className='custom';inp.id=id+'-custom';inp.title='自訂顏色';inp.setAttribute('aria-label','自訂顏色');
+  inp.oninput=()=>set(key,inp.value,onSet);el.appendChild(inp);controls.push(()=>{inp.value=S[key]});
+}
+function chips(id,list,key,onSet){const el=$(id);
+  list.forEach(([v,n])=>{const b=document.createElement('button');b.className='chip';b.textContent=n;b.onclick=()=>set(key,v,onSet);el.appendChild(b);
+    controls.push(()=>b.setAttribute('aria-pressed',S[key]===v))});
+}
+function set(k,v,onSet){S[k]=v;if(onSet)onSet(v);render()}
+function refreshControls(){controls.forEach(f=>f())}
+
+swatches('sw-base',BASES,'base');
+swatches('sw-brush',BRUSH,'brush',()=>{S.eraser=false});
+chips('c-tool',[[false,'筆刷'],[true,'橡皮擦']],'eraser');
+chips('c-soft',[[true,'柔和'],[false,'銳利']],'soft');
+chips('c-sym',[[false,'關閉'],[true,'開啟']],'sym');
+chips('c-eyeSize',[['S','小'],['M','中'],['L','大']],'eyeSize');
+chips('c-eyeLink',[[true,'兩眼同色'],[false,'左右不同色']],'eyeLink',v=>{if(!v&&S.eyeR===S.eyeL)S.eyeR=S.eyeL==='#4a90c8'?'#d9a62e':'#4a90c8'});
+swatches('sw-eyeL',EYES,'eyeL');swatches('sw-eyeR',EYES,'eyeR');swatches('sw-nose',NOSES,'nose');
+chips('c-earLink',[[true,'兩邊一樣'],[false,'左右分開']],'earLink',v=>{if(v)S.earR=S.earL});
+chips('c-earL',EARS,'earL',v=>{if(S.earLink)S.earR=v});chips('c-earR',EARS,'earR');
+chips('c-fur',[['none','無毛'],['short','短毛'],['medium','中長毛'],['long','長毛']],'fur');
+chips('c-tail',[['long','長尾'],['short','短尾'],['kirin','麒麟尾'],['nottail','沒有尾巴']].map(x=>x[0]==='nottail'?['none',x[1]]:x),'tail');
+swatches('sw-whColor',WHC,'whColor');
+chips('c-whLen',[['short','短'],['mid','中'],['long','長']],'whLen');
+chips('c-whCurl',[[false,'直的'],[true,'微捲']],'whCurl');
+chips('c-whLink',[[true,'兩邊一樣'],[false,'左右分開']],'whLink',v=>{if(v)S.whR=S.whL});
+const nums=[0,1,2,3,4,5].map(n=>[n,String(n)]);
+chips('c-whL',nums,'whL',v=>{if(S.whLink)S.whR=v});chips('c-whR',nums,'whR');
+['brushSize','size','fat'].forEach(k=>{const el=$(k);el.oninput=()=>{S[k]=+el.value;render()};controls.push(()=>{el.value=S[k]})});
+$('catName').oninput=e=>{S.name=e.target.value;save()};
+
+/* tabs */
+function showTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
+  document.querySelectorAll('.pane').forEach(p=>p.hidden=p.dataset.pane!==t);
+  $('stage').classList.toggle('painting',t==='color');$('badge').hidden=t!=='color';try{localStorage.setItem(KEY+'-tab',t)}catch(e){}}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+/* painting */
+const undoStack=[],redoStack=[];
+function snap(){return ctx.getImageData(0,0,600,600)}
+function histUI(){$('undo').disabled=!undoStack.length;$('redo').disabled=!redoStack.length}
+function pushUndo(){try{undoStack.push(snap());if(undoStack.length>30)undoStack.shift();redoStack.length=0}catch(e){}histUI()}
+function undo(){const d=undoStack.pop();if(!d)return;redoStack.push(snap());ctx.putImageData(d,0,0);histUI();save()}
+function redo(){const d=redoStack.pop();if(!d)return;undoStack.push(snap());ctx.putImageData(d,0,0);histUI();save()}
+document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
+  if(k==='z'&&!e.shiftKey){e.preventDefault();undo()}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();redo()}});
+function pt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*600,y:(e.clientY-r.top)/r.height*600}}
+function dab1(x,y){const rad=S.brushSize;ctx.globalCompositeOperation=S.eraser?'destination-out':'source-over';
+  const c=S.eraser?'#000000':S.brush;
+  if(S.soft){const g=ctx.createRadialGradient(x,y,0,x,y,rad);g.addColorStop(0,rgba(c,1));g.addColorStop(.5,rgba(c,.9));g.addColorStop(1,rgba(c,0));ctx.fillStyle=g}
+  else ctx.fillStyle=c;
+  ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation='source-over'}
+function dab(p){dab1(p.x,p.y);if(S.sym)dab1(600-p.x,p.y)}
+let painting=false,last=null;
+cv.addEventListener('pointerdown',e=>{if(tab!=='color')return;e.preventDefault();pushUndo();painting=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}last=pt(e);dab(last)});
+cv.addEventListener('pointermove',e=>{if(!painting)return;const p=pt(e),dx=p.x-last.x,dy=p.y-last.y,dist=Math.hypot(dx,dy),step=Math.max(2,S.brushSize*.22);
+  if(dist<step)return;const n=Math.floor(dist/step);for(let i=1;i<=n;i++)dab({x:last.x+dx*i/n,y:last.y+dy*i/n});last=p});
+['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,()=>{if(painting){painting=false;save()}}));
+$('undo').onclick=undo;$('redo').onclick=redo;histUI();
+let clearArm=false;
+$('clearPaint').onclick=e=>{if(!clearArm){clearArm=true;e.target.textContent='再按一次清除';setTimeout(()=>{clearArm=false;e.target.textContent='清除花紋'},2500);return}
+  pushUndo();ctx.clearRect(0,0,600,600);clearArm=false;e.target.textContent='清除花紋';save()};
+
+function stamp(kind){pushUndo();ctx.save();ctx.scale(2,2);ctx.globalCompositeOperation='source-over';
+  const lines=(arr,w,c)=>{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';arr.forEach(([a,b,c2,d])=>{ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c2,d);ctx.stroke()})};
+  const mir=arr=>arr.concat(arr.map(([a,b,c,d])=>[300-a,b,300-c,d]));
+  if(kind==='tabby'){lines([[138,58,140,80],[150,54,150,82],[162,58,160,80]],7,S.brush);
+    lines(mir([[62,108,84,114],[60,124,82,126],[96,190,110,198],[92,206,108,212],[94,222,108,226]]),7,S.brush);
+    lines([[230,238,242,232],[242,216,254,216],[238,198,250,194]],7,S.brush)}
+  if(kind==='mask'){ctx.fillStyle='#fbf9f5';ctx.fill(new Path2D('M150,100 C132,116 106,136 108,154 C120,178 180,178 192,154 C194,136 168,116 150,100 Z'))}
+  if(kind==='chest'){ctx.fillStyle='#fbf9f5';ctx.beginPath();ctx.ellipse(150,226,30,36,0,0,Math.PI*2);ctx.fill()}
+  if(kind==='patch'){ctx.fillStyle=S.brush;[[108,86,32,24,-.4],[196,220,26,22,.3],[244,196,16,24,0],[110,236,18,14,0]].forEach(([x,y,a,b,r])=>{ctx.beginPath();ctx.ellipse(x,y,a,b,r,0,Math.PI*2);ctx.fill()})}
+  ctx.restore();save()}
+document.querySelectorAll('[data-stamp]').forEach(b=>b.onclick=()=>stamp(b.dataset.stamp));
+
+/* save / load */
+let saveT,user=null,db=null,auth=null,loading=false;
+const status=t=>{$('saved').textContent=t};
+function save(){clearTimeout(saveT);saveT=setTimeout(doSave,user?1200:400)}
+async function doSave(){
+  const data={S,paint:cv.toDataURL()};
+  try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
+  if(user&&db&&!loading){
+    if(data.paint.length>900000){status('花紋太複雜，超過雲端單筆上限，請清掉一些');return}
+    try{await setDoc(doc(db,'users',user.uid,'cats','main'),{settings:S,paint:data.paint,updatedAt:serverTimestamp()});status('已同步到雲端')}
+    catch(e){status('雲端儲存失敗（'+(e.code||e.message)+'）')}
+  }else if(!user)status('已自動儲存在這台裝置')
+}
+function applyData(settings,paint){
+  return new Promise(res=>{
+    S={...DEF,...settings};$('catName').value=S.name;ctx.clearRect(0,0,600,600);(undoStack.length=0,redoStack.length=0,histUI());
+    if(!paint){render();return res()}
+    const img=new Image();img.onload=()=>{ctx.drawImage(img,0,0);render();res()};img.onerror=()=>{render();res()};img.src=paint;
+  })
+}
+let resetArm=false;
+$('resetAll').onclick=e=>{if(!resetArm){resetArm=true;e.target.textContent='再按一次確認';setTimeout(()=>{resetArm=false;e.target.textContent='全部重來'},2500);return}
+  resetArm=false;e.target.textContent='全部重來';S={...DEF};$('catName').value=S.name;ctx.clearRect(0,0,600,600);(undoStack.length=0,redoStack.length=0,histUI());stamp('patch');(undoStack.length=0,redoStack.length=0,histUI());render()};
+
+/* auth */
+function setupFirebase(){
+  if(!firebaseConfig.apiKey){$('loginBtn').hidden=true;$('authStatus').textContent='還沒設定 Firebase，設定只存在這台裝置';return}
+  const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);
+  $('loginBtn').onclick=async()=>{try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){$('authStatus').textContent='登入失敗（'+(e.code||e.message)+'）'}};
+  $('logoutBtn').onclick=()=>signOut(auth);
+  onAuthStateChanged(auth,async u=>{
+    user=u;$('loginBtn').hidden=!!u;$('logoutBtn').hidden=!u;$('avatar').hidden=!(u&&u.photoURL);
+    if(!u){$('authStatus').textContent='尚未登入，設定只存在這台裝置';return}
+    if(u.photoURL)$('avatar').src=u.photoURL;
+    $('authStatus').textContent=(u.displayName||u.email)+'，已登入';
+    loading=true;status('正在讀取雲端的貓…');
+    try{
+      const snap=await getDoc(doc(db,'users',u.uid,'cats','main'));
+      if(snap.exists()){const d=snap.data();await applyData(d.settings,d.paint)}
+      loading=false;doSave();
+    }catch(e){loading=false;status('讀取雲端失敗（'+(e.code||e.message)+'）')}
+  });
+}
+
+(async function init(){
+  let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  let t='color';try{t=localStorage.getItem(KEY+'-tab')||'color'}catch(e){}
+  showTab(t);
+  if(saved&&saved.S)await applyData(saved.S,saved.paint);
+  else{$('catName').value=S.name;stamp('patch');(undoStack.length=0,redoStack.length=0,histUI());render()}
+  setupFirebase();
+})();
+</script>
+</body>
+</html>
