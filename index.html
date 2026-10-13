@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>捏貓工作室</title>
+<title>貓的工作室</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -76,6 +76,16 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 #aiModel{font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px}
 .gsub a{color:var(--accent)}
 #openAI{color:var(--fg)}
+.memlist h3{font-size:14px;font-weight:500;color:var(--muted);margin:10px 0 4px}
+.memlist ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.memlist li{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;background:var(--chip);border-radius:12px;padding:8px 8px 8px 12px;font-size:14.5px}
+.memlist li span{flex:1;min-width:0}.memlist li small{color:var(--muted);font-size:12px;order:3;flex-basis:100%}
+.memlist li button{border:0;background:none;color:var(--muted);cursor:pointer;padding:2px 6px;font-size:14px}
+.memadd{display:flex;gap:6px;flex-wrap:wrap}.memadd select,.memadd input{font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px}
+.memadd input{flex:1;min-width:10em}
+.notlike{margin-left:auto;font:inherit;font-size:12px;background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.fix{flex-basis:100%;display:flex;gap:6px;margin-top:4px}.fix input{flex:1;min-width:0;font:inherit;font-size:14.5px;color:var(--fg);background:var(--panel);border:1.5px solid var(--accent);border-radius:10px;padding:6px 10px}
+#guestPanel p{margin:0;line-height:1.7}
 .talk{max-width:640px;margin:16px auto 0;display:flex;flex-direction:column;gap:10px}
 .phrases{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .phrase{font:inherit;font-size:15px;background:var(--panel);color:var(--fg);border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
@@ -111,6 +121,9 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 @media (prefers-reduced-motion:reduce){.eyes{animation:none}.wrap{transition:none}}
 .badge{position:absolute;left:14px;top:14px;background:rgba(255,255,255,.88);color:#2f5f57;font-size:12px;padding:4px 10px;border-radius:999px}
 .badge[hidden]{display:none}
+.stagebar{display:flex;justify-content:center;gap:4px;align-self:center;background:var(--panel);border:1.5px solid var(--line);padding:4px;border-radius:999px;margin-top:-2px}
+.sbtn{font:inherit;font-size:15px;border:0;background:transparent;color:var(--fg);padding:8px 16px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.sbtn:hover:not(:disabled){background:var(--chip)}.sbtn:disabled{opacity:.35;cursor:default}.sbtn[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
 .namecard{display:flex;align-items:center;gap:10px;max-width:560px;width:100%;margin-inline:auto}
 .namecard label{font-size:13px;color:var(--muted);white-space:nowrap}
 .namecard input{flex:1;min-width:0;font:inherit;font-family:var(--font-display);font-size:20px;color:var(--fg);background:transparent;border:0;border-bottom:2px dashed var(--line);padding:4px 2px}
@@ -145,8 +158,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
 <header class="top">
   <div>
-    <h1>捏貓工作室</h1>
-    <p>一步步把牠調回來：毛色、花紋、豆豆眼、耳朵和鬍鬚。</p>
+    <h1>貓的工作室</h1>
     <div class="auth">
       <img id="avatar" alt="" hidden>
       <span id="authStatus">尚未登入，設定只存在這台裝置</span>
@@ -172,6 +184,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       </div>
       <span class="badge" id="badge" hidden>用手指或滑鼠在貓身上畫花紋</span>
     </div>
+    <div class="stagebar" id="stagebar" hidden><button class="sbtn" id="undo" type="button">↶ 上一步</button><button class="sbtn" id="eraseQuick" type="button">橡皮擦</button><button class="sbtn" id="redo" type="button">下一步 ↷</button></div>
     <div class="viewpick"><div class="chips" id="c-mview" role="group" aria-label="角度"></div><span class="vhint" id="vhint"></span></div>
     <div class="namecard">
       <label for="catName">牠的名字</label>
@@ -207,7 +220,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
           <button class="btn" data-stamp="patch">大斑塊</button>
         </div>
       </div>
-      <div class="btns"><button class="btn" id="undo">↶ 上一步</button><button class="btn" id="redo">下一步 ↷</button><button class="btn warn" id="clearPaint">清除花紋</button><button class="btn" id="rederive" hidden>從正面重新帶入</button></div>
+      <div class="btns"><button class="btn warn" id="clearPaint">清除花紋</button><button class="btn" id="rederive" hidden>從正面重新帶入</button></div>
     </div>
 
     <div class="pane" data-pane="eyes">
@@ -282,6 +295,28 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<div class="guide" id="memPanel" hidden role="dialog" aria-modal="true" aria-labelledby="memTitle">
+  <div class="gcard">
+    <div class="ghead"><span>記憶本</span><button class="gx" id="memClose" type="button">關閉</button></div>
+    <h2 id="memTitle">牠記得的事</h2>
+    <p class="gsub">你平常跟牠說的話會在背景慢慢整理成記憶，牠說話時會參考這些。記錯的可以按 ✕ 刪掉。</p>
+    <div class="gsum"><b>互動習慣</b><br><span id="memHabit"></span></div>
+    <div class="memlist" id="memList"></div>
+    <form class="memadd" id="memAdd"><select id="memCat" aria-label="分類"></select><input id="memText" maxlength="120" placeholder="自己補充一件關於牠的事" aria-label="補充的記憶"><button class="btn primary" type="submit">記住</button></form>
+    <div class="btns"><button class="btn" id="memLearn" type="button">現在整理</button></div>
+    <p class="gsub" id="memMsg" role="status"></p>
+  </div>
+</div>
+
+<div class="guide" id="guestPanel" hidden role="dialog" aria-modal="true" aria-labelledby="guestTitle">
+  <div class="gcard">
+    <h2 id="guestTitle">你現在是訪客模式</h2>
+    <p>沒有登入的話，你捏的貓、個性和記憶<b>只會存在這台裝置的這個瀏覽器</b>。換手機、換瀏覽器、用無痕視窗或清除瀏覽資料，牠就會不見。</p>
+    <p>用 Google 登入後，牠會存到雲端，任何裝置登入都找得到牠。</p>
+    <div class="gfoot"><button class="btn" id="guestStay" type="button">先用訪客模式</button><button class="btn primary" id="guestLogin" type="button">用 Google 登入</button></div>
+  </div>
+</div>
+
 <section class="home" id="viewHome" hidden>
   <div class="room" id="room">
     <div class="window" aria-hidden="true"><span></span></div>
@@ -308,7 +343,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       <input id="sayInput" maxlength="100" placeholder="跟牠說說話…" aria-label="跟牠說的話">
       <button class="btn primary" type="submit" id="sayBtn">說</button>
     </form>
-    <div class="ptools"><button class="linkbtn" id="openAI" type="button">說話模式：貓語</button><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
+    <div class="ptools"><button class="linkbtn" id="openAI" type="button">說話模式：貓語</button><button class="linkbtn" id="openMem" type="button">牠的記憶本</button><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
     <ol class="tlog" id="talkLog" aria-live="polite"></ol>
   </div>
 </section>
@@ -333,7 +368,7 @@ const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
   brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,backEdited:false,
-  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood',personaSet:false,persNotes:{},guideAns:[],phrases:['我回來了','早安','晚安','想你','要吃罐罐嗎','乖乖'],talkMode:'cat'};
+  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood',personaSet:false,persNotes:{},guideAns:[],phrases:['我回來了','早安','晚安','想你','要吃罐罐嗎','乖乖'],talkMode:'cat',learned:[],stats:{}};
 const KEY='neko-maker-v1';
 let S={...DEF},tab='color',mview='front',booting=true;
 const $=id=>document.getElementById(id);
@@ -489,6 +524,7 @@ function refreshControls(){controls.forEach(f=>f())}
 swatches('sw-base',BASES,'base');
 swatches('sw-brush',BRUSH,'brush',()=>{S.eraser=false});
 chips('c-tool',[[false,'筆刷'],[true,'橡皮擦']],'eraser');
+$('eraseQuick').onclick=()=>set('eraser',!S.eraser);controls.push(()=>$('eraseQuick').setAttribute('aria-pressed',!!S.eraser));
 chips('c-soft',[[true,'柔和'],[false,'銳利']],'soft');
 chips('c-sym',[[false,'關閉'],[true,'開啟']],'sym');
 chips('c-eyeSize',[['S','小'],['M','中'],['L','大']],'eyeSize');
@@ -517,7 +553,7 @@ $('catName').oninput=e=>{S.name=e.target.value;save()};
 /* tabs */
 function showTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
   document.querySelectorAll('.pane').forEach(p=>p.hidden=p.dataset.pane!==t);
-  $('stage').classList.toggle('painting',t==='color');$('badge').hidden=t!=='color';try{localStorage.setItem(KEY+'-tab',t)}catch(e){}}
+  $('stage').classList.toggle('painting',t==='color');$('badge').hidden=t!=='color';$('stagebar').hidden=t!=='color';try{localStorage.setItem(KEY+'-tab',t)}catch(e){}}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
 /* ===== 側面、背面花紋：從正面自動帶入 ===== */
@@ -622,6 +658,7 @@ const status=t=>{$('saved').textContent=t};
 function save(){clearTimeout(saveT);saveT=setTimeout(doSave,user?1200:400)}
 async function doSave(){
   if(booting)return;
+  if(!user)guestDirty=true;
   const data={S,paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintBack:CV.back.toDataURL()};
   try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
   if(user&&db&&!loading){
@@ -646,6 +683,12 @@ $('resetAll').onclick=e=>{if(!resetArm){resetArm=true;e.target.textContent='再�
   VIEWS.forEach(v=>{CV[v].getContext('2d').clearRect(0,0,600,600);hist[v].u.length=0;hist[v].r.length=0});
   setMView('front');stamp('patch');hist.front.u.length=0;histUI();render()};
 
+/* 訪客模式提醒 */
+let guestDirty=false;
+$('guestStay').onclick=()=>{$('guestPanel').hidden=true};
+$('guestLogin').onclick=()=>{$('guestPanel').hidden=true;$('loginBtn').click()};
+window.addEventListener('beforeunload',e=>{if(!user&&firebaseConfig.apiKey&&guestDirty){e.preventDefault();e.returnValue=''}});
+
 /* auth */
 function setupFirebase(){
   if(!firebaseConfig.apiKey){$('loginBtn').hidden=true;$('authStatus').textContent='還沒設定 Firebase，設定只存在這台裝置';return}
@@ -654,7 +697,9 @@ function setupFirebase(){
   $('logoutBtn').onclick=()=>signOut(auth);
   onAuthStateChanged(auth,async u=>{
     user=u;$('loginBtn').hidden=!!u;$('logoutBtn').hidden=!u;$('avatar').hidden=!(u&&u.photoURL);
-    if(!u){$('authStatus').textContent='尚未登入，設定只存在這台裝置';return}
+    if(!u){$('authStatus').textContent='尚未登入，設定只存在這台裝置';let shown=false;try{shown=sessionStorage.getItem('neko-guest-seen')}catch(e){}
+      if(!shown){try{sessionStorage.setItem('neko-guest-seen','1')}catch(e){}$('guestPanel').hidden=false}return}
+    $('guestPanel').hidden=true;
     if(u.photoURL)$('avatar').src=u.photoURL;
     $('authStatus').textContent=(u.displayName||u.email)+'，已登入';
     loading=true;status('正在讀取雲端的貓…');
@@ -862,7 +907,7 @@ function petTick(zone){if(touch)touch.zones.add(zone);
 let touch=null;
 function touchEnd(cancel){if(!touch)return;clearTimeout(touch.hold);const t=touch,wasHug=t.mode==='hug'&&H.hug;
   if(wasHug){H.hug=false;H.faceT=.01;say('喵～',1200);sitDown('front')}touch=null;hc.classList.remove('petting');lastInteract=Date.now();idleFired=false;
-  const ev=touchStory(t,wasHug);if(ev&&Math.random()<.7)setTimeout(()=>aiEvent(ev,{allowMove:!t.bad&&!t.hugFail}),900)}
+  recordPet(t,wasHug);const ev=touchStory(t,wasHug);if(ev&&Math.random()<.7)setTimeout(()=>aiEvent(ev,{allowMove:!t.bad&&!t.hugFail}),900)}
 function startHug(){
   const n=S.name||'牠',pref=S.hugPref||'mood',aff=P01('affection');
   let p=pref==='love'?.9:pref==='hate'?.1:.25+H.mood*.45+aff*.25;if(H.cooldown>0)p*=.3;
@@ -964,11 +1009,13 @@ function perform(r,th,asleep,ms){
   }
 }
 const talkLog=[];
-function drawLog(){const ol=$('talkLog');ol.innerHTML='';talkLog.forEach(([w,t,d])=>{const li=document.createElement('li');li.className=w;
+function drawLog(){const ol=$('talkLog');ol.innerHTML='';talkLog.forEach(([w,t,d],i)=>{const li=document.createElement('li');li.className=w;
   const who=document.createElement('b');who.textContent=w==='me'?'你':(S.name||'牠');if(w!=='ev')li.append(who);li.append(document.createTextNode(t));
+  if(w==='cat'){const fx=document.createElement('button');fx.type='button';fx.className='notlike';fx.textContent='不像牠';fx.onclick=()=>openFix(i,li);li.appendChild(fx)}
   if(d){const s=document.createElement('small');s.textContent=d;li.appendChild(s)}ol.appendChild(li)})}
 let lastSaid='';
 async function send(text){text=(text||'').trim();if(!text)return;if(aiBusy){note(`${S.name||'牠'}還在想，等一下再說`,2);return}lastInteract=Date.now();idleFired=false;
+  if(intentOf(text)!=='danger')notePending(text);
   talkLog.push(['me',text]);drawLog();const r=(aiOn()&&intentOf(text)!=='danger')?await aiSend(text):respond(text);talkLog.push(['cat',[r.m,r.th].filter(Boolean).join(' ')||'…',r.d]);
   while(talkLog.length>6)talkLog.shift();drawLog();
   lastSaid=text;const sp=$('savePhrase');if(!phrases().includes(text)){sp.textContent=`＋ 把「${text.length>10?text.slice(0,10)+'…':text}」存成快捷按鈕`;sp.hidden=false;clearTimeout(send.t);send.t=setTimeout(()=>{sp.hidden=true},9000)}else sp.hidden=true}
@@ -1012,7 +1059,7 @@ function catProfile(){
     `現在：${tod}，你${st}，心情${H.mood>.7?'很好':H.mood>.4?'普通':'有點差'}。`].filter(Boolean).join('\n')}
 function systemPrompt(){return `你是一隻名叫「${S.name||'貓咪'}」的貓，住在主人為你做的小小網頁房間裡。主人很愛你，這裡是讓主人可以繼續陪伴你的地方。
 
-${catProfile()}
+${catProfile()}${learnedPrompt()}
 
 說話規則：
 - 用台灣繁體中文，用貓的視角說話：以自己為中心、在意吃和睡，語氣符合上面的個性（傲嬌就嘴硬，黏人就撒嬌）。
@@ -1128,6 +1175,7 @@ function touchStory(t,wasHug){
 }
 function onHomeOpen(){
   const last=+ls.get('neko-last-seen')||0,gap=Date.now()-last;ls.set('neko-last-seen',String(Date.now()));
+  if(!last||gap>=20*60*1000){recordVisit();if(pending.length>=2)setTimeout(()=>maybeLearn(true),8000)}
   if(!aiOn()||(last&&gap<20*60*1000))return;
   const g=!last?'這是主人第一次來看你':gap<72e5?`主人離開了大約 ${Math.round(gap/6e4)} 分鐘`:gap<1728e5?`主人大約 ${Math.round(gap/36e5)} 小時沒來了`:`主人已經 ${Math.round(gap/864e5)} 天沒來看你了`;
   setTimeout(()=>aiEvent(`（主人打開房間來看你了。${g}）`,{force:true}),1500);
@@ -1135,6 +1183,112 @@ function onHomeOpen(){
 setInterval(()=>{if(view!=='home'||document.hidden)return;ls.set('neko-last-seen',String(Date.now()));
   if(!idleFired&&H.state!=='sleep'&&!H.hug&&Date.now()-lastInteract>4*60*1000){idleFired=true;aiEvent('（主人在旁邊，但已經好幾分鐘沒有理你了）')}},15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view==='home')onHomeOpen()});
+
+/* ===== 日積月累：從主人的話和互動裡，慢慢學會真正的牠 ===== */
+const PENDKEY='neko-pending',FACT_MAX=80,NEWS_MAX=8;
+const FACT_CATS=['習性','喜好','討厭','回憶','口頭禪與叫聲','修正','主人近況'];
+let pending=[];try{pending=JSON.parse(ls.get(PENDKEY)||'[]')}catch(e){pending=[]}
+const today=()=>new Date().toISOString().slice(0,10);
+function learned(){if(!Array.isArray(S.learned))S.learned=[];return S.learned}
+function addFact(c,t,src){t=String(t||'').trim().slice(0,120);if(!t)return false;const L=learned();
+  if(L.some(f=>f.t===t))return false;L.push({c:FACT_CATS.includes(c)?c:'習性',t,d:today(),s:src||'auto'});
+  const news=L.filter(f=>f.c==='主人近況');if(news.length>NEWS_MAX)L.splice(L.indexOf(news[0]),1);
+  while(L.length>FACT_MAX){const i=L.findIndex(f=>f.c!=='修正'&&f.s!=='me');L.splice(i<0?0:i,1)}
+  return true}
+function notePending(t){pending.push({t,ts:Date.now()});if(pending.length>60)pending=pending.slice(-60);ls.set(PENDKEY,JSON.stringify(pending));memLabel();maybeLearn()}
+async function gemJSON(sys,user,schema){
+  const order=[aiModel(),...AI_MODELS.map(m=>m[0]).filter(m=>m!==aiModel())];let last;
+  for(let i=0;i<order.length;i++){
+    try{const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(order[i])}:generateContent`,
+        {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':aiKey()},
+         body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:'user',parts:[{text:user}]}],
+           generationConfig:{temperature:.2,maxOutputTokens:800,responseMimeType:'application/json',responseSchema:schema}})});
+      const j=await res.json().catch(()=>({}));
+      if(!res.ok){const e=new Error((j.error&&j.error.message)||('HTTP '+res.status));e.status=res.status;throw e}
+      return JSON.parse((((j.candidates||[])[0]||{}).content||{}).parts.map(p=>p.text||'').join(''))}
+    catch(e){last=e;if(!busyErr(e))throw e;await new Promise(r=>setTimeout(r,800))}}
+  throw last}
+const ZCODES=ZONES.map(z=>z[0]);
+const LEARN_SCHEMA={type:'OBJECT',properties:{
+  facts:{type:'ARRAY',items:{type:'OBJECT',properties:{c:{type:'STRING',enum:FACT_CATS.filter(c=>c!=='修正')},t:{type:'STRING'}},required:['c','t']}},
+  affection:{type:'INTEGER'},temper:{type:'INTEGER'},energy:{type:'INTEGER'},
+  likes:{type:'ARRAY',items:{type:'STRING',enum:ZCODES}},dislikes:{type:'ARRAY',items:{type:'STRING',enum:ZCODES}}},required:['facts']};
+let learning=false;
+async function maybeLearn(force){
+  if(learning||!aiKey()||!pending.length||(!force&&pending.length<6))return;
+  learning=true;const batch=pending.slice(),n=S.name||'貓咪';
+  const known=learned().map(f=>`[${f.c}] ${f.t}`).join('\n')||'（還沒有）';
+  const sys=`你在幫一位主人整理他已故愛貓「${n}」的資料。主人在一個網頁裡跟虛擬的${n}聊天，下面是主人最近說的話（只有主人的話，虛擬貓的回答是 AI 編的，所以不在這裡）。
+請只根據主人明確說出的內容，找出關於「真實的${n}」的新資訊，用台灣繁體中文、每則一句話記下，用「牠」稱呼貓：
+- 習性：作息、行為、小動作（例如：每天早上五點會踩主人的臉叫人起床）
+- 喜好、討厭：食物、玩具、地方、聲音、人
+- 回憶：主人提到的過去的事
+- 口頭禪與叫聲：牠的叫聲、主人對牠的暱稱、主人常對牠說的話
+- 主人近況：主人提到自己最近的生活（例如最近工作很忙、下週要出差），只記和陪伴有關、不敏感的事
+不要推測、不要把主人的情緒或問句當成事實、不要重複已經記得的事。沒有新資訊就回傳空陣列。
+affection（親人）、temper（脾氣）、energy（活潑）是對個性的微調，範圍 -5 到 5，只有主人明確描述牠的個性時才填非 0，例如「你以前超黏我」affection +3。
+likes、dislikes 只在主人明確說到牠喜歡或討厭被摸哪裡時才填，代碼：${ZONES.map(([z,zn])=>z+'='+zn).join('、')}。
+
+已經記得的事：
+${known}`;
+  try{
+    const o=await gemJSON(sys,batch.map(b=>'・'+b.t).join('\n'),LEARN_SCHEMA);
+    let added=0;(o.facts||[]).forEach(f=>{if(addFact(f.c,f.t,'auto'))added++});
+    const cl=v=>Math.max(-5,Math.min(5,Math.round(+v||0))),bound=v=>Math.max(0,Math.min(100,v));
+    ['affection','temper','energy'].forEach(k=>{const d=cl(o[k]);if(d)S[k]=bound((S[k]??50)+d)});
+    (o.likes||[]).forEach(z=>{if(ZCODES.includes(z)&&!S.likes.includes(z)){S.likes=[...S.likes,z];S.dislikes=S.dislikes.filter(x=>x!==z)}});
+    (o.dislikes||[]).forEach(z=>{if(ZCODES.includes(z)&&!S.dislikes.includes(z)){S.dislikes=[...S.dislikes,z];S.likes=S.likes.filter(x=>x!==z)}});
+    pending=pending.slice(batch.length);ls.set(PENDKEY,JSON.stringify(pending));
+    S.learnedAt=Date.now();render();memLabel();if(!$('memPanel').hidden)drawMem(added?`整理好了，新記住 ${added} 件事`:'整理好了，這次沒有新的事');
+  }catch(e){if(!$('memPanel').hidden)drawMem('整理失敗：'+aiErrText(e))}
+  finally{learning=false}
+}
+/* 互動習慣 */
+function stats(){const st=S.stats&&typeof S.stats==='object'?S.stats:{};st.pet=st.pet||{};st.hours=Array.isArray(st.hours)&&st.hours.length===24?st.hours:Array(24).fill(0);st.hugs=st.hugs||0;st.visits=st.visits||0;S.stats=st;return st}
+function recordPet(t,wasHug){const st=stats(),secs=Math.max(0,(performance.now()-t.t0)/1000);
+  if(wasHug)st.hugs++;
+  if(t.mode==='pet'&&t.zones&&t.zones.size){const each=secs/t.zones.size;t.zones.forEach(z=>{st.pet[z]=Math.round(((st.pet[z]||0)+each)*10)/10})}
+  save()}
+function recordVisit(){const st=stats();st.visits++;st.hours[new Date().getHours()]++;save()}
+function habitText(){const st=stats(),n=S.name||'牠';const out=[];
+  const top=Object.entries(st.pet).sort((a,b)=>b[1]-a[1]).filter(([,v])=>v>=15).slice(0,2).map(([z])=>ZONE_NAME[z]);
+  if(top.length)out.push(`主人最常摸你的${top.join('和')}`);
+  if(st.visits>=5){const b=[['早上',5,11],['中午',11,14],['下午',14,18],['晚上',18,23],['深夜',23,29]].map(([l,a,z])=>{let c=0;for(let h=a;h<z;h++)c+=st.hours[h%24];return[l,c]}).sort((a,b)=>b[1]-a[1])[0];
+    if(b[1]>=3)out.push(`主人通常${b[0]}來看你`)}
+  if(st.hugs>=5)out.push(`主人常常抱你（已經抱了 ${st.hugs} 次）`);
+  return out.join('，')}
+function learnedPrompt(){const L=learned(),facts=L.filter(f=>f.c!=='主人近況'),news=L.filter(f=>f.c==='主人近況');let s='';
+  if(facts.length)s+=`\n從主人平常的話裡記住的真實的你（比上面的設定更準，請以這些為主）：\n${facts.slice(-50).map(f=>`- [${f.c}] ${f.t}`).join('\n')}`;
+  if(news.length)s+=`\n主人最近的生活（可以偶爾關心，但不要每句都提）：\n${news.map(f=>`- ${f.t}（${f.d}）`).join('\n')}`;
+  const h=habitText();if(h)s+=`\n你觀察到的主人習慣：${h}。`;
+  return s}
+
+/* 「不像牠」修正 */
+function openFix(i,li){if(li.querySelector('.fix'))return;const cat=talkLog[i][1];let prev='';for(let k=i-1;k>=0;k--)if(talkLog[k][0]!=='cat'){prev=talkLog[k][1];break}
+  const f=document.createElement('form');f.className='fix';const inp=document.createElement('input');inp.id='fix-'+i;inp.maxLength=100;inp.placeholder=`真正的${S.name||'牠'}會怎麼做、怎麼回？`;inp.setAttribute('aria-label','真正的牠會怎麼反應');
+  const ok=document.createElement('button');ok.className='btn primary';ok.textContent='記住';f.append(inp,ok);li.appendChild(f);inp.focus();
+  f.onsubmit=e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;addFact('修正',`${prev?`主人${/^主人/.test(prev)?'那時':'說「'+prev.slice(0,30)+'」'}時，`:''}真正的牠會：${v}（不是「${cat.slice(0,30)}」）`,'me');save();memLabel();
+    f.replaceWith(Object.assign(document.createElement('small'),{textContent:`記住了，${S.name||'牠'}下次會更像牠`}))}}
+
+/* 記憶本 */
+function memLabel(){const n=learned().length;$('openMem').textContent=`${S.name||'牠'}的記憶本（${n}）`}
+function drawMem(msg){
+  const box=$('memList');box.innerHTML='';const L=learned();
+  $('memMsg').textContent=msg||(pending.length?`還有 ${pending.length} 句你說過的話等著整理${aiKey()?'，累積到 6 句會自動整理':'（需要先在 AI 說話設定貼上金鑰）'}`:'目前沒有待整理的話');
+  $('memLearn').disabled=!pending.length||!aiKey()||learning;
+  const h=habitText();$('memHabit').textContent=h?h.replace(/你/g,S.name||'牠')+'。':'互動還不夠多，再陪牠一陣子就會看出習慣。';
+  if(!L.length){const p=document.createElement('p');p.className='gsub';p.textContent='還沒有記住的事。平常跟牠聊天時聊聊真正的牠，或在下面自己寫。';box.appendChild(p)}
+  FACT_CATS.forEach(c=>{const items=L.map((f,i)=>[f,i]).filter(([f])=>f.c===c);if(!items.length)return;
+    const h3=document.createElement('h3');h3.textContent=c;box.appendChild(h3);
+    const ul=document.createElement('ul');items.forEach(([f,i])=>{const li=document.createElement('li');const sp=document.createElement('span');sp.textContent=f.t;
+      const dt=document.createElement('small');dt.textContent=f.d+(f.s==='me'?'・你寫的':'');
+      const del=document.createElement('button');del.type='button';del.textContent='✕';del.setAttribute('aria-label','刪除這條記憶');
+      del.onclick=()=>{L.splice(i,1);save();memLabel();drawMem()};li.append(sp,dt,del);ul.appendChild(li)});box.appendChild(ul)})}
+$('openMem').onclick=()=>{const sel=$('memCat');if(!sel.options.length)FACT_CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});drawMem();$('memPanel').hidden=false};
+$('memClose').onclick=()=>{$('memPanel').hidden=true};
+$('memLearn').onclick=()=>{$('memMsg').textContent='整理中…';$('memLearn').disabled=true;maybeLearn(true)};
+$('memAdd').addEventListener('submit',e=>{e.preventDefault();const t=$('memText').value.trim();if(!t)return;if(addFact($('memCat').value,t,'me')){save();memLabel()}$('memText').value='';drawMem('記住了')});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&pending.length>=2)maybeLearn(true)});
 
 let raf=0,lastTs=0;
 function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
@@ -1144,7 +1298,7 @@ function showView(v){
   view=v;$('viewMaker').hidden=v!=='maker';$('viewHome').hidden=v!=='home';
   document.querySelectorAll('.view-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
   try{localStorage.setItem(KEY+'-view',v)}catch(e){}
-  if(v==='home'){drawHomeCat();if(!editing)drawPhrases();aiLabel();if(!booting)onHomeOpen();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
+  if(v==='home'){drawHomeCat();if(!editing)drawPhrases();aiLabel();memLabel();if(!booting)onHomeOpen();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
 }
 document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.dataset.view));
 
