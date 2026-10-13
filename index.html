@@ -878,7 +878,17 @@ function step(dt){
   if(H.faceT>0){H.faceT-=dt;if(H.faceT<=0&&!H.hug)setFace(H.state==='sleep'?'closed':'normal')}
   H.hugK+=((H.hug?1:0)-H.hugK)*Math.min(1,dt*6);
   if(H.wriggle>0){H.wriggle-=dt;if(H.wriggle<=0){H.hop=.55;walkAway();note(`${S.name||'牠'}逃走了`)}return}
-  if(H.hug){H.x+=(.5-H.x)*Math.min(1,dt*3);if(Math.random()<dt*1.5)heart();H.mood=Math.min(1,H.mood+dt*.05);return}
+  if(H.hug){const rw=room.clientWidth,w=hc.offsetWidth;
+    if(H.dragX!=null){const tx=Math.min(1,Math.max(0,(H.dragX-w/2)/Math.max(1,rw-w))),nx=H.x+(tx-H.x)*Math.min(1,dt*10);
+      H.dragV=H.dragV*.8+.2*((nx-H.x)*(rw-w)/Math.max(dt,1e-3));H.x=nx;
+      const tc=Math.max(0,Math.min(1.5,(H.dragY0-H.dragY)/w+.15));H.carry=(H.carry||0)+(tc-(H.carry||0))*Math.min(1,dt*10)}
+    const sp=Math.abs(H.dragV||0),calm=sp<w*.3,stress=1+Math.min(3,sp/(w*1.5))+((H.carry||0)>1?.6:0);
+    H.patience-=dt*stress;
+    if(calm&&H.patience>3&&Math.random()<dt*1.2)heart();
+    if(calm)H.mood=Math.min(1,H.mood+dt*.04);
+    if(!H.warned&&H.patience<1.6){H.warned=true;setFace('annoyed',2);say('喵…',900)}
+    if(H.patience<=0)escapeHug();
+    return}
   if(touch&&touch.mode==='pet')return;
   if(H.jump){const J=H.jump;J.t+=dt;const a=J.t-J.pre,p=Math.max(0,Math.min(1,a/J.dur));
     H.jumpPhase=a<0?'crouch':p<1?'air':'land';H.jumpP=p;
@@ -946,15 +956,16 @@ function apply(dt){
   if(hiding){sy*=.94;if(H.hideK==='box')y+=w*.07}
   hc.style.zIndex=hiding?'0':'';
   if(H.wriggle>0)rot+=Math.sin(t*28)*9*(m||.4);
-  const hk=H.hugK,sc=1+.42*hk;sx*=sc;sy*=sc;y+=w*.12*hk;
+  const hk=H.hugK,sc=1+.25*hk;sx*=sc;sy*=sc;if(H.hug){y+=(H.carry||0)*w;rot+=Math.max(-14,Math.min(14,(H.dragV||0)*.012))*(m||.4);if(H.warned)rot+=Math.sin(t*22)*4*(m||.4)}
   const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';hCat.style.transformOrigin='35% 90%';
   hCat.style.transform=(flip?'scaleX(-1) ':'')+(v==='side'&&H.state==='scratch'?'rotate(-14deg)':'');
   hc.style.bottom=(rh*.11-w*.107)+'px';
   hc.style.transform=`translate(${px+wig}px,${-(bob+y)}px) rotate(${rot}deg) scale(${sx},${sy})`;
+  const lift=Math.max(0,y-(st!=='jump'&&!H.hug?H.y*w:0)),shEl=hc.querySelector('.shadow');if(shEl){const k=Math.min(.6,lift/w*.5);shEl.style.transform=`translateY(${lift/sy}px) scale(${1-k})`;shEl.style.opacity=String(1-k*.8)}
   hc.classList.toggle('held',H.hug);
   layoutRoom(rw,rh,w);
   const n=S.name||'牠';
-  const txt=H.statusT>0?H.statusTxt:H.hug?`${n}讓你抱著`:st==='chase'?`${n}在追逗貓棒`:st==='stalk'?`${n}壓低身體慢慢靠近`:st==='ready'?(wandOn&&FT.hidden?`${n}盯著逗貓棒消失的地方`:`${n}盯著逗貓棒，屁股扭扭`):st==='bat'?`${n}站起來用爪子撥`:st==='leap'?`${n}跳起來抓！`:st==='grab'?`${n}抱著逗貓棒踢踢`:st==='dash'?`${n}衝出來了！`:st==='search'?`${n}在找逗貓棒`:st==='hide'?(hiding?`${n}躲在${ROOM_ITEMS[H.hideK]?.[0]||'家具'}後面偷看`:`${n}偷偷躲起來`):walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
+  const txt=H.statusT>0?H.statusTxt:H.hug?(H.warned?`${n}開始扭來扭去，想下來了`:Math.abs(H.dragV||0)>w*.3?`${n}被你抱著走來走去`:`${n}讓你抱著`):st==='chase'?`${n}在追逗貓棒`:st==='stalk'?`${n}壓低身體慢慢靠近`:st==='ready'?(wandOn&&FT.hidden?`${n}盯著逗貓棒消失的地方`:`${n}盯著逗貓棒，屁股扭扭`):st==='bat'?`${n}站起來用爪子撥`:st==='leap'?`${n}跳起來抓！`:st==='grab'?`${n}抱著逗貓棒踢踢`:st==='dash'?`${n}衝出來了！`:st==='search'?`${n}在找逗貓棒`:st==='hide'?(hiding?`${n}躲在${ROOM_ITEMS[H.hideK]?.[0]||'家具'}後面偷看`:`${n}偷偷躲起來`):walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
   if(!bubble.hidden)bubble.classList.toggle('flip',px+w*.58+bubble.offsetWidth>rw-6);
 }
@@ -998,13 +1009,19 @@ function petTick(zone){if(touch)touch.zones.add(zone);
 }
 let touch=null;
 function touchEnd(cancel){if(!touch)return;clearTimeout(touch.hold);const t=touch,wasHug=t.mode==='hug'&&H.hug;
-  if(wasHug){H.hug=false;H.faceT=.01;say('喵～',1200);sitDown('front')}touch=null;hc.classList.remove('petting');lastInteract=Date.now();idleFired=false;
-  recordPet(t,wasHug);const ev=touchStory(t,wasHug);if(ev&&Math.random()<.7)setTimeout(()=>aiEvent(ev,{allowMove:!t.bad&&!t.hugFail}),900)}
+  if(wasHug){H.hug=false;H.faceT=.01;say('喵～',1200);const c=H.carry||0;H.carry=0;H.dragV=0;sitDown('front');if(c>.05){H.y=c;jumpTo(0,()=>sitDown('front'),{pre:0,dur:.35})}}touch=null;hc.classList.remove('petting');lastInteract=Date.now();idleFired=false;
+  recordPet(t,wasHug);const ev=touchStory(t,wasHug);if(ev&&Math.random()<.7)setTimeout(()=>aiEvent(ev,{allowMove:!t.bad&&!t.hugFail&&!t.escaped}),900)}
+function hugPatience(){const pref=S.hugPref||'mood',aff=P01('affection'),tmp=P01('temper');
+  const b=pref==='love'?40:pref==='hate'?2.5:5+aff*10+H.mood*6;return b*(1.3-tmp*.6)*(.8+Math.random()*.4)}
+function escapeHug(){const n=S.name||'牠';H.hug=false;H.y=H.carry||0;H.carry=0;H.dragV=0;H.wriggle=.7;H.state='sit';
+  setFace('annoyed',1.4);say('喵嗚！放開我',1400);note(`${n}掙脫跳下來了`,2.5);H.mood-=.06;H.cooldown=4;
+  if(touch){touch.escaped=true;touch.mode='done';clearTimeout(touch.hold)}}
 function startHug(){
   const n=S.name||'牠',pref=S.hugPref||'mood',aff=P01('affection');
   let p=pref==='love'?.9:pref==='hate'?.1:.25+H.mood*.45+aff*.25;if(H.cooldown>0)p*=.3;
   if(H.state==='sleep')p*=.6;
-  if(Math.random()<p){H.y=0;H.jump=null;H.inBox=false;H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart()}
+  if(Math.random()<p){const rr=room.getBoundingClientRect();H.dragX=touch.x-rr.left;H.dragY=H.dragY0=touch.y-rr.top;H.carry=0;H.dragV=0;H.warned=false;H.patience=hugPatience();
+    H.y=0;H.jump=null;H.inBox=false;H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart()}
   else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done';touch.hugFail=true}
 }
 hc.addEventListener('pointerdown',e=>{
@@ -1014,6 +1031,7 @@ hc.addEventListener('pointerdown',e=>{
 });
 hc.addEventListener('pointermove',e=>{
   if(!touch)return;const d=Math.hypot(e.clientX-touch.x,e.clientY-touch.y);touch.x=e.clientX;touch.y=e.clientY;touch.moved+=d;
+  if(touch.mode==='hug'&&H.hug){const rr=room.getBoundingClientRect();H.dragX=e.clientX-rr.left;H.dragY=e.clientY-rr.top;touch.dragDist=(touch.dragDist||0)+d;return}
   if(touch.mode==='tap'&&touch.moved>14){touch.mode='pet';clearTimeout(touch.hold);hc.classList.add('petting')}
   if(touch.mode!=='pet')return;
   const z=zoneAt(e);H.petRecent+=d;touch.acc+=d;
@@ -1264,6 +1282,8 @@ async function aiEvent(desc,{allowMove=true,force=false}={}){
 function touchStory(t,wasHug){
   const secs=Math.max(1,Math.round((performance.now()-t.t0)/1000));
   if(t.hugFail)return'（主人想把你抱起來，但你扭來扭去跳走了）';
+  if(t.escaped)return`（主人抱著你${(t.dragDist||0)>300?'在房間裡走來走去':''}，你抱不住了，掙脫跳下來）`;
+  if(wasHug&&(t.dragDist||0)>300)return`（主人抱著你在房間裡走來走去，大約 ${secs} 秒）`;
   if(wasHug)return`（主人把你抱在懷裡大約 ${secs} 秒${secs>8?'，抱了好久':''}）`;
   if(t.mode!=='pet'||!t.zones||!t.zones.size)return null;
   const zn=[...t.zones].map(z=>ZONE_NAME[z]).join('、');
@@ -1408,7 +1428,7 @@ function layoutRoom(rw,rh,w){
   BED=R.bed.x;
 }
 function jumpTo(y,cb,o={}){const up=y>H.y;H.jump={from:H.y,to:y,t:0,pre:o.pre??(up?.28:.12),dur:o.dur??(up?.5:.42),post:.2,pause:o.pause||0,cb};H.state='jump';if(H.face!=='normal')setFace('normal')}
-function jumpDown(cb){if(H.y>.8)jumpTo(.56,()=>jumpTo(0,cb),{pause:.15});else jumpTo(0,cb)}
+function jumpDown(cb){const R=roomCfg(),onTree=R.tree.on&&Math.abs(H.x-R.tree.x)<.04;if(H.y>.8&&onTree)jumpTo(.56,()=>jumpTo(0,cb),{pause:.15});else jumpTo(0,cb,onTree?{}:{pre:.05,dur:.35})}
 function goSleep(){if(roomCfg().bed.on)startWalk(BED,true);else{if(H.y>.05||H.inBox){startWalk(H.x,true);return}H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setFace('closed');say('Zzz…')}}
 function sideSpot(k,off){const rw=room.clientWidth,w=hc.offsetWidth,R=roomCfg(),f=off*w/Math.max(1,rw-w);
   let t=R[k].x-f,face=1;if(t<.02){t=R[k].x+f;face=-1}return[Math.min(.98,Math.max(.02,t)),face]}
