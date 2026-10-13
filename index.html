@@ -1020,7 +1020,16 @@ ${catProfile()}
 - 如果主人真心問你是不是真的牠，溫柔誠實地說你是主人用回憶做出來陪他的小貓。
 - 主人難過時溫柔陪伴，也可以像貓一樣提醒他去吃飯、睡覺、找朋友聊聊。
 - 只回傳 JSON。action 是你要做的動作：come（走到主人面前）、wag（甩尾巴）、hop（開心跳一下）、blink（慢慢眨眼）、back（屁股轉向主人）、bed（走去貓窩睡）、ear（耳朵轉向主人）、none。face 是表情：normal、happy、closed、annoyed。`}
+const busyErr=e=>e&&(e.status===503||e.status===500||e.status===502||/high demand|overloaded|unavailable/i.test(e.message||''));
+let modelOverride='';
 async function askGemini(text){
+  const order=[aiModel(),...AI_MODELS.map(m=>m[0]).filter(m=>m!==aiModel())];let last;
+  for(let i=0;i<order.length;i++){
+    try{const o=await askGeminiOnce(text,order[i]);modelOverride=i?order[i]:'';return o}
+    catch(e){last=e;if(!busyErr(e))throw e;await new Promise(r=>setTimeout(r,i?600:1200))}
+  }
+  throw last}
+async function askGeminiOnce(text,model){
   const contents=chatHist.slice(-12).map(m=>({role:m.role==='me'?'user':'model',parts:[{text:m.text}]}));
   contents.push({role:'user',parts:[{text}]});
   const body={systemInstruction:{parts:[{text:systemPrompt()}]},contents,
@@ -1028,7 +1037,7 @@ async function askGemini(text){
       responseSchema:{type:'OBJECT',properties:{say:{type:'STRING'},action:{type:'STRING',enum:['come','wag','hop','blink','back','bed','ear','none']},face:{type:'STRING',enum:['normal','happy','closed','annoyed']}},required:['say','action','face']}}};
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(aiModel())}:generateContent`,
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
       {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':aiKey()},body:JSON.stringify(body),signal:ctl.signal});
     const j=await res.json().catch(()=>({}));
     if(!res.ok){const e=new Error((j.error&&j.error.message)||('HTTP '+res.status));e.status=res.status;throw e}
@@ -1042,6 +1051,7 @@ function aiErrText(e){const s=e.status;
   if(e.name==='AbortError')return'AI 太久沒回應';
   if(s===400||s===401||s===403)return'金鑰不被接受（'+String(e.message||'').slice(0,60)+'），請到「AI 說話設定」檢查';
   if(s===404)return'找不到這個模型，請到設定換一個';
+  if(busyErr(e))return'Google 的 AI 現在太忙，三個模型都試過了，等一下再試，先用貓語回你';
   if(s===429)return'今天的免費額度用完了或說太快，先用貓語回你';
   return'連不上 AI（'+(e.message||'網路問題')+'）'}
 let aiBusy=false;
@@ -1078,7 +1088,7 @@ $('aiModeAI').onclick=()=>{if(!$('aiKey').value.trim()&&!aiKey()){$('aiMsg').tex
 $('aiSave').onclick=async()=>{const k=$('aiKey').value.trim();ls.set(AIKEY,k);ls.set(AIMODEL,$('aiModel').value);
   if(!k){$('aiMsg').textContent='已清除這台裝置的金鑰';if(S.talkMode==='ai'){S.talkMode='cat';save()}aiLabel();return}
   $('aiMsg').textContent='已儲存，正在測試…';
-  try{const o=await askGemini('（主人剛打開房間）');$('aiMsg').textContent=`成功！${S.name||'牠'}說：「${o.say}」`;
+  try{const o=await askGemini('（主人剛打開房間）');$('aiMsg').textContent=`成功！${S.name||'牠'}說：「${o.say}」`+(modelOverride?`（${aiModel()} 太忙，這次改用 ${modelOverride}）`:'');
     if(S.talkMode!=='ai'){S.talkMode='ai';save();$('aiModeCat').setAttribute('aria-pressed',false);$('aiModeAI').setAttribute('aria-pressed',true)}}
   catch(e){$('aiMsg').textContent=aiErrText(e)}aiLabel()};
 $('aiForget').onclick=()=>{chatHist=[];ls.set(CHATKEY,'');$('aiMsg').textContent='已清除這台裝置上的對話記憶'};
