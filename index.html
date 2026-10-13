@@ -55,6 +55,9 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 #nb-full{background:#e9a35b}#nb-water{background:#6fa3c8}#nb-mood{background:#e5707b}#nb-energy{background:#8bbf6a}
 .meter b.low{opacity:.55}
 #it-plate,#it-fountain{pointer-events:auto;cursor:pointer}
+#it-fountain .rip{opacity:0;transform-box:fill-box;transform-origin:center}
+#it-fountain.drinking .rip{animation:rip .9s ease-out infinite}#it-fountain.drinking .rip2{animation-delay:.45s}
+@keyframes rip{from{transform:scale(.4);opacity:.95}to{transform:scale(2.6);opacity:0}}
 #it-fountain .water{stroke-dasharray:4 4;animation:flow .6s linear infinite}@keyframes flow{to{stroke-dashoffset:-8}}
 .cananim{position:absolute;z-index:60;pointer-events:none;transform:scale(.4);opacity:0;transition:transform .35s,opacity .35s}
 .cananim.s1{transform:scale(1);opacity:1}.cananim .lid{transform-origin:3px 8px;transition:transform .35s}.cananim.s2 .lid{transform:rotate(-125deg)}
@@ -62,7 +65,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .heart.pop{color:#2e3936;font-size:18px;background:#fff;border-radius:10px;padding:2px 8px;font-family:var(--font-display)}
 .room .wandbtn{top:30%}.room .canbtn{top:54%}.room .takebtn{top:78%}
 @media (max-width:480px){.wandbtn{padding:5px 6px 4px;font-size:11px;border-radius:14px;right:8px}.wandbtn svg{width:22px;height:22px}}
-@media (prefers-reduced-motion:reduce){#it-fountain .water{animation:none}}
+@media (prefers-reduced-motion:reduce){#it-fountain .water,#it-fountain .rip{animation:none}}
 .z1{z-index:1}
 #it-tree,#it-scratch,#it-boxback,#it-boxfront,.bed{pointer-events:auto;cursor:pointer}
 .room.wand,.room.wand *{cursor:none!important}.room.wand{touch-action:none}.room.wand .wandbtn,.room.wand .wandbtn *{cursor:pointer!important}
@@ -407,7 +410,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="item z1" id="it-boxback" hidden aria-hidden="true"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><path d="M8,26 L0,6 L32,12 L32,26Z" fill="#c98f55"/><path d="M92,26 L100,6 L68,12 L68,26Z" fill="#c98f55"/><rect x="6" y="16" width="88" height="14" fill="#8a5a33"/></svg></div>
     <div class="item z3" id="it-boxfront" hidden aria-hidden="true"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><rect x="6" y="24" width="88" height="38" fill="#d9a066"/><rect x="6" y="22" width="88" height="5" fill="#e6b47e"/><rect x="44" y="27" width="12" height="35" fill="#c98f55" opacity=".5"/></svg></div>
     <div class="item z3" id="it-plate" hidden role="button" aria-label="盤子"><svg viewBox="0 0 44 12" preserveAspectRatio="none"><g id="plateFood"><ellipse cx="22" cy="6" rx="12" ry="5" fill="#c98b6b"/><ellipse cx="18" cy="4.5" rx="4" ry="1.6" fill="#dca386"/><ellipse cx="26" cy="5.5" rx="3" ry="1.3" fill="#b5735a"/></g><ellipse cx="22" cy="8.5" rx="21" ry="3.5" fill="#dcd6cc"/><ellipse cx="22" cy="7.8" rx="17" ry="2.4" fill="#f6f2ec"/></svg></div>
-    <div class="item z1" id="it-fountain" hidden role="button" aria-label="飲水機"><svg viewBox="0 0 42 50" preserveAspectRatio="none"><ellipse cx="21" cy="46" rx="20" ry="4" fill="#b9dcef"/><rect x="5" y="22" width="32" height="26" rx="8" fill="#7fb3d5"/><rect x="5" y="22" width="32" height="7" rx="3.5" fill="#9fc8e3"/><ellipse cx="21" cy="24" rx="12" ry="3" fill="#d6eefa"/><path class="water" d="M21,9 C21,15 21,19 21,23" stroke="#d6eefa" stroke-width="3" stroke-linecap="round" fill="none"/><circle cx="21" cy="8" r="3" fill="#5f9fc8"/></svg></div>
+    <div class="item z1" id="it-fountain" hidden role="button" aria-label="飲水機"><svg viewBox="0 0 42 50" preserveAspectRatio="none"><ellipse cx="21" cy="46" rx="20" ry="4" fill="#b9dcef"/><rect x="5" y="22" width="32" height="26" rx="8" fill="#7fb3d5"/><rect x="5" y="22" width="32" height="7" rx="3.5" fill="#9fc8e3"/><ellipse cx="21" cy="24" rx="12" ry="3" fill="#d6eefa"/><path class="water" d="M21,9 C21,15 21,19 21,23" stroke="#d6eefa" stroke-width="3" stroke-linecap="round" fill="none"/><ellipse class="rip" cx="21" cy="24" rx="4" ry="1.2" fill="none" stroke="#ffffff" stroke-width=".9"/><ellipse class="rip rip2" cx="21" cy="24" rx="4" ry="1.2" fill="none" stroke="#ffffff" stroke-width=".9"/><circle cx="21" cy="8" r="3" fill="#5f9fc8"/></svg></div>
     <div class="cananim" id="canAnim" hidden aria-hidden="true"><svg viewBox="0 0 26 30" width="100%" height="100%" overflow="visible"><rect x="2" y="8" width="22" height="20" rx="3" fill="#c9d3dc"/><rect x="2" y="13" width="22" height="9" fill="#e5707b"/><path d="M8,17 l3,-2 l3,2 l3,-2" stroke="#fff" stroke-width="1.4" fill="none"/><g class="lid"><ellipse cx="13" cy="8" rx="11" ry="3" fill="#aeb9c4"/><ellipse cx="13" cy="7.6" rx="8" ry="2" fill="#d7dee5"/><rect x="11" y="5" width="5" height="2.4" rx="1.2" fill="#8d99a6"/></g><g class="spill"><ellipse cx="13" cy="9" rx="8" ry="2.4" fill="#c98b6b"/></g></svg></div>
     <div class="item z3" id="it-bowl" hidden role="button" aria-label="飯碗，點一下倒飼料"><svg viewBox="0 0 42 18" preserveAspectRatio="none"><g id="food"><ellipse cx="21" cy="5" rx="15" ry="4.5" fill="#b77a4a"/><circle cx="14" cy="3.5" r="1.6" fill="#8f5a33"/><circle cx="24" cy="2.8" r="1.6" fill="#8f5a33"/><circle cx="29" cy="5" r="1.4" fill="#8f5a33"/></g><path d="M3,7 L39,7 L34,18 L8,18Z" fill="#6fa3c8"/><rect x="0" y="5" width="42" height="4" rx="2" fill="#8bbbe0"/></svg></div>
 
@@ -593,6 +596,7 @@ function featureParts(v='front',opt={}){
     F.face+=`<g class="eyes">${eye(250,132,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
     F.face+=`<ellipse cx="281" cy="146" rx="4.5" ry="3.5" fill="${S.nose}"/>`;
     F.face+=`<path d="M279,152 q-3,6 -10,3" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    F.face+=`<path class="tongue" d="M272,154 q5,1 5,8 q-1,5 -5,4 q-3,-5 0,-12Z" fill="#f08a96" opacity="0"/>`;
     F.face+=wpath(whisk(264,150,1,wR,L));
   }
   if(v==='back'){
@@ -985,7 +989,7 @@ function apply(dt){
     if(scr){setT('legNF',`rotate(${-105+k*18} 193 232)`);setT('legFF',`rotate(${-95-k*18} 213 232)`);setT('legNB','');setT('legFB','')}
     else{setT('legNF',`rotate(${a} 193 232)`);setT('legFB',`rotate(${a} 117 232)`);
     setT('legNB',`rotate(${-a} 97 232)`);setT('legFF',`rotate(${-a} 213 232)`)}
-    if(st==='stalk'||st==='ready')setT('head',`translate(0 10) rotate(${st==='ready'?4:2} 200 180)`);else setT('head',eat?`rotate(${16+Math.sin(t*8)*3*m} 200 180)`:scr?'rotate(-6 200 180)':`rotate(${walking?Math.sin(ph*2)*1.5*m:0} 200 180)`);
+    if(st==='stalk'||st==='ready')setT('head',`translate(0 10) rotate(${st==='ready'?4:2} 200 180)`);else setT('head',st==='drink'?`rotate(${22+Math.sin(t*16)*4*m} 200 180)`:eat?`rotate(${16+Math.sin(t*8)*3*m} 200 180)`:scr?'rotate(-6 200 180)':`rotate(${walking?Math.sin(ph*2)*1.5*m:0} 200 180)`);
     setT('body',`translate(148 252) scale(1 ${1+(walking?0:.016*Math.sin(t*2.4)*m)}) translate(-148 -252)`);
   }else{
     const tilt=(v==='back'?H.look*5:H.look*6)+H.tilt+H.lean*12;
@@ -1016,6 +1020,7 @@ function apply(dt){
   hc.style.zIndex=hiding?'0':String(CATZ);
   if(H.wriggle>0)rot+=Math.sin(t*28)*9*(m||.4);
   const hk=H.hugK,sc=1+.25*hk;sx*=sc;sy*=sc;if(H.hug){y+=(H.carry||0)*w;rot+=Math.max(-14,Math.min(14,(H.dragV||0)*.012))*(m||.4);if(H.warned)rot+=Math.sin(t*22)*4*(m||.4)}
+  {const tg=HP.side&&HP.side.face&&HP.side.face.querySelector('.tongue');if(tg){if(st==='drink'&&v==='side'){const q=m?Math.max(0,Math.sin(t*16)):.6;tg.setAttribute('opacity',q>.15?'1':'0');tg.setAttribute('transform',`translate(274 156) scale(1 ${.5+q*.9}) translate(-274 -156)`)}else tg.setAttribute('opacity','0')}}
   const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';hCat.style.transformOrigin='35% 90%';
   hCat.style.transform=(flip?'scaleX(-1) ':'')+(v==='side'&&H.state==='scratch'?'rotate(-14deg)':'');
   hc.style.bottom=(rh*.11-w*.107)+'px';
@@ -1512,7 +1517,7 @@ function layoutRoom(rw,rh,w){
   place(IT.plate[0],'plate',w*.46,w*.13,feet-w*.03);
   place(IT.fountain[0],'fountain',w*.42,w*.5,feet-w*.03);
   bed.hidden=!R.bed.on;bed.style.left=(cx('bed')-w*.46)+'px';bed.style.width=(w*.92)+'px';
-  BED=R.bed.x;
+  BED=R.bed.x;IT.fountain[0].classList.toggle('drinking',H.state==='drink');
   const o=roomOrder(),zOf=k=>(o.indexOf(k)+1)*2;CATZ=zOf('cat');
   ['tree','scratch','plate','bowl','fountain'].forEach(k=>{IT[k][0].style.zIndex=zOf(k)});
   IT.box[0].style.zIndex=zOf('box');IT.box[1].style.zIndex=H.inBox?Math.max(CATZ+1,zOf('box')+1):zOf('box')+1;bed.style.zIndex=zOf('bed');
@@ -1542,7 +1547,7 @@ function doAct(k,src,o={}){const R=roomCfg();
   if(k==='eat'){const it=src==='plate'?'plate':'bowl';const[t,face]=sideSpot(it,.4);startWalk(t,false,()=>{H.facing=face;setHView('side');
       if(foodAmt(it)<=.01){H.state='sit';H.waitFood=it;H.timer=8;return}startEat(it)},o.fast)}
   if(k==='sniff'){const it=src==='plate'?'plate':'bowl';const[t,face]=sideSpot(it,.4);startWalk(t,false,()=>{H.state='sniff';H.facing=face;setHView('side');H.timer=1.5;say('嗅嗅',900)})}
-  if(k==='drink'){const[t,face]=sideSpot('fountain',.36);startWalk(t,false,()=>{H.state='drink';H.facing=face;setHView('side');H.timer=3+Math.random()*3;say('啪搭啪搭',1500)})}
+  if(k==='drink'){const[t,face]=sideSpot('fountain',.5);startWalk(t,false,()=>{H.state='drink';H.facing=face;setHView('side');H.timer=3+Math.random()*3;say('啪搭啪搭',1500)})}
   if(k==='beg'){const it=R.bowl.on?'bowl':R.plate.on?'plate':null;
     if(!it||Math.random()<.4){logAct('demand','肚子餓了，跑來對你喵喵叫',true);comeOver(()=>{H.state='beg';H.timer=6;setHView('front');say('喵～喵～',1500)})}
     else{logAct('demand',`坐在空${it==='plate'?'盤子':'碗'}前面喵喵叫，想吃飯`,true);const[t]=sideSpot(it,.55);startWalk(t,false,()=>{setHView('front');H.state='beg';H.timer=7;say('喵～（肚子餓了）',1800)})}}
