@@ -56,26 +56,30 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .meter b.low{opacity:.55}
 #it-plate,#it-fountain{pointer-events:auto;cursor:pointer}
 #it-fountain .water{stroke-dasharray:4 4;animation:flow .6s linear infinite}@keyframes flow{to{stroke-dashoffset:-8}}
-.cananim{position:absolute;z-index:4;pointer-events:none;transform:scale(.4);opacity:0;transition:transform .35s,opacity .35s}
+.cananim{position:absolute;z-index:60;pointer-events:none;transform:scale(.4);opacity:0;transition:transform .35s,opacity .35s}
 .cananim.s1{transform:scale(1);opacity:1}.cananim .lid{transform-origin:3px 8px;transition:transform .35s}.cananim.s2 .lid{transform:rotate(-125deg)}
 .cananim.s3{transform:translateX(20%) translateY(10%) rotate(115deg);transition:transform .4s}.cananim .spill{opacity:0}.cananim.s3 .spill{opacity:1}
 .heart.pop{color:#2e3936;font-size:18px;background:#fff;border-radius:10px;padding:2px 8px;font-family:var(--font-display)}
-.room .wandbtn{top:40%}.room .canbtn{top:64%}
+.room .wandbtn{top:30%}.room .canbtn{top:54%}.room .takebtn{top:78%}
 @media (max-width:480px){.wandbtn{padding:5px 6px 4px;font-size:11px;border-radius:14px;right:8px}.wandbtn svg{width:22px;height:22px}}
 @media (prefers-reduced-motion:reduce){#it-fountain .water{animation:none}}
 .z1{z-index:1}
 #it-tree,#it-scratch,#it-boxback,#it-boxfront,.bed{pointer-events:auto;cursor:pointer}
 .room.wand,.room.wand *{cursor:none!important}.room.wand{touch-action:none}.room.wand .wandbtn,.room.wand .wandbtn *{cursor:pointer!important}
-.toylayer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}#wandStick{z-index:6}#wandToy{z-index:5}
-.wandbtn{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(255,255,255,.92);border:2px solid transparent;border-radius:18px;padding:8px 8px 6px;cursor:pointer;font:inherit;font-size:12px;color:#2e3936;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.toylayer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}#wandStick{z-index:51}#wandToy{z-index:50}
+.wandbtn{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:80;display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(255,255,255,.92);border:2px solid transparent;border-radius:18px;padding:8px 8px 6px;cursor:pointer;font:inherit;font-size:12px;color:#2e3936;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .wandbtn[aria-pressed="true"]{border-color:#e5707b;background:#fff3f4}
 .wandbtn:focus-visible{outline:2.5px solid #e5707b;outline-offset:2px}.z3{z-index:3}#it-bowl{pointer-events:auto;cursor:pointer}
 .room.editing .item,.room.editing .bed{pointer-events:auto;cursor:grab;outline:2px dashed rgba(255,255,255,.9);outline-offset:3px;border-radius:6px}
 .room.editing #it-boxfront{outline:none}
+.room{isolation:isolate}
+.layerbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;font-size:14px}
+.room.editing .picked{outline:3px solid #e5707b!important;outline-offset:3px}
+.room.editing .bed{border-radius:50%}
 .roomtools{display:flex;justify-content:center;margin-top:10px}.furnwrap{display:flex;flex-direction:column;gap:6px;align-items:center}.furn{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .homecat{z-index:2;position:absolute;left:0;transform-origin:50% 100%;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .homecat.petting{cursor:grabbing}
-.heart{position:absolute;color:#e5707b;font-size:22px;pointer-events:none;z-index:3;animation:floatUp 1.2s ease-out forwards}
+.heart{position:absolute;color:#e5707b;font-size:22px;pointer-events:none;z-index:70;animation:floatUp 1.2s ease-out forwards}
 @keyframes floatUp{from{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}to{transform:translateY(-60px) scale(1.1);opacity:0}}
 @media (prefers-reduced-motion:reduce){.heart{animation:none}}
 .homecat:focus-visible{outline:2.5px solid #fff;outline-offset:4px;border-radius:12px}
@@ -111,6 +115,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .askhead{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}.askhead span:first-child{color:var(--accent);font-weight:500}
 .askq{margin:0;font-family:var(--font-display);font-size:18px;line-height:1.5;text-wrap:balance}
 .askfree{display:flex;gap:8px}.askfree input{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px}
+.askhint{margin:-4px 0 0;font-size:12.5px;color:var(--muted)}
 .askfoot{display:flex;gap:16px;flex-wrap:wrap}
 .askset{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;background:var(--chip);border-radius:12px;padding:10px 12px}
 .askset label{display:flex;align-items:center;gap:8px;margin-right:auto;cursor:pointer}.askset input{width:18px;height:18px;accent-color:var(--accent)}
@@ -358,7 +363,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="askset"><label><input type="checkbox" id="askOn"> 每天問我關於牠的小問題</label><span>每天最多</span><select id="askPer" aria-label="每天最多幾題"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select><span>題</span></div>
     <div class="memlist" id="memList"></div>
     <form class="memadd" id="memAdd"><select id="memCat" aria-label="分類"></select><input id="memText" maxlength="120" placeholder="自己補充一件關於牠的事" aria-label="補充的記憶"><button class="btn primary" type="submit">記住</button></form>
-    <div class="btns"><button class="btn" id="memLearn" type="button">現在整理</button></div>
+    <div class="btns"><button class="btn" id="memLearn" type="button">現在整理</button><button class="btn" id="memCompact" type="button">合併相似的記憶</button></div>
     <p class="gsub" id="memMsg" role="status"></p>
   </div>
 </div>
@@ -409,6 +414,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <svg class="toylayer" id="wandToy" hidden aria-hidden="true"><path id="stringPath" fill="none" stroke="#6b5b4c" stroke-width="1.6"/><g id="featherG"><circle r="6" fill="#e8c14f"/><path d="M0,3 C-16,14 -18,30 -9,42 C-4,28 -1,18 0,6Z" fill="#e5707b"/><path d="M0,3 C16,14 18,30 9,42 C4,28 1,18 0,6Z" fill="#5fb3a3"/><path d="M0,4 C-3,20 0,34 0,44 C3,32 4,18 0,4Z" fill="#f6c27f"/></g></svg>
     <svg class="toylayer" id="wandStick" hidden aria-hidden="true"><path id="stickPath" stroke="#a8775a" stroke-width="5" stroke-linecap="round"/></svg>
     <button class="wandbtn canbtn" id="canBtn" type="button" aria-label="開罐頭"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><rect x="9" y="14" width="22" height="18" rx="3" fill="#c9d3dc"/><rect x="9" y="18" width="22" height="8" fill="#e5707b"/><ellipse cx="20" cy="14" rx="11" ry="3.2" fill="#aeb9c4"/><rect x="18" y="10" width="5" height="3" rx="1.5" fill="#8d99a6"/></svg><span>罐頭</span></button>
+    <button class="wandbtn takebtn" id="takeBtn" type="button" hidden aria-label="收罐頭"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><ellipse cx="20" cy="27" rx="15" ry="5" fill="#dcd6cc"/><ellipse cx="20" cy="25" rx="9" ry="3.5" fill="#c98b6b"/><path d="M27,8 L13,20" stroke="#e5707b" stroke-width="3" stroke-linecap="round"/><path d="M13,20 l-3,-1 l2,4z" fill="#e5707b"/></svg><span>收罐頭</span></button>
     <button class="wandbtn" id="wandBtn" type="button" aria-pressed="false" aria-label="逗貓棒"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M8,34 L26,10" stroke="#a8775a" stroke-width="3" stroke-linecap="round"/><path d="M26,10 C30,14 31,20 30,26" stroke="#6b5b4c" stroke-width="1.4" fill="none"/><path d="M30,26 C25,29 25,35 28,38 C30,34 31,31 30,27Z" fill="#e5707b"/><path d="M30,26 C35,29 36,34 33,38 C32,34 31,31 30,27Z" fill="#5fb3a3"/></svg><span>逗貓棒</span></button>
     <div class="homecat" id="homecat" role="button" tabindex="0" aria-label="摸摸牠">
       <div class="bubble" id="bubble" hidden></div>
@@ -422,6 +428,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="askhead"><span>小問題</span><span id="askLeft"></span></div>
     <p class="askq" id="askQ"></p>
     <div class="chips" id="askOpts"></div>
+    <p class="askhint" id="askHint">可以複選，選好按「記住」</p>
     <div class="askfree"><input id="askText" maxlength="120" placeholder="或自己寫：真正的牠會…" aria-label="自己寫答案"><button class="btn primary" id="askSend" type="button">記住</button></div>
     <div class="askfoot"><button class="linkbtn" id="askSkip" type="button">跳過</button><button class="linkbtn" id="askStop" type="button">今天不要再問</button><button class="linkbtn" id="askSet" type="button">設定</button></div>
   </div>
@@ -434,7 +441,9 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   <p class="homehint"><span id="homeStatus">牠在家裡</span></p>
   <p class="homehint small">點一下打招呼・在牠身上來回滑動是摸摸・按住不放是抱抱・點家具叫牠去玩・右邊的逗貓棒可以陪牠玩</p>
   <div class="roomtools"><button class="btn" id="roomEdit" type="button">佈置房間</button></div>
-  <div class="furnwrap" id="furnWrap" hidden><p class="homehint small">點家具加入或收起來，在房間裡拖曳家具可以移動位置</p><div class="furn" id="furn"></div></div>
+  <div class="furnwrap" id="furnWrap" hidden><p class="homehint small">點家具加入或收起來，在房間裡拖曳家具可以移動位置</p><div class="furn" id="furn"></div>
+    <div class="layerbar" id="layerBar" hidden><span>選取：<b id="layerName"></b>（<span id="layerWhere"></span>）</span><button class="btn" id="layerBack" type="button">往後一層</button><button class="btn" id="layerFront" type="button">往前一層</button></div>
+    <p class="homehint small" id="layerTip">點一下房間裡的家具就能選取，再調整前後順序</p></div>
   <div class="talk">
     <div class="care" id="care" hidden role="status">
       <p>聽起來你現在真的很難受，這些心情不用一個人扛著。</p>
@@ -1004,7 +1013,7 @@ function apply(dt){
   if(st==='leap'&&H.leapT>0){const p=1-H.leapT/.7;y+=Math.sin(p*Math.PI)*(H.leapH||.6)*w;sy*=1.08}
   if(st==='grab')rot+=Math.sin(t*26)*4*(m||.3);
   if(hiding){sy*=.94;if(H.hideK==='box')y+=w*.07}
-  hc.style.zIndex=hiding?'0':'';
+  hc.style.zIndex=hiding?'0':String(CATZ);
   if(H.wriggle>0)rot+=Math.sin(t*28)*9*(m||.4);
   const hk=H.hugK,sc=1+.25*hk;sx*=sc;sy*=sc;if(H.hug){y+=(H.carry||0)*w;rot+=Math.max(-14,Math.min(14,(H.dragV||0)*.012))*(m||.4);if(H.warned)rot+=Math.sin(t*22)*4*(m||.4)}
   const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';hCat.style.transformOrigin='35% 90%';
@@ -1359,7 +1368,7 @@ setInterval(()=>{if(view!=='home'||document.hidden)return;ls.set('neko-last-seen
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view==='home')onHomeOpen()});
 
 /* ===== 日積月累：從主人的話和互動裡，慢慢學會真正的牠 ===== */
-const PENDKEY='neko-pending',FACT_MAX=80,NEWS_MAX=8;
+const PENDKEY='neko-pending',FACT_MAX=120,NEWS_MAX=8,COMPACT_AT=60,COMPACT_TO=40;
 const FACT_CATS=['習性','喜好','討厭','回憶','口頭禪與叫聲','修正','主人近況'];
 let pending=[];try{pending=JSON.parse(ls.get(PENDKEY)||'[]')}catch(e){pending=[]}
 const today=()=>new Date().toISOString().slice(0,10);
@@ -1416,10 +1425,26 @@ ${known}`;
     (o.likes||[]).forEach(z=>{if(ZCODES.includes(z)&&!S.likes.includes(z)){S.likes=[...S.likes,z];S.dislikes=S.dislikes.filter(x=>x!==z)}});
     (o.dislikes||[]).forEach(z=>{if(ZCODES.includes(z)&&!S.dislikes.includes(z)){S.dislikes=[...S.dislikes,z];S.likes=S.likes.filter(x=>x!==z)}});
     pending=pending.slice(batch.length);ls.set(PENDKEY,JSON.stringify(pending));
-    S.learnedAt=Date.now();render();memLabel();if(!$('memPanel').hidden)drawMem(added?`整理好了，新記住 ${added} 件事`:'整理好了，這次沒有新的事');
+    S.learnedAt=Date.now();render();memLabel();setTimeout(()=>compactMemory(),1000);if(!$('memPanel').hidden)drawMem(added?`整理好了，新記住 ${added} 件事`:'整理好了，這次沒有新的事');
   }catch(e){if(!$('memPanel').hidden)drawMem('整理失敗：'+aiErrText(e))}
   finally{learning=false}
 }
+
+/* 記憶太多時，請 AI 合併整理（相似的合在一起、矛盾的以新的為準） */
+let compacting=false;
+async function compactMemory(force){const L=learned(),facts=L.filter(f=>f.c!=='主人近況');
+  if(compacting||!aiKey()||(!force&&facts.length<COMPACT_AT)||facts.length<8)return false;compacting=true;const n=S.name||'貓咪';
+  const sys=`你在幫主人整理貓咪「${n}」的記憶本。下面是累積的記憶（越下面越新），請整理成最多 ${COMPACT_TO} 條：
+- 合併重複或意思相近的，保留具體細節（時間、地點、食物、玩具名稱）
+- 有矛盾時，以「修正」和比較新的為準，舊的那條刪掉
+- 每條一句話，用「牠」稱呼貓，用台灣繁體中文
+- 分類只能用：${FACT_CATS.filter(c=>c!=='主人近況').join('、')}
+- 不要新增記憶裡沒有的事`;
+  try{const o=await gemParts(sys,[{text:facts.map(f=>`[${f.c}] ${f.t}`).join('\n')}],{type:'OBJECT',properties:{facts:{type:'ARRAY',items:{type:'OBJECT',properties:{c:{type:'STRING',enum:FACT_CATS.filter(c=>c!=='主人近況')},t:{type:'STRING'}},required:['c','t']}}},required:['facts']},2000);
+    const out=(o.facts||[]).filter(f=>f&&f.t).slice(0,COMPACT_TO);if(out.length<4)return false;
+    const news=L.filter(f=>f.c==='主人近況');S.learned=[...out.map(f=>({c:FACT_CATS.includes(f.c)?f.c:'習性',t:String(f.t).slice(0,120),d:today(),s:'merged'})),...news];
+    S.compactedAt=Date.now();save();memLabel();if(!$('memPanel').hidden)drawMem(`整理好了：${facts.length} 條合併成 ${out.length} 條`);return true}
+  catch(e){if(!$('memPanel').hidden)drawMem('合併失敗：'+aiErrText(e));return false}finally{compacting=false}}
 /* 互動習慣 */
 function stats(){const st=S.stats&&typeof S.stats==='object'?S.stats:{};st.pet=st.pet||{};st.hours=Array.isArray(st.hours)&&st.hours.length===24?st.hours:Array(24).fill(0);st.hugs=st.hugs||0;st.visits=st.visits||0;S.stats=st;return st}
 function recordPet(t,wasHug){const st=stats(),secs=Math.max(0,(performance.now()-t.t0)/1000);
@@ -1458,11 +1483,12 @@ function drawMem(msg){
   FACT_CATS.forEach(c=>{const items=L.map((f,i)=>[f,i]).filter(([f])=>f.c===c);if(!items.length)return;
     const h3=document.createElement('h3');h3.textContent=c;box.appendChild(h3);
     const ul=document.createElement('ul');items.forEach(([f,i])=>{const li=document.createElement('li');const sp=document.createElement('span');sp.textContent=f.t;
-      const dt=document.createElement('small');dt.textContent=f.d+(f.s==='me'?'・你寫的':'');
+      const dt=document.createElement('small');dt.textContent=f.d+(f.s==='me'?'・你寫的':f.s==='merged'?'・整理合併':'');
       const del=document.createElement('button');del.type='button';del.textContent='✕';del.setAttribute('aria-label','刪除這條記憶');
       del.onclick=()=>{L.splice(i,1);save();memLabel();drawMem()};li.append(sp,dt,del);ul.appendChild(li)});box.appendChild(ul)})}
 $('openMem').onclick=()=>{syncAskSet();const sel=$('memCat');if(!sel.options.length)FACT_CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});drawMem();$('memPanel').hidden=false};
 $('memClose').onclick=()=>{$('memPanel').hidden=true};
+$('memCompact').onclick=async()=>{if(!aiKey()){drawMem('合併記憶需要 Gemini 金鑰');return}$('memMsg').textContent='合併中…';$('memCompact').disabled=true;await compactMemory(true);$('memCompact').disabled=false};
 $('memLearn').onclick=()=>{$('memMsg').textContent='整理中…';$('memLearn').disabled=true;maybeLearn(true)};
 $('memAdd').addEventListener('submit',e=>{e.preventDefault();const t=$('memText').value.trim();if(!t)return;if(addFact($('memCat').value,t,'me')){save();memLabel()}$('memText').value='';drawMem('記住了')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&pending.length>=2)maybeLearn(true)});
@@ -1481,13 +1507,29 @@ function layoutRoom(rw,rh,w){
   const place=(el,k,ww,hh,b)=>{el.hidden=!R[k].on;if(!R[k].on)return;el.style.width=ww+'px';el.style.height=hh+'px';el.style.left=(cx(k)-ww/2)+'px';el.style.bottom=b+'px'};
   place(IT.tree[0],'tree',w*.9,w*1.2,feet-w*.02);
   place(IT.scratch[0],'scratch',w*.3,w*.95,feet-w*.02);
-  IT.box.forEach(el=>place(el,'box',w,w*.62,feet-w*.04));IT.box[1].style.zIndex=H.inBox?3:1;
+  IT.box.forEach(el=>place(el,'box',w,w*.62,feet-w*.04));
   place(IT.bowl[0],'bowl',w*.42,w*.18,feet-w*.03);
   place(IT.plate[0],'plate',w*.46,w*.13,feet-w*.03);
   place(IT.fountain[0],'fountain',w*.42,w*.5,feet-w*.03);
   bed.hidden=!R.bed.on;bed.style.left=(cx('bed')-w*.46)+'px';bed.style.width=(w*.92)+'px';
   BED=R.bed.x;
+  const o=roomOrder(),zOf=k=>(o.indexOf(k)+1)*2;CATZ=zOf('cat');
+  ['tree','scratch','plate','bowl','fountain'].forEach(k=>{IT[k][0].style.zIndex=zOf(k)});
+  IT.box[0].style.zIndex=zOf('box');IT.box[1].style.zIndex=H.inBox?Math.max(CATZ+1,zOf('box')+1):zOf('box')+1;bed.style.zIndex=zOf('bed');
+  IT.box.forEach(el=>el.classList.toggle('picked',selItem==='box'));
+  ['tree','scratch','plate','bowl','fountain'].forEach(k=>IT[k][0].classList.toggle('picked',selItem===k));bed.classList.toggle('picked',selItem==='bed');
 }
+let CATZ=12,selItem=null;
+const ORDER_DEF=['bed','tree','scratch','box','fountain','cat','bowl','plate'];
+function roomOrder(){let o=Array.isArray(S.roomOrder)?S.roomOrder.filter((k,i,a)=>(k==='cat'||ROOM_ITEMS[k])&&a.indexOf(k)===i):[];
+  if(!o.length)o=[...ORDER_DEF];if(!o.includes('cat'))o.push('cat');
+  Object.keys(ROOM_ITEMS).forEach(k=>{if(!o.includes(k)){if(k==='bowl'||k==='plate')o.push(k);else o.splice(o.indexOf('cat'),0,k)}});
+  S.roomOrder=o;return o}
+function drawLayerBar(){const bar=$('layerBar');if(!selItem||!roomEdit){bar.hidden=true;$('layerTip').hidden=!roomEdit;return}bar.hidden=false;$('layerTip').hidden=true;
+  const o=roomOrder(),i=o.indexOf(selItem),c=o.indexOf('cat'),n=S.name||'貓';
+  $('layerName').textContent=ROOM_ITEMS[selItem][0];$('layerWhere').textContent=i>c?`在${n}前面`:`在${n}後面`;
+  $('layerFront').disabled=i>=o.length-1;$('layerBack').disabled=i<=0}
+function moveLayer(d){if(!selItem)return;const o=roomOrder(),i=o.indexOf(selItem),j=i+d;if(j<0||j>=o.length)return;[o[i],o[j]]=[o[j],o[i]];save();drawLayerBar()}
 function jumpTo(y,cb,o={}){const up=y>H.y;H.jump={from:H.y,to:y,t:0,pre:o.pre??(up?.28:.12),dur:o.dur??(up?.5:.42),post:.2,pause:o.pause||0,cb};H.state='jump';if(H.face!=='normal')setFace('normal')}
 function jumpDown(cb){const R=roomCfg(),onTree=R.tree.on&&Math.abs(H.x-R.tree.x)<.04;if(H.y>.8&&onTree)jumpTo(.56,()=>jumpTo(0,cb),{pause:.15});else jumpTo(0,cb,onTree?{}:{pre:.05,dur:.35})}
 function goSleep(){if(roomCfg().bed.on)startWalk(BED,true);else{if(H.y>.05||H.inBox){startWalk(H.x,true);return}H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setFace('closed');say('Zzz…')}}
@@ -1507,7 +1549,7 @@ function doAct(k,src,o={}){const R=roomCfg();
 }
 function tryActivity(){const R=roomCfg(),en=P01('energy'),N=needs(),T=traits(),E=N.energy,opts=[];
   const fb=R.bowl.on?foodAmt('bowl'):0,fp=R.plate.on?foodAmt('plate'):0,hungry=1-N.full;
-  if(fp>.01)opts.push(['eat:plate',(.12+hungry*.9)*(1+T.canLove*.1)]);
+  if(fp>.01)opts.push(['eat:plate',(.12+hungry*.9)*(1+T.canLove*.1)*(canAge()>30?.2:1)]);
   if(fb>.01)opts.push(['eat:bowl',(.08+hungry*.8)*(1-T.picky*.06)]);
   if(fb<=.01&&fp<=.01&&N.full<.35)opts.push(['beg',.25*(1+T.demand*.15)]);
   if(R.fountain.on&&N.water<.6)opts.push(['drink',(.6-N.water)*1.2*(1+T.drink*.1)]);
@@ -1536,9 +1578,9 @@ function foodAmt(src){const R=roomCfg();return src==='plate'?(+R.plate.food||0):
 function setFood(src,v){const R=roomCfg();v=Math.max(0,Math.min(1,v));if(src==='plate')R.plate.food=v;else R.bowl.food=v;drawFood()}
 function drawFood(){const fb=foodAmt('bowl'),fp=foodAmt('plate');
   const a=$('food');a.style.display=fb>.01?'':'none';a.setAttribute('transform',`translate(21 8) scale(${.6+.4*fb} ${.35+.65*fb}) translate(-21 -8)`);
-  const b=$('plateFood');b.style.display=fp>.01?'':'none';b.setAttribute('transform',`translate(22 6) scale(${.5+.5*fp} ${.3+.7*fp}) translate(-22 -6)`)}
+  $('takeBtn').hidden=!(fp>.01);const b=$('plateFood');b.style.display=fp>.01?'':'none';b.setAttribute('transform',`translate(22 6) scale(${.5+.5*fp} ${.3+.7*fp}) translate(-22 -6)`)}
 function eagerness(src){const n=needs(),T=traits();let e=.2+(1-n.full)*.9+T.appetite*.06-(src==='bowl'?T.picky*.05:0);
-  if(src==='plate')e+=.25+T.canLove*.08;if(n.full>.9)e-=.35;return Math.max(.02,Math.min(1,e))}
+  if(src==='plate'){e+=.25+T.canLove*.08;if(canAge()>30)e*=.25}if(n.full>.9)e-=.35;return Math.max(.02,Math.min(1,e))}
 function startEat(it){const T=traits();H.state='eat';H.eatSrc=it;H.waitFood=null;setHView('side');
   H.timer=(4+Math.random()*6)*(1+T.appetite*.1)*(1-T.picky*.06)*(it==='plate'?1.3:1);say(it==='plate'?'吧唧吧唧':'咔滋咔滋',1500)}
 function foodReact(src,o={}){const e=eagerness(src),food=src==='plate'?'罐頭':'飼料';
@@ -1548,7 +1590,7 @@ function foodReact(src,o={}){const e=eagerness(src),food=src==='plate'?'罐頭':
   const r=Math.random();
   if(r<e){const fast=e>.72;logAct(src==='plate'?'canRun':'foodRun',fast?(src==='plate'?'一聽到開罐頭的聲音就衝過來':'聽到倒飼料的聲音就衝過來'):`走過去吃${food}`,true);doAct('eat',src,{fast})}
   else if(r<e+.4){logAct('foodLater',`看了一眼${food}，晚點再吃`,true);if(H.state==='sit')setHView('front');say('…喵',1000)}
-  else{logAct('foodIgnore',`走過去聞一聞${food}，沒有吃`,true);doAct('sniff',src)}}
+  else{logAct('foodIgnore',src==='plate'&&canAge()>30?'聞一聞放太久的罐頭，不想吃':`走過去聞一聞${food}，沒有吃`,true);doAct('sniff',src)}}
 function fillBowl(byOwner){const R=roomCfg();if(!R.bowl.on)return;setFood('bowl',1);save();
   setTimeout(()=>foodReact('bowl',{sound:true}),400);
   if(byOwner)setTimeout(()=>aiEvent('（主人幫你的碗倒了飼料）',{allowMove:false}),2600)}
@@ -1565,10 +1607,24 @@ function openCan(){const R=roomCfg(),n=S.name||'牠';if(canBusy||roomEdit)return
   el.className='cananim';el.hidden=false;void el.offsetWidth;el.classList.add('s1');
   setTimeout(()=>{el.classList.add('s2');popText(cx,rh*.89-w*.75,'啵！');foodReact('plate',{sound:true})},500);
   setTimeout(()=>el.classList.add('s3'),950);
-  setTimeout(()=>{setFood('plate',1);save()},1400);
+  setTimeout(()=>{setFood('plate',1);roomCfg().plate.at=Date.now();save()},1400);
   setTimeout(()=>{el.hidden=true;el.className='cananim';canBusy=false},2000);
   setTimeout(()=>aiEvent('（主人開了一個罐頭放到你的盤子裡）',{allowMove:false}),3200)}
 $('canBtn').addEventListener('click',e=>{e.stopPropagation();openCan()});
+function canAge(){const at=roomCfg().plate.at;return at?(Date.now()-at)/60000:0}
+function takeCan(){const R=roomCfg(),n=S.name||'牠',left=foodAmt('plate');if(left<=.01||canBusy)return;
+  const mins=canAge(),eating=H.state==='eat'&&H.eatSrc==='plate',T=traits(),N=needs();
+  setFood('plate',0);R.plate.at=0;save();lastInteract=Date.now();idleFired=false;note('你把沒吃完的罐頭收起來了',3);
+  let line,face=null,text;
+  if(eating){sitDown('front');face='annoyed';line='喵嗚！我還在吃！';H.mood-=.08;text='正在吃罐頭就被你收走了，很不高興'}
+  else if(mins<2&&left>.5){const mad=T.canLove>=1||N.full<.5;face=mad?'annoyed':null;line=mad?'喵！我還要吃！':'喵？';text=mad?'罐頭才剛開就被收走，跑來抗議':'看著罐頭被收走，歪頭';if(mad){H.mood-=.05;comeOver(()=>{})}}
+  else if(mins>30){line=pick(['（終於收了，那個放太久了）','喵～']);text='看你收走放很久的罐頭，一點也不在意'}
+  else{const full=N.full>.8;line=full?'（反正吃飽了）':'喵…';text=full?'吃飽了，不在意罐頭被收走':'看著罐頭被收走，有點捨不得'}
+  if(face)setFace(face,1.6);logAct('canTaken',text,true);
+  if(aiOn()){sayBoth('…',null,1500);aiEvent(`（主人把盤子裡沒吃完的罐頭收走了。罐頭放了大約 ${mins<1?'不到 1':Math.round(mins)} 分鐘，還剩大約 ${Math.round(left*100)}%${eating?'，你正在吃':''}）`,{allowMove:false,force:true})}
+  else say(line,1800)}
+$('takeBtn').addEventListener('click',e=>{e.stopPropagation();takeCan()});
+
 
 /* 佈置模式：開關家具、拖曳位置 */
 let roomEdit=false;
@@ -1576,9 +1632,10 @@ function drawFurn(){const box=$('furn');box.innerHTML='';const R=roomCfg();
   Object.entries(ROOM_ITEMS).forEach(([k,[n]])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=n;b.setAttribute('aria-pressed',!!R[k].on);
     b.onclick=()=>{R[k].on=!R[k].on;if(!R[k].on){if(k==='tree'&&H.y>.05){H.y=0;H.jump=null;sitDown('front')}if(k==='box'&&H.inBox){H.inBox=false;sitDown('front')}
       if((k==='bowl'&&H.state==='eat')||(k==='scratch'&&H.state==='scratch'))sitDown('front')}drawFurn();save()};box.appendChild(b)})}
-$('roomEdit').onclick=()=>{roomEdit=!roomEdit;room.classList.toggle('editing',roomEdit);$('furnWrap').hidden=!roomEdit;$('roomEdit').textContent=roomEdit?'完成佈置':'佈置房間';drawFurn()};
+$('layerFront').onclick=()=>moveLayer(1);$('layerBack').onclick=()=>moveLayer(-1);
+$('roomEdit').onclick=()=>{roomEdit=!roomEdit;if(!roomEdit)selItem=null;setTimeout(drawLayerBar);room.classList.toggle('editing',roomEdit);$('furnWrap').hidden=!roomEdit;$('roomEdit').textContent=roomEdit?'完成佈置':'佈置房間';drawFurn()};
 Object.entries(IT).forEach(([k,els])=>els.forEach(el=>{
-  el.addEventListener('pointerdown',e=>{if(!roomEdit)return;e.preventDefault();e.stopPropagation();try{el.setPointerCapture(e.pointerId)}catch(_){}
+  el.addEventListener('pointerdown',e=>{if(!roomEdit)return;e.preventDefault();e.stopPropagation();selItem=k;drawLayerBar();try{el.setPointerCapture(e.pointerId)}catch(_){}
     const move=ev=>{const r=room.getBoundingClientRect(),w=hc.offsetWidth,x=Math.min(.98,Math.max(.02,(ev.clientX-r.left-w/2)/Math.max(1,r.width-w)));
       roomCfg()[k].x=x;if(k==='tree'&&H.y>.05)H.x=x;if(k==='box'&&H.inBox)H.x=x};
     const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);save()};
@@ -1644,7 +1701,7 @@ function drawWand(){
   $('stickPath').setAttribute('d',`M${ax},${ay} L${ax+70},${ay-150}`);
   $('stringPath').setAttribute('d',`M${ax},${ay} Q${mx},${my} ${FT.x},${FT.y}`);
   $('featherG').setAttribute('transform',`translate(${FT.x},${FT.y}) rotate(${FT.ang})`);
-  $('wandToy').style.zIndex=FT.hidden?'0':'5'}
+  $('wandToy').style.zIndex=FT.hidden?'0':'50'}
 /* 行為紀錄 */
 const actAt={};let actAny=0;
 function logAct(key,text,force){const now=performance.now();if(!force&&(now-(actAt[key]||0)<6000||now-actAny<2200))return;actAt[key]=now;actAny=now;
@@ -1659,6 +1716,7 @@ const TRAIT_FIX={
   eatAll:[['牠通常會剩一點',T=>{T.picky+=2},'牠吃飯通常會剩一點']],
   leftover:[['牠都會吃光',T=>{T.picky-=2;T.appetite+=1},'牠吃飯都會吃光光']],
   demand:[['牠不會這樣討飯',T=>{T.demand-=3},'牠肚子餓時不太會討飯'],['牠討飯更兇',T=>{T.demand+=2},'牠肚子餓時會一直喵喵叫討飯']],
+  canTaken:[['牠不會在意',T=>{T.canLove-=1},'罐頭沒吃完被收走，牠不太在意'],['牠會很生氣',T=>{T.canLove+=1},'罐頭沒吃完被收走，牠會很生氣']],
   drink:[['牠很少喝水',T=>{T.drink-=2},'牠很少喝水'],['牠很愛喝水',T=>{T.drink+=2},'牠很愛喝水']]
 };
 TRAIT_FIX.go_fountain=TRAIT_FIX.drink;TRAIT_FIX.lazy_fountain=[['牠很愛喝水',T=>{T.drink+=2},'牠很愛喝水']];
@@ -1921,15 +1979,16 @@ function maybeAsk(key,text){const C=askCfg(),D=askDay();
 function showAsk(q){const D=askDay();D.n++;D.recent=[...(D.recent||[]),q.question].slice(-12);save();askCur=q;
   $('askQ').textContent=q.question;$('askLeft').textContent=`今天第 ${D.n} 題，最多 ${askCfg().perDay} 題`;
   const box=$('askOpts');box.innerHTML='';
-  q.options.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=o.label;b.onclick=()=>answerAsk(o);box.appendChild(b)});
-  $('askText').value='';$('askCard').hidden=false}
+  q.options.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=o.label;b.setAttribute('aria-pressed','false');b._opt=o;b.onclick=()=>b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');box.appendChild(b)});
+  $('askText').value='';$('askHint').textContent='可以複選，選好按「記住」';$('askCard').hidden=false}
 function closeAsk(){$('askCard').hidden=true;askCur=null}
-function answerAsk(o,free){const q=askCur;if(!q)return;const n=S.name||'牠';
-  if(o){if(o.fact)addFact('習性',o.fact,'me');(o.effects||[]).forEach(e=>{if(ASK_EFFECTS.includes(e.key))applyEffect(e.key,e.delta)})}
+function answerAsk(opts,free){const q=askCur;if(!q)return;const n=S.name||'牠';
+  opts.forEach(o=>{if(o.fact)addFact('習性',o.fact,'me');(o.effects||[]).forEach(e=>{if(ASK_EFFECTS.includes(e.key))applyEffect(e.key,e.delta)})});
   if(free)addFact('習性',`${q.question.replace(/^.*?。/,'')}主人說：${free}`,'me');
-  talkLog.push(['ev',`你回答：${o?o.label:''}${free?(o?'，':'')+free:''}`]);while(talkLog.length>8)talkLog.shift();drawLog();
-  save();memLabel();render();closeAsk();note(`記住了，${n}會越來越像牠`,3)}
-$('askSend').onclick=()=>{const v=$('askText').value.trim();if(!v){$('askText').focus();return}answerAsk(null,v)};
+  talkLog.push(['ev',`你回答：${[...opts.map(o=>o.label),free].filter(Boolean).join('、')}`]);while(talkLog.length>8)talkLog.shift();drawLog();
+  save();memLabel();render();closeAsk();note(`記住了，${n}會越來越像牠`,3);setTimeout(()=>compactMemory(),1500)}
+$('askSend').onclick=()=>{const v=$('askText').value.trim(),opts=[...$('askOpts').children].filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b._opt);
+  if(!v&&!opts.length){$('askHint').textContent='先選一個或寫一句喔';return}answerAsk(opts,v)};
 $('askText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('askSend').click()}});
 $('askSkip').onclick=closeAsk;
 $('askStop').onclick=()=>{const D=askDay();D.n=askCfg().perDay;save();closeAsk();note('今天不會再問了',2)};
