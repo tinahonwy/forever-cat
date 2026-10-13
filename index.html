@@ -571,7 +571,8 @@ async function doSave(){
   try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
   if(user&&db&&!loading){
     if(data.paint.length+data.paintSide.length+data.paintBack.length>950000){status('花紋太複雜，超過雲端單筆上限，請清掉一些');return}
-    try{await setDoc(doc(db,'users',user.uid,'cats','main'),{settings:S,paint:data.paint,paintSide:data.paintSide,paintBack:data.paintBack,updatedAt:serverTimestamp()});status('已同步到雲端')}
+    const clean=JSON.parse(JSON.stringify(S));if(Array.isArray(clean.guideAns))clean.guideAns=clean.guideAns.map(a=>Array.isArray(a)?a.join(','):String(a??''));
+    try{await setDoc(doc(db,'users',user.uid,'cats','main'),{settings:clean,paint:data.paint,paintSide:data.paintSide,paintBack:data.paintBack,updatedAt:serverTimestamp()});status('已同步到雲端')}
     catch(e){status('雲端儲存失敗（'+(e.code||e.message)+'）')}
   }else if(!user)status('已自動儲存在這台裝置')
 }
@@ -621,14 +622,14 @@ const GUIDE=[
   {k:'hug',q:n=>`把${n}抱起來的時候，牠會？`,opts:[['乖乖讓你抱，還會呼嚕',{hug:'love'}],['看心情，有時候給抱',{hug:'mood'}],['扭來扭去，馬上跳走',{hug:'hate'}]]}
 ];
 const G={i:0,ans:[],likes:[],dislikes:[],notes:{}};
-function openGuide(){G.i=0;G.ans=GUIDE.map((Q,i)=>[...((S.guideAns||[])[i]||[])]);G.likes=[...(S.likes||[])];G.dislikes=[...(S.dislikes||[])];G.notes={...(S.persNotes||{})};$('guide').hidden=false;drawGuide()}
+function openGuide(){G.i=0;G.ans=GUIDE.map((Q,i)=>{const a=(S.guideAns||[])[i];return Array.isArray(a)?[...a]:typeof a==='string'&&a?a.split(',').map(Number):[]});G.likes=[...(S.likes||[])];G.dislikes=[...(S.dislikes||[])];G.notes={...(S.persNotes||{})};$('guide').hidden=false;drawGuide()}
 function guideResult(){
   const vals=k=>{const out=[];GUIDE.forEach((Q,i)=>{if(Q.opts)(G.ans[i]||[]).forEach(j=>{const v=Q.opts[j][1][k];if(v!=null)out.push(v)})});return out};
   const avg=(k,d)=>{const v=vals(k);return v.length?v.reduce((x,y)=>x+y,0)/v.length:d};
   const hugs=vals('hug'),cl=v=>Math.round(Math.max(0,Math.min(100,v)));
   return{affection:cl(avg('aff',60)+avg('affD',0)),temper:cl(avg('temp',40)),energy:cl(avg('en',50)),
     hugPref:hugs.length===1?hugs[0]:hugs.length?'mood':'mood',likes:G.likes,dislikes:G.dislikes,
-    persNotes:Object.fromEntries(Object.entries(G.notes).filter(([k,v])=>v&&v.trim())),guideAns:G.ans}}
+    persNotes:Object.fromEntries(Object.entries(G.notes).filter(([k,v])=>v&&v.trim())),guideAns:G.ans.map(a=>(a||[]).join(','))}}
 function drawGuide(){
   const n=S.name||'牠',done=G.i>=GUIDE.length,box=$('gOpts');box.innerHTML='';box.className='gopts';
   $('gProg').textContent=done?'完成':`${G.i+1} / ${GUIDE.length}`;$('gBack').hidden=G.i===0;$('gNext').hidden=false;
