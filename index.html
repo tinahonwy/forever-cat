@@ -93,6 +93,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .tlog{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .tlog li{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;padding:6px 12px;border-radius:12px;background:var(--chip)}
 .tlog li.me{background:var(--accent-soft)}
+.tlog li.ev{background:transparent;color:var(--muted);font-size:13px;padding:2px 12px}
 .tlog b{font-weight:500}.tlog small{flex-basis:100%;color:var(--muted);font-size:12.5px}
 .care{background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:16px;padding:12px 16px;font-size:14.5px;line-height:1.7}
 .care p{margin:0 0 6px}
@@ -838,7 +839,7 @@ function zoneAt(e){
   if(Math.abs(x-150)<44&&y>196)return y>246?'paw':'belly';
   return'back';
 }
-function petTick(zone){
+function petTick(zone){if(touch)touch.zones.add(zone);
   const n=S.name||'牠',liked=(S.likes||[]).includes(zone),hated=(S.dislikes||[]).includes(zone),temper=P01('temper'),aff=P01('affection');
   if(H.state==='sleep'){
     if(liked&&Math.random()<.8){say('呼嚕…',1200);note(`${n}睡夢中呼嚕呼嚕`);return}
@@ -847,29 +848,31 @@ function petTick(zone){
   if(H.state==='walk'){sitDown('front')}
   if(H.view==='back'&&Math.random()<.5)setHView('front');
   H.timer=Math.max(H.timer,3);
-  if(H.cooldown>0||hated){
+  if(H.cooldown>0||hated){if(touch)touch.bad='hate';
     H.mood-=.1;setFace('annoyed',1.6);H.swat=.4;say(hated?(Math.random()<.5?'哈～！':'不要摸那裡'):'喵！夠了',1400);note(`${n}不喜歡被摸${ZONE_NAME[zone]}`);
     if(H.mood<.35||temper>.6||Math.random()<.4){touchEnd(true);H.cooldown=6;setTimeout(()=>{if(H.state==='sit')walkAway()},500)}
     return;
   }
   const limit=(1.5-temper)*(.6+aff)*1500;
-  if(H.petRecent>limit){H.cooldown=6;setFace('annoyed',1.6);H.swat=.4;say('咬！（輕輕的）',1500);note(`${n}被摸太久，不耐煩了`);touchEnd(true);setTimeout(()=>{if(H.state==='sit')walkAway()},600);return}
-  if(zone==='belly'&&!liked&&Math.random()<.25+temper*.5){H.trap=.9;setFace('annoyed',1.2);say('抱住你的手！咬咬',1500);note(`${n}抱住你的手踢踢`);return}
-  if(liked){H.mood+=.08;setFace('happy',1.8);H.lean=(Math.random()<.5?-1:1);heart();if(Math.random()<.6)say(Math.random()<.5?'呼嚕呼嚕…':'喵～',1300);note(`${n}很喜歡被摸${ZONE_NAME[zone]}`)}
+  if(H.petRecent>limit){if(touch)touch.bad='over';H.cooldown=6;setFace('annoyed',1.6);H.swat=.4;say('咬！（輕輕的）',1500);note(`${n}被摸太久，不耐煩了`);touchEnd(true);setTimeout(()=>{if(H.state==='sit')walkAway()},600);return}
+  if(zone==='belly'&&!liked&&Math.random()<.25+temper*.5){if(touch)touch.bad='trap';H.trap=.9;setFace('annoyed',1.2);say('抱住你的手！咬咬',1500);note(`${n}抱住你的手踢踢`);return}
+  if(liked){if(touch)touch.good++;H.mood+=.08;setFace('happy',1.8);H.lean=(Math.random()<.5?-1:1);heart();if(Math.random()<.6)say(Math.random()<.5?'呼嚕呼嚕…':'喵～',1300);note(`${n}很喜歡被摸${ZONE_NAME[zone]}`)}
   else{H.mood+=.03;if(H.mood>.6)setFace('happy',1.2);if(Math.random()<.3)say('喵',900);note(`${n}讓你摸${ZONE_NAME[zone]}`)}
 }
 let touch=null;
-function touchEnd(cancel){if(!touch)return;clearTimeout(touch.hold);if(touch.mode==='hug'&&H.hug){H.hug=false;H.faceT=.01;say('喵～',1200);sitDown('front')}touch=null;hc.classList.remove('petting')}
+function touchEnd(cancel){if(!touch)return;clearTimeout(touch.hold);const t=touch,wasHug=t.mode==='hug'&&H.hug;
+  if(wasHug){H.hug=false;H.faceT=.01;say('喵～',1200);sitDown('front')}touch=null;hc.classList.remove('petting');lastInteract=Date.now();idleFired=false;
+  const ev=touchStory(t,wasHug);if(ev&&Math.random()<.7)setTimeout(()=>aiEvent(ev,{allowMove:!t.bad&&!t.hugFail}),900)}
 function startHug(){
   const n=S.name||'牠',pref=S.hugPref||'mood',aff=P01('affection');
   let p=pref==='love'?.9:pref==='hate'?.1:.25+H.mood*.45+aff*.25;if(H.cooldown>0)p*=.3;
   if(H.state==='sleep')p*=.6;
   if(Math.random()<p){H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart()}
-  else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done'}
+  else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done';touch.hugFail=true}
 }
 hc.addEventListener('pointerdown',e=>{
   e.preventDefault();try{hc.setPointerCapture(e.pointerId)}catch(_){}
-  touch={x:e.clientX,y:e.clientY,t0:performance.now(),moved:0,acc:0,mode:'tap',zone:null};
+  touch={x:e.clientX,y:e.clientY,t0:performance.now(),moved:0,acc:0,mode:'tap',zone:null,zones:new Set(),good:0,bad:''};
   touch.hold=setTimeout(()=>{if(touch&&touch.mode==='tap'&&touch.moved<14){touch.mode='hug';startHug()}},550);
 });
 hc.addEventListener('pointermove',e=>{
@@ -883,7 +886,7 @@ hc.addEventListener('pointerup',()=>{
   if(!touch)return;const quick=touch.mode==='tap'&&performance.now()-touch.t0<450;touchEnd();if(quick)poke();
 });
 hc.addEventListener('pointercancel',()=>touchEnd(true));
-function poke(){
+function poke(){lastInteract=Date.now();idleFired=false;
   if(H.state==='sleep'){wake();say('喵？',1500);H.tilt=8;return}
   if(H.state==='sit'&&H.view==='back'){setHView('front');H.timer=3+Math.random()*3;H.tilt=8;say('喵？',1400);return}
   H.hop=.55;H.wag=1.6;H.tilt=(Math.random()<.5?-1:1)*10;
@@ -962,10 +965,10 @@ function perform(r,th,asleep,ms){
 }
 const talkLog=[];
 function drawLog(){const ol=$('talkLog');ol.innerHTML='';talkLog.forEach(([w,t,d])=>{const li=document.createElement('li');li.className=w;
-  const who=document.createElement('b');who.textContent=w==='me'?'你':(S.name||'牠');li.append(who,document.createTextNode(t));
+  const who=document.createElement('b');who.textContent=w==='me'?'你':(S.name||'牠');if(w!=='ev')li.append(who);li.append(document.createTextNode(t));
   if(d){const s=document.createElement('small');s.textContent=d;li.appendChild(s)}ol.appendChild(li)})}
 let lastSaid='';
-async function send(text){text=(text||'').trim();if(!text||aiBusy)return;
+async function send(text){text=(text||'').trim();if(!text)return;if(aiBusy){note(`${S.name||'牠'}還在想，等一下再說`,2);return}lastInteract=Date.now();idleFired=false;
   talkLog.push(['me',text]);drawLog();const r=(aiOn()&&intentOf(text)!=='danger')?await aiSend(text):respond(text);talkLog.push(['cat',[r.m,r.th].filter(Boolean).join(' ')||'…',r.d]);
   while(talkLog.length>6)talkLog.shift();drawLog();
   lastSaid=text;const sp=$('savePhrase');if(!phrases().includes(text)){sp.textContent=`＋ 把「${text.length>10?text.slice(0,10)+'…':text}」存成快捷按鈕`;sp.hidden=false;clearTimeout(send.t);send.t=setTimeout(()=>{sp.hidden=true},9000)}else sp.hidden=true}
@@ -1019,6 +1022,7 @@ ${catProfile()}
 - 不要談論死亡、天堂、彩虹橋，也不要替自己做「我不怪你」「我在天上很好」這類宣告。主人說到這些時，就用貓的方式陪著他，例如靠過去、說「我在這裡」。
 - 如果主人真心問你是不是真的牠，溫柔誠實地說你是主人用回憶做出來陪他的小貓。
 - 主人難過時溫柔陪伴，也可以像貓一樣提醒他去吃飯、睡覺、找朋友聊聊。
+- 以「（」開頭、用括號包起來的訊息是旁白，描述主人對你做了什麼或發生了什麼，不是主人說的話；請用貓的方式對這件事反應，例如被摸得舒服就呼嚕撒嬌、被摸到討厭的地方就抱怨、主人很久沒來就撒嬌或鬧脾氣。
 - 只回傳 JSON。action 是你要做的動作：come（走到主人面前）、wag（甩尾巴）、hop（開心跳一下）、blink（慢慢眨眼）、back（屁股轉向主人）、bed（走去貓窩睡）、ear（耳朵轉向主人）、none。face 是表情：normal、happy、closed、annoyed。`}
 const busyErr=e=>e&&(e.status===503||e.status===500||e.status===502||/high demand|overloaded|unavailable/i.test(e.message||''));
 let modelOverride='';
@@ -1093,6 +1097,45 @@ $('aiSave').onclick=async()=>{const k=$('aiKey').value.trim();ls.set(AIKEY,k);ls
   catch(e){$('aiMsg').textContent=aiErrText(e)}aiLabel()};
 $('aiForget').onclick=()=>{chatHist=[];ls.set(CHATKEY,'');$('aiMsg').textContent='已清除這台裝置上的對話記憶'};
 
+/* ===== AI 旁白事件：摸摸抱抱的感想、主動找你 ===== */
+const AUTO_DAY_MAX=40;let autoAt=0,lastInteract=Date.now(),idleFired=false;
+function autoBudget(){const k='neko-auto-'+new Date().toISOString().slice(0,10),n=+ls.get(k)||0;return{ok:n<AUTO_DAY_MAX,use:()=>ls.set(k,String(n+1))}}
+async function aiEvent(desc,{allowMove=true,force=false}={}){
+  if(!aiOn()||aiBusy||view!=='home'||document.hidden)return;
+  if(!force&&Date.now()-autoAt<25000)return;
+  const b=autoBudget();if(!b.ok)return;b.use();autoAt=Date.now();
+  aiBusy=true;$('sayBtn').disabled=true;
+  try{const o=await askGemini(desc);pushHist('me',desc);pushHist('cat',o.say);
+    const asleep=H.state==='sleep',r={m:o.say,a:allowMove?o.action:'none',f:null,d:''};
+    if(r.a==='hop'){r.a='wag';r.hop=1}
+    if(asleep&&!['none','bed','come'].includes(r.a))wake();
+    if(o.face&&o.face!=='normal')setFace(o.face,2.6);
+    perform(r,null,asleep,2600+o.say.length*110);
+    talkLog.push(['ev',desc.replace(/^（|）$/g,'')]);talkLog.push(['cat',o.say]);while(talkLog.length>6)talkLog.shift();drawLog();
+  }catch(e){}finally{aiBusy=false;$('sayBtn').disabled=false}
+}
+function touchStory(t,wasHug){
+  const secs=Math.max(1,Math.round((performance.now()-t.t0)/1000));
+  if(t.hugFail)return'（主人想把你抱起來，但你扭來扭去跳走了）';
+  if(wasHug)return`（主人把你抱在懷裡大約 ${secs} 秒${secs>8?'，抱了好久':''}）`;
+  if(t.mode!=='pet'||!t.zones||!t.zones.size)return null;
+  const zn=[...t.zones].map(z=>ZONE_NAME[z]).join('、');
+  if(t.bad==='over')return'（主人摸你摸太久了，你不耐煩地輕咬一口走開）';
+  if(t.bad==='trap')return'（主人摸你的肚子，你抱住他的手踢了幾下）';
+  if(t.bad==='hate')return`（主人摸了你的${zn}，那是你不喜歡被摸的地方）`;
+  if(secs<2)return null;
+  return`（主人摸了你的${zn}大約 ${secs} 秒${t.good?'，你覺得很舒服':''}）`;
+}
+function onHomeOpen(){
+  const last=+ls.get('neko-last-seen')||0,gap=Date.now()-last;ls.set('neko-last-seen',String(Date.now()));
+  if(!aiOn()||(last&&gap<20*60*1000))return;
+  const g=!last?'這是主人第一次來看你':gap<72e5?`主人離開了大約 ${Math.round(gap/6e4)} 分鐘`:gap<1728e5?`主人大約 ${Math.round(gap/36e5)} 小時沒來了`:`主人已經 ${Math.round(gap/864e5)} 天沒來看你了`;
+  setTimeout(()=>aiEvent(`（主人打開房間來看你了。${g}）`,{force:true}),1500);
+}
+setInterval(()=>{if(view!=='home'||document.hidden)return;ls.set('neko-last-seen',String(Date.now()));
+  if(!idleFired&&H.state!=='sleep'&&!H.hug&&Date.now()-lastInteract>4*60*1000){idleFired=true;aiEvent('（主人在旁邊，但已經好幾分鐘沒有理你了）')}},15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view==='home')onHomeOpen()});
+
 let raf=0,lastTs=0;
 function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
 
@@ -1101,7 +1144,7 @@ function showView(v){
   view=v;$('viewMaker').hidden=v!=='maker';$('viewHome').hidden=v!=='home';
   document.querySelectorAll('.view-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
   try{localStorage.setItem(KEY+'-view',v)}catch(e){}
-  if(v==='home'){drawHomeCat();if(!editing)drawPhrases();aiLabel();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
+  if(v==='home'){drawHomeCat();if(!editing)drawPhrases();aiLabel();if(!booting)onHomeOpen();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
 }
 document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.dataset.view));
 
