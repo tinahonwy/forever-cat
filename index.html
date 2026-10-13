@@ -50,7 +50,9 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .homecat:focus-visible{outline:2.5px solid #fff;outline-offset:4px;border-radius:12px}
 .catbox{position:relative;width:100%;aspect-ratio:1}
 .shadow{position:absolute;left:22%;width:56%;top:86%;height:8%;background:rgba(40,60,50,.16);border-radius:50%}
-.bubble{position:absolute;left:58%;top:-4%;background:#fff;color:#3b3434;font-family:var(--font-display);font-size:18px;padding:6px 14px;border-radius:18px;white-space:nowrap;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.bubble.flip{left:auto;right:58%}
+.bubble span{display:block}.bubble .th{font-family:var(--font-body);font-size:13px;color:#6b7a76}
+.bubble{position:absolute;left:58%;top:-4%;background:#fff;color:#3b3434;font-family:var(--font-display);font-size:18px;padding:6px 14px;border-radius:18px;width:max-content;max-width:min(220px,58vw);z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.1)}
 .viewpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:560px;width:100%;margin-inline:auto}
 .vhint{font-size:13px;color:var(--muted)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -70,6 +72,26 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .gtext{width:100%;font:inherit;font-size:15px;color:var(--fg);background:var(--panel);border:1.5px dashed var(--line);border-radius:14px;padding:10px 14px;resize:vertical}
 .gtext:focus{outline:none;border-color:var(--accent);border-style:solid}
 .gsum{background:var(--chip);border-radius:14px;padding:12px 16px;font-size:15px;line-height:1.8}
+.talk{max-width:640px;margin:16px auto 0;display:flex;flex-direction:column;gap:10px}
+.phrases{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.phrase{font:inherit;font-size:15px;background:var(--panel);color:var(--fg);border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
+.phrase:hover{border-color:var(--accent)}.phrase.add{border-style:dashed;color:var(--muted)}
+.pedit{display:inline-flex;align-items:center;gap:2px;background:var(--panel);border:1.5px solid var(--line);border-radius:999px;padding:2px 4px}
+.pedit input{font:inherit;font-size:15px;width:7.5em;border:0;background:transparent;color:var(--fg);padding:4px}
+.pedit input:focus{outline:none}.pedit:focus-within{border-color:var(--accent)}
+.pedit button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:999px}.pedit button:disabled{opacity:.3}
+.sayform{display:flex;gap:8px}
+.sayform input{flex:1;min-width:0;font:inherit;font-size:16px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:10px 14px}
+.sayform input:focus{outline:none;border-color:var(--accent)}
+.ptools{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.linkbtn{font:inherit;font-size:13px;background:none;border:0;color:var(--muted);cursor:pointer;padding:2px 0;text-decoration:underline;text-underline-offset:3px}
+#savePhrase{color:var(--accent)}#editPhrases{margin-left:auto}
+.tlog{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.tlog li{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;padding:6px 12px;border-radius:12px;background:var(--chip)}
+.tlog li.me{background:var(--accent-soft)}
+.tlog b{font-weight:500}.tlog small{flex-basis:100%;color:var(--muted);font-size:12.5px}
+.care{background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:16px;padding:12px 16px;font-size:14.5px;line-height:1.7}
+.care p{margin:0 0 6px}
 .homehint{text-align:center;color:var(--muted);font-size:14px;margin:12px 0 0}
 .homehint.small{font-size:12.5px;margin-top:4px}
 #homeStatus{color:var(--fg);font-size:15px}
@@ -256,6 +278,20 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
   <p class="homehint"><span id="homeStatus">牠在家裡</span></p>
   <p class="homehint small">點一下打招呼・在牠身上來回滑動是摸摸・按住不放是抱抱</p>
+  <div class="talk">
+    <div class="care" id="care" hidden role="status">
+      <p>聽起來你現在真的很難受，這些心情不用一個人扛著。</p>
+      <p>如果有傷害自己的念頭，請打 <b>1925</b> 安心專線（24 小時、免付費），或 <b>1995</b> 生命線、<b>1980</b> 張老師，也可以告訴身邊信任的人。情況緊急請打 <b>119</b>。</p>
+      <button class="btn" id="careClose" type="button">我知道了</button>
+    </div>
+    <div class="phrases" id="phrases"></div>
+    <form class="sayform" id="sayForm" autocomplete="off">
+      <input id="sayInput" maxlength="100" placeholder="跟牠說說話…" aria-label="跟牠說的話">
+      <button class="btn primary" type="submit">說</button>
+    </form>
+    <div class="ptools"><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
+    <ol class="tlog" id="talkLog" aria-live="polite"></ol>
+  </div>
 </section>
 
 <script type="module">
@@ -278,7 +314,7 @@ const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
   brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,backEdited:false,
-  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood',personaSet:false,persNotes:{},guideAns:[]};
+  affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood',personaSet:false,persNotes:{},guideAns:[],phrases:['我回來了','早安','晚安','想你','要吃罐罐嗎','乖乖']};
 const KEY='neko-maker-v1';
 let S={...DEF},tab='color',mview='front',booting=true;
 const $=id=>document.getElementById(id);
@@ -630,10 +666,19 @@ function guideResult(){
   return{affection:cl(avg('aff',60)+avg('affD',0)),temper:cl(avg('temp',40)),energy:cl(avg('en',50)),
     hugPref:hugs.length===1?hugs[0]:hugs.length?'mood':'mood',likes:G.likes,dislikes:G.dislikes,
     persNotes:Object.fromEntries(Object.entries(G.notes).filter(([k,v])=>v&&v.trim())),guideAns:G.ans.map(a=>(a||[]).join(','))}}
+function noteKeywords(r){
+  const N=r.persNotes||{},all=Object.entries(N).filter(([k])=>k!=='likes'&&k!=='dislikes').map(([,v])=>v).join(' ');
+  const cl=v=>Math.round(Math.max(0,Math.min(100,v))),adj=(re,k,d)=>{if(re.test(all))r[k]=cl(r[k]+d)};
+  adj(/黏|討摸|撒嬌|跟前跟後|蹭|親人/,'affection',12);adj(/怕生|躲|膽小|害羞|不親人/,'affection',-12);
+  adj(/咬|哈氣|兇|揮爪|抓人|脾氣/,'temper',12);adj(/溫柔|溫和|很乖|脾氣好/,'temper',-12);
+  adj(/懶|愛睡|睡很久|不愛動|躺/,'energy',-12);adj(/跑酷|暴衝|好動|愛玩|瘋|精力/,'energy',12);
+  const ZW=[[/頭|額頭/,'head'],[/下巴/,'chin'],[/臉|耳朵|臉頰/,'cheek'],[/背/,'back'],[/屁股|尾巴根/,'butt'],[/肚子|肚肚/,'belly'],[/尾巴(?!根)/,'tail'],[/腳|肉球|手手/,'paw']];
+  [['likes','dislikes'],['dislikes','likes']].forEach(([k,o])=>{const t=N[k]||'';ZW.forEach(([re,z])=>{if(re.test(t)&&!r[k].includes(z)){r[k]=[...r[k],z];r[o]=r[o].filter(x=>x!==z)}})});
+  return r}
 function drawGuide(){
   const n=S.name||'牠',done=G.i>=GUIDE.length,box=$('gOpts');box.innerHTML='';box.className='gopts';
   $('gProg').textContent=done?'完成':`${G.i+1} / ${GUIDE.length}`;$('gBack').hidden=G.i===0;$('gNext').hidden=false;
-  if(done){const r=guideResult(),w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>l.map(z=>ZONES.find(x=>x[0]===z)[1]).join('、')||'沒有特別';
+  if(done){const r=noteKeywords(guideResult()),w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>l.map(z=>ZONES.find(x=>x[0]===z)[1]).join('、')||'沒有特別';
     $('gQ').textContent=`${n}是這樣的貓`;$('gSub').textContent='之後隨時可以在「個性」分頁微調或重新回答';
     const d=document.createElement('div');d.className='gsum';const esc=t=>t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
     d.innerHTML=`${w3(r.affection,'怕生','普通親人','超級親人')}・${w3(r.temper,'脾氣溫和','有點傲嬌','很有脾氣')}・${w3(r.energy,'懶洋洋','普通活潑','活力過剩')}<br>喜歡被摸：${zn(r.likes)}<br>討厭被摸：${zn(r.dislikes)}<br>抱抱：${{love:'很愛抱抱',mood:'看心情',hate:'不喜歡被抱'}[r.hugPref]}`+
@@ -652,7 +697,7 @@ function drawGuide(){
   ta.value=G.notes[Q.k]||'';ta.oninput=()=>{G.notes[Q.k]=ta.value};box.after?null:0;
   const wrapT=document.createElement('div');wrapT.className='gwrap';wrapT.appendChild(ta);box.appendChild(wrapT);
 }
-$('gNext').onclick=()=>{if(G.i>=GUIDE.length){Object.assign(S,guideResult(),{personaSet:true});$('guide').hidden=true;render();if(view==='home')note(`${S.name||'牠'}的個性設定好了`,3);return}G.i++;drawGuide()};
+$('gNext').onclick=()=>{if(G.i>=GUIDE.length){Object.assign(S,noteKeywords(guideResult()),{personaSet:true});$('guide').hidden=true;render();if(view==='home')note(`${S.name||'牠'}的個性設定好了`,3);return}G.i++;drawGuide()};
 $('gBack').onclick=()=>{if(G.i>0){G.i--;drawGuide()}};
 $('gClose').onclick=()=>{$('guide').hidden=true;S.personaSet=true;save()};
 $('openGuide').onclick=openGuide;
@@ -689,7 +734,7 @@ function heart(){const r=hCat.getBoundingClientRect(),rr=room.getBoundingClientR
   room.appendChild(el);setTimeout(()=>el.remove(),1300)}
 function sitDown(view){H.state='sit';H.timer=(2.5+Math.random()*4)*(1.6-P01('energy'));setHView(view||(Math.random()<.3?'back':'front'))}
 function wake(){sitDown('front');H.goSleep=false;setFace('normal');bubble.hidden=true}
-function startWalk(target,sleep){H.state='walk';H.target=target;H.goSleep=!!sleep;setHView('side');if(H.face!=='normal')setFace('normal')}
+function startWalk(target,sleep,after){H.state='walk';H.target=target;H.goSleep=!!sleep;H.onArrive=after||null;setHView('side');if(H.face!=='normal')setFace('normal')}
 function walkAway(){let t=H.x>.5?H.x-.35-Math.random()*.2:H.x+.35+Math.random()*.2;startWalk(Math.min(.96,Math.max(.04,t)))}
 function step(dt){
   H.timer-=dt;if(H.hop>0)H.hop=Math.max(0,H.hop-dt);if(H.wag>0)H.wag-=dt;H.tilt*=Math.exp(-dt*2.5);
@@ -705,7 +750,7 @@ function step(dt){
     const d=H.target-H.x,sp=(.07+.06*P01('energy'))*dt;
     if(Math.abs(d)<=sp){H.x=H.target;
       if(H.goSleep){H.goSleep=false;H.state='sleep';H.timer=14+Math.random()*12;setHView('front');setFace('closed');say('Zzz…')}
-      else sitDown()}
+      else{sitDown('front');if(H.onArrive){const f=H.onArrive;H.onArrive=null;f()}}}
     else H.x+=Math.sign(d)*sp;
   }else if(H.state==='sit'&&H.timer<=0){
     const r=Math.random(),sleepy=.15+.25*(1-P01('energy'));
@@ -755,6 +800,7 @@ function apply(dt){
   const n=S.name||'牠';
   const txt=H.statusT>0?H.statusTxt:H.hug?`${n}讓你抱著`:walking?(H.goSleep?`${n}想去睡覺了`:`${n}在走來走去`):sleeping?`${n}睡著了`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
+  if(!bubble.hidden)bubble.classList.toggle('flip',px+w*.58+bubble.offsetWidth>rw-6);
 }
 
 /* ===== 觸摸：點一下、來回摸、按住抱抱 ===== */
@@ -828,6 +874,100 @@ function poke(){
 hc.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();poke()}});
 const track=e=>{const r=room.getBoundingClientRect();H.px=e.clientX-r.left;H.pAt=performance.now()};
 room.addEventListener('pointermove',track);room.addEventListener('pointerdown',track);
+/* ===== 跟牠說話（貓語模式） ===== */
+const DEF_PHRASES=['我回來了','早安','晚安','想你','要吃罐罐嗎','乖乖'];
+const INTENTS=[
+  ['danger',/想死|不想活|自殺|活不下去|結束生命|去找你|跟你走|陪你走|消失就好|傷害自己/],
+  ['home',/回來|回家|到家|我來了/],
+  ['morning',/早安|早上好|起床/],
+  ['night',/晚安|睡覺|去睡|好睏|想睡/],
+  ['food',/罐罐|吃飯|零食|肉泥|餓|飼料|吃/],
+  ['sad',/累|難過|哭|煩|不開心|壓力|寂寞|孤單|好痛/],
+  ['miss',/想你|想妳|愛你|愛妳|喜歡你|好想|抱抱/],
+  ['sorry',/對不起|抱歉|不好意思/],
+  ['praise',/乖|好棒|可愛|漂亮|帥|寶貝|好美/],
+  ['play',/玩|逗貓|球|跑跑/],
+  ['bye',/出門|上班|上學|掰|拜拜|再見|出去/]
+];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function intentOf(t){for(const[k,re]of INTENTS)if(re.test(t))return k;const n=S.name;if(n&&t.includes(n))return'name';return'other'}
+function sayBoth(m,th,ms=2800){bubble.innerHTML='';if(m){const a=document.createElement('span');a.textContent=m;bubble.appendChild(a)}
+  if(th){const b=document.createElement('span');b.className='th';b.textContent=th;bubble.appendChild(b)}
+  if(!m&&!th)return;bubble.hidden=false;clearTimeout(say.t);say.t=setTimeout(()=>{bubble.hidden=true},ms)}
+function comeOver(after){if(H.hug){after&&after();return}if(H.state==='sleep')wake();
+  if(Math.abs(H.x-.5)<.06){sitDown('front');after&&after();return}startWalk(.5,false,after)}
+function respond(text){
+  const n=S.name||'牠',it=intentOf(text),aff=P01('affection'),tmp=P01('temper'),en=P01('energy');
+  const warm=aff>=.55,tsun=tmp>=.55&&aff<.75,lazy=en<.35,asleep=H.state==='sleep';
+  if(it==='danger'){$('care').hidden=false;comeOver(()=>{setFace('closed',3);H.lean=1});sayBoth('咪…',null);
+    const d=`${n}安靜地走過來，坐在你身邊`;note(d,4);return{m:'咪…',th:null,d}}
+  const R={
+    home:()=>warm?{m:'喵～喵～',th:['（終於回來了）','（今天好晚喔）','（等你好久了）'],a:'come',f:'happy',heart:1,d:`${n}跑過來迎接你`}
+      :tsun?{m:'喵。',th:['（哼，現在才回來）','（我才沒有在等你）'],a:'back',d:`${n}看了你一眼，又轉過去`}
+      :{m:'喵',th:['（回來啦）'],a:'wag',d:`${n}甩甩尾巴`},
+    morning:()=>asleep?{m:'嗯喵…',th:['（再睡五分鐘）'],a:'wake',d:`${n}伸了個懶腰`}
+      :lazy?{m:'…喵',th:['（好睏）'],a:'blink',d:`${n}瞇著眼睛`}
+      :{m:'喵～',th:['（早安，早餐呢？）','（早！）'],a:warm?'come':'wag',f:'happy',d:warm?`${n}跑過來蹭你`:`${n}甩甩尾巴`},
+    night:()=>asleep?{m:'呼嚕…',th:['（zzz）'],a:'none',d:`${n}在睡夢中呼嚕`}
+      :{m:'喵～',th:warm?['（晚安，明天見）','（一起睡嗎）']:['（終於要睡了嗎）'],a:'bed',d:`${n}走去貓窩睡覺`},
+    food:()=>({m:pick(['喵喵喵！','喵！喵！']),th:['（罐罐！罐罐！）','（快點快點）','（是鮪魚嗎）'],a:'come',f:'happy',hop:1,d:`${n}衝過來了`}),
+    miss:()=>warm?{m:'呼嚕呼嚕…',th:['（我在這裡）','（蹭蹭）','（我也是）'],a:'come',f:'happy',lean:1,heart:1,d:`${n}走過來蹭你`}
+      :{m:'…喵',th:['（知道了啦）','（慢慢眨眼）'],a:'blink',d:`${n}對你慢慢眨眼`},
+    sad:()=>warm?{m:'咪…',th:['（我陪你）','（靠過來給你摸）'],a:'come',f:'closed',lean:1,d:`${n}靠過來陪你`}
+      :{m:'',th:['（坐在你旁邊）'],a:'come',d:`${n}默默坐到你旁邊`},
+    sorry:()=>({m:'喵～',th:['（蹭蹭你的手）'],a:warm?'come':'blink',f:warm?'happy':null,d:warm?`${n}蹭蹭你`:`${n}對你慢慢眨眼`}),
+    praise:()=>({m:'喵～',th:tsun?['（這還用說）']:['（我知道）','（再多說一點）'],a:'wag',f:'happy',d:`${n}得意地甩尾巴`}),
+    play:()=>lazy?{m:'喵…',th:['（等一下再玩）'],a:'back',d:`${n}懶得動`}:{m:'喵！',th:['（來啊來啊）'],a:'wag',hop:1,f:'happy',d:`${n}興奮起來了`},
+    bye:()=>tsun?{m:'喵。',th:['（快走吧）'],a:'back',d:`${n}屁股對著你`}:{m:'喵…',th:['（早點回來）'],a:'come',d:`${n}跟到門口送你`},
+    name:()=>tsun&&Math.random()<.5?{m:'',th:['（假裝沒聽到）'],a:'ear',d:`${n}耳朵動了一下，假裝沒聽到`}:{m:'喵？',th:['（叫我嗎）'],a:warm?'come':'ear',d:`${n}轉頭看你`},
+    other:()=>warm?{m:pick(['喵？','咪～','喵']),th:['（你說的我都喜歡聽）','（嗯嗯）'],a:'ear',d:`${n}歪頭聽你說話`}
+      :{m:'喵',th:['（嗯）'],a:'ear',d:`${n}耳朵轉向你`}
+  };
+  const r=(asleep&&!['morning','food','home','night'].includes(it)&&Math.random()<.7)?{m:'',th:['（睡夢中耳朵動了一下）'],a:'none',d:`${n}睡得很熟`}:R[it]();
+  const th=r.th&&(Math.random()<.6||!r.m)?pick(r.th):null;
+  const fx=()=>{if(r.f)setFace(r.f,2.2);if(r.lean)H.lean=Math.random()<.5?-1:1;if(r.heart)heart();if(r.hop)H.hop=.55;H.wag=1.4;sayBoth(r.m,th)};
+  if(!asleep)H.tilt=(Math.random()<.5?-1:1)*6;
+  switch(r.a){
+    case'come':comeOver(fx);break;
+    case'back':if(H.state==='walk')sitDown('front');else setHView('front');sayBoth(r.m,th);setTimeout(()=>{if(H.state==='sit'&&!H.hug){setHView('back');H.timer=5}},900);break;
+    case'bed':if(H.hug){fx();break}sayBoth(r.m,th);startWalk(BED,true);break;
+    case'wake':wake();H.hop=.55;sayBoth(r.m,th);break;
+    case'blink':if(H.state==='walk')sitDown('front');else if(!asleep)setHView('front');if(!asleep)setFace('closed',1.4);sayBoth(r.m,th);break;
+    case'none':sayBoth(r.m,th);break;
+    default:if(H.state==='sit'&&H.view==='back')setHView('front');fx();
+  }
+  H.mood=Math.min(1,H.mood+.04);note(r.d,3.5);
+  return{m:r.m,th,d:r.d};
+}
+const talkLog=[];
+function drawLog(){const ol=$('talkLog');ol.innerHTML='';talkLog.forEach(([w,t,d])=>{const li=document.createElement('li');li.className=w;
+  const who=document.createElement('b');who.textContent=w==='me'?'你':(S.name||'牠');li.append(who,document.createTextNode(t));
+  if(d){const s=document.createElement('small');s.textContent=d;li.appendChild(s)}ol.appendChild(li)})}
+let lastSaid='';
+function send(text){text=(text||'').trim();if(!text)return;
+  talkLog.push(['me',text]);const r=respond(text);talkLog.push(['cat',[r.m,r.th].filter(Boolean).join(' ')||'…',r.d]);
+  while(talkLog.length>6)talkLog.shift();drawLog();
+  lastSaid=text;const sp=$('savePhrase');if(!phrases().includes(text)){sp.textContent=`＋ 把「${text.length>10?text.slice(0,10)+'…':text}」存成快捷按鈕`;sp.hidden=false;clearTimeout(send.t);send.t=setTimeout(()=>{sp.hidden=true},9000)}else sp.hidden=true}
+let editing=false;
+function phrases(){if(!Array.isArray(S.phrases))S.phrases=[...DEF_PHRASES];return S.phrases}
+function ordered(){const h=new Date().getHours(),pr=h>=5&&h<11?/早/:(h>=21||h<5)?/晚安|睡/:h>=17?/回來|回家/:null;
+  const a=phrases().filter(x=>x&&x.trim());return pr?a.filter(x=>pr.test(x)).concat(a.filter(x=>!pr.test(x))):a}
+function drawPhrases(){const box=$('phrases');box.innerHTML='';box.classList.toggle('editing',editing);
+  if(!editing){ordered().forEach(t=>{const b=document.createElement('button');b.type='button';b.className='phrase';b.textContent=t;b.onclick=()=>send(t);box.appendChild(b)})}
+  else{phrases().forEach((t,i)=>{const w=document.createElement('span');w.className='pedit';
+      const up=document.createElement('button');up.type='button';up.textContent='←';up.setAttribute('aria-label','往前移');up.disabled=i===0;
+      up.onclick=()=>{const p=S.phrases;[p[i-1],p[i]]=[p[i],p[i-1]];drawPhrases();save()};
+      const inp=document.createElement('input');inp.value=t;inp.maxLength=20;inp.id='ph-'+i;inp.setAttribute('aria-label','快捷按鈕文字');inp.oninput=()=>{S.phrases[i]=inp.value;save()};
+      const del=document.createElement('button');del.type='button';del.textContent='✕';del.setAttribute('aria-label','刪除這個按鈕');del.onclick=()=>{S.phrases.splice(i,1);drawPhrases();save()};
+      w.append(up,inp,del);box.appendChild(w)});
+    const add=document.createElement('button');add.type='button';add.className='phrase add';add.textContent='＋ 新增';
+    add.onclick=()=>{phrases().push('');drawPhrases();const l=$('ph-'+(S.phrases.length-1));if(l)l.focus()};box.appendChild(add)}
+  $('editPhrases').textContent=editing?'完成':'編輯快捷按鈕'}
+$('editPhrases').onclick=()=>{editing=!editing;if(!editing){S.phrases=phrases().map(x=>x.trim()).filter(Boolean);save()}drawPhrases()};
+$('savePhrase').onclick=()=>{if(lastSaid&&!phrases().includes(lastSaid)){phrases().push(lastSaid);save();drawPhrases();note('已新增快捷按鈕',2)}$('savePhrase').hidden=true};
+$('sayForm').addEventListener('submit',e=>{e.preventDefault();const i=$('sayInput');send(i.value);i.value=''});
+$('careClose').onclick=()=>{$('care').hidden=true};
+
 let raf=0,lastTs=0;
 function loop(ts){if(view!=='home'){raf=0;return}const dt=Math.min(.05,lastTs?(ts-lastTs)/1000:0);lastTs=ts;H.t+=dt;step(dt);apply(dt);raf=requestAnimationFrame(loop)}
 
@@ -836,7 +976,7 @@ function showView(v){
   view=v;$('viewMaker').hidden=v!=='maker';$('viewHome').hidden=v!=='home';
   document.querySelectorAll('.view-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
   try{localStorage.setItem(KEY+'-view',v)}catch(e){}
-  if(v==='home'){drawHomeCat();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
+  if(v==='home'){drawHomeCat();if(!editing)drawPhrases();if(!raf){lastTs=0;raf=requestAnimationFrame(loop)}if(!S.personaSet&&!booting)setTimeout(openGuide,700)}
 }
 document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.dataset.view));
 
