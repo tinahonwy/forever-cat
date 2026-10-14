@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>貓的工作室</title>
 <link rel="icon" type="image/png" href="LOGO.png">
-<link rel="apple-touch-icon" href="LOGO.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#7fc1b5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="貓的工作室">
 <meta property="og:image" content="LOGO.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -44,6 +49,18 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .window{position:absolute;left:8%;top:10%;width:22%;aspect-ratio:4/5;background:#d5eef6;border:8px solid #fbf6ee;border-radius:14px}
 .window span{position:absolute;inset:0}.window span::before,.window span::after{content:"";position:absolute;background:#fbf6ee}
 .window span::before{left:50%;top:0;bottom:0;width:6px;transform:translateX(-50%)}.window span::after{top:50%;left:0;right:0;height:6px;transform:translateY(-50%)}
+.window{transition:background 2s}.window i{position:absolute;opacity:0;transition:opacity 2s}
+.window .moon{right:16%;top:12%;width:24%;aspect-ratio:1;border-radius:50%;box-shadow:inset -7px 4px 0 0 #f5e6ad}
+.window .stars{inset:0;background:radial-gradient(circle at 20% 25%,#fff 0 1.5px,transparent 2px),radial-gradient(circle at 70% 60%,#fff 0 1.2px,transparent 2px),radial-gradient(circle at 35% 75%,#fff 0 1px,transparent 1.6px),radial-gradient(circle at 80% 85%,#fff 0 1.4px,transparent 2px),radial-gradient(circle at 15% 55%,#fff 0 1px,transparent 1.6px)}
+.room[data-tod=dawn] .window{background:linear-gradient(#f6c4a4,#fde6c8)}
+.room[data-tod=dusk] .window{background:linear-gradient(#ef9d6a,#f7c992)}
+.room[data-tod=night] .window{background:linear-gradient(#1b2850,#34497d)}.room[data-tod=night] .window i{opacity:1}
+.tshade{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;transition:opacity 2s,background 2s}
+.room[data-tod=dawn] .tshade{opacity:1;background:rgba(255,185,140,.10)}
+.room[data-tod=dusk] .tshade{opacity:1;background:rgba(255,140,70,.12)}
+.room[data-tod=night] .tshade{opacity:1;background:radial-gradient(ellipse at 50% 62%,rgba(20,28,64,.16),rgba(20,28,64,.46))}
+.dentry{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:var(--chip);border-radius:14px}.dentry b{font-size:13px;color:var(--muted);font-weight:500}.dentry p{margin:0;line-height:1.7;white-space:pre-wrap}
+.diarylist{display:flex;flex-direction:column;gap:10px}
 .floor{position:absolute;left:0;right:0;bottom:0;height:30%;background:#efdcc2;border-top:10px solid #fbf6ee}
 .bed{position:absolute;bottom:7%;height:12%;background:#e5868e;border-radius:50%;box-shadow:inset 0 -10px 0 rgba(0,0,0,.08)}
 .item{position:absolute;left:0;bottom:0;pointer-events:none}.item svg{display:block;width:100%;height:100%}
@@ -212,6 +229,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .stagecam svg{width:20px;height:20px}
 #traceLayer{pointer-events:none;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 .phototools{display:flex;flex-direction:column;gap:6px}.traceop{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}.traceop input{flex:1}.traceop[hidden]{display:none}
+.vphotos{display:flex;flex-direction:column;gap:6px}.vphotos .lbl{font-size:13px;color:var(--muted)}.vphoto i{font-style:normal;color:var(--accent)}
 .aiwarn{font-size:12px;opacity:.8;margin-top:2px}
 .photorow{display:flex;flex-direction:column;gap:8px}
 .hint{font-size:13px;color:var(--muted);background:var(--chip);padding:8px 12px;border-radius:12px;margin:0}
@@ -250,6 +268,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
         <svg class="layer" id="base" viewBox="0 0 300 300" aria-hidden="true"></svg>
         <canvas class="layer paint" id="paint" width="600" height="600" aria-label="正面花紋畫布"></canvas>
         <canvas class="layer paint" id="paintSide" width="600" height="600" aria-label="側面花紋畫布" hidden></canvas>
+        <canvas class="layer paint" id="paintSideL" width="600" height="600" aria-label="左側花紋畫布" hidden></canvas>
         <canvas class="layer paint" id="paintBack" width="600" height="600" aria-label="背面花紋畫布" hidden></canvas>
         <canvas class="layer" id="traceLayer" width="600" height="600" hidden aria-hidden="true"></canvas>
         <svg class="layer" id="top" viewBox="0 0 300 300" aria-hidden="true"></svg>
@@ -276,7 +295,8 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
 
     <div class="pane" data-pane="color">
-      <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>拍照或從相簿選一張牠的照片</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><p class="hint" id="photoMsg">上傳一張牠的正面照片，Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。</p>
+      <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>先選一張牠的正面照（必要）</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><div class="vphotos"><span class="lbl">再補其他角度，花紋會更像（建議）</span><div class="chips"><button class="chip vphoto" type="button" data-v="sideL">左側照片<i></i></button><button class="chip vphoto" type="button" data-v="side">右側照片<i></i></button><button class="chip vphoto" type="button" data-v="back">背面（屁股）照片<i></i></button></div><input type="file" id="photoInput2" accept="image/*" hidden></div>
+        <p class="hint" id="photoMsg">先上傳一張牠的正面照片，Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
         <p class="hint aiwarn">※ 花紋和外觀是 AI 生成的，不一定準確，可以用筆刷、換色塊、刪色塊手動微調。</p>
         <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
       <div class="row"><span class="lbl">底色</span><div class="swatches" id="sw-base"></div></div>
@@ -345,6 +365,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
     <div class="foot"><span id="saved">設定會自動存在這台裝置</span><button class="btn warn" id="resetAll">全部重來</button></div>
     <div class="backup"><button class="btn" id="backupOut" type="button">下載備份</button><button class="btn" id="backupIn" type="button">從備份還原</button><input type="file" id="backupFile" accept="application/json,.json" hidden><span id="backupMsg"></span></div>
+    <div class="backup"><button class="btn" id="installBtn" type="button">加到手機主畫面</button><span id="installMsg"></span></div>
   </div>
 </div>
 
@@ -374,6 +395,16 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<div class="guide" id="diaryPanel" hidden role="dialog" aria-modal="true" aria-labelledby="diaryTitle">
+  <div class="gcard">
+    <div class="ghead"><span>日記本</span><button class="gx" id="diaryClose" type="button">關閉</button></div>
+    <h2 id="diaryTitle">牠的日記</h2>
+    <p class="gsub">每天發生的事會偷偷記下來，隔天打開時牠會寫成一篇日記。</p>
+    <div class="diarylist" id="diaryList"></div>
+    <div class="btns"><button class="btn primary" id="diaryToday" type="button">先寫今天的</button></div>
+    <p class="gsub" id="diaryMsg" role="status"></p>
+  </div>
+</div>
 <div class="guide" id="memPanel" hidden role="dialog" aria-modal="true" aria-labelledby="memTitle">
   <div class="gcard">
     <div class="ghead"><span>記憶本</span><button class="gx" id="memClose" type="button">關閉</button></div>
@@ -419,7 +450,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 </div>
 <section class="home" id="viewHome" hidden>
   <div class="room" id="room">
-    <div class="window" aria-hidden="true"><span></span></div>
+    <div class="window" aria-hidden="true"><i class="stars"></i><i class="moon"></i><span></span></div>
     <div class="floor" aria-hidden="true"></div>
     <div class="bed" id="bed" aria-hidden="true"></div>
     <div class="item z1" id="it-tree" hidden aria-hidden="true"><svg viewBox="0 0 90 120" preserveAspectRatio="none"><rect x="5" y="112" width="80" height="8" rx="3" fill="#b98a63"/><rect x="39" y="12" width="12" height="100" fill="#ead7b6"/><path d="M39,20 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,27 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,34 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,41 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,48 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,55 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,62 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,69 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,76 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,83 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,90 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,97 h12" stroke="#d2b88f" stroke-width="2"/><path d="M39,104 h12" stroke="#d2b88f" stroke-width="2"/><path d="M22,71 V84" stroke="#9a7a5c" stroke-width="1.5"/><circle cx="22" cy="87" r="4.5" fill="#e5868e"/><rect x="8" y="62" width="52" height="9" rx="4" fill="#a8775a"/><rect x="10" y="8" width="70" height="10" rx="5" fill="#a8775a"/></svg></div>
@@ -431,6 +462,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="cananim" id="canAnim" hidden aria-hidden="true"><svg viewBox="0 0 26 30" width="100%" height="100%" overflow="visible"><rect x="2" y="8" width="22" height="20" rx="3" fill="#c9d3dc"/><rect id="canLabel" x="2" y="13" width="22" height="9" fill="#e5707b"/><path d="M8,17 l3,-2 l3,2 l3,-2" stroke="#fff" stroke-width="1.4" fill="none"/><g class="lid"><ellipse cx="13" cy="8" rx="11" ry="3" fill="#aeb9c4"/><ellipse cx="13" cy="7.6" rx="8" ry="2" fill="#d7dee5"/><rect x="11" y="5" width="5" height="2.4" rx="1.2" fill="#8d99a6"/></g><g class="spill"><ellipse id="canSpill" cx="13" cy="9" rx="8" ry="2.4" fill="#c98b6b"/></g></svg></div>
     <div class="item z3" id="it-bowl" hidden role="button" aria-label="飯碗，點一下倒飼料"><svg viewBox="0 0 42 18" preserveAspectRatio="none"><g id="food"><ellipse cx="21" cy="5" rx="15" ry="4.5" fill="#b77a4a"/><circle cx="14" cy="3.5" r="1.6" fill="#8f5a33"/><circle cx="24" cy="2.8" r="1.6" fill="#8f5a33"/><circle cx="29" cy="5" r="1.4" fill="#8f5a33"/></g><path d="M3,7 L39,7 L34,18 L8,18Z" fill="#6fa3c8"/><rect x="0" y="5" width="42" height="4" rx="2" fill="#8bbbe0"/></svg></div>
 
+    <div class="tshade" aria-hidden="true"></div>
     <svg class="toylayer" id="wandToy" hidden aria-hidden="true"><path id="stringPath" fill="none" stroke="#6b5b4c" stroke-width="1.6"/><g id="featherG"><circle r="6" fill="#e8c14f"/><path d="M0,3 C-16,14 -18,30 -9,42 C-4,28 -1,18 0,6Z" fill="#e5707b"/><path d="M0,3 C16,14 18,30 9,42 C4,28 1,18 0,6Z" fill="#5fb3a3"/><path d="M0,4 C-3,20 0,34 0,44 C3,32 4,18 0,4Z" fill="#f6c27f"/></g></svg>
     <svg class="toylayer" id="wandStick" hidden aria-hidden="true"><path id="stickPath" stroke="#a8775a" stroke-width="5" stroke-linecap="round"/></svg>
     <button class="wandbtn canbtn" id="canBtn" type="button" aria-label="開罐頭"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><rect x="9" y="14" width="22" height="18" rx="3" fill="#c9d3dc"/><rect x="9" y="18" width="22" height="8" fill="#e5707b"/><ellipse cx="20" cy="14" rx="11" ry="3.2" fill="#aeb9c4"/><rect x="18" y="10" width="5" height="3" rx="1.5" fill="#8d99a6"/></svg><span>罐頭</span></button>
@@ -476,7 +508,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       <input id="sayInput" maxlength="100" placeholder="跟牠說說話…" aria-label="跟牠說的話">
       <button class="btn primary" type="submit" id="sayBtn">說</button>
     </form>
-    <div class="ptools"><button class="linkbtn" id="openAI" type="button">說話模式：貓語</button><button class="linkbtn" id="openMem" type="button">牠的記憶本</button><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
+    <div class="ptools"><button class="linkbtn" id="openAI" type="button">說話模式：貓語</button><button class="linkbtn" id="openMem" type="button">牠的記憶本</button><button class="linkbtn" id="openDiary" type="button">牠的日記</button><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
     <ol class="tlog" id="talkLog" aria-live="polite"></ol>
   </div>
 </section>
@@ -500,14 +532,15 @@ const firebaseConfig = {
 const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434',eyeLink:true,nose:'#e88a90',
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
-  brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,backEdited:false,
+  brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,sideLEdited:false,backEdited:false,
   affection:60,temper:40,energy:50,likes:['head','chin'],dislikes:['belly'],hugPref:'mood',personaSet:false,persNotes:{},guideAns:[],phrases:['我回來了','早安','晚安','想你','要吃罐罐嗎','乖乖'],talkMode:'cat',learned:[],stats:{}};
 const KEY='neko-maker-v1';
 let S={...DEF},tab='color',mview='front',booting=true;
 const $=id=>document.getElementById(id);
 const base=$('base'),topL=$('top'),wrap=$('wrap');
-const VIEWS=['front','side','back'],VNAME={front:'正面',side:'側面',back:'背面'};
-const CV={front:$('paint'),side:$('paintSide'),back:$('paintBack')};
+const VIEWS=['front','side','back'],PAINTS=['front','side','sideL','back'],VNAME={front:'正面',side:'右側',sideL:'左側',back:'背面'};
+const GV=v=>v==='sideL'?'side':v; // 左側用同一個側面形狀，畫面左右翻過來
+const CV={front:$('paint'),side:$('paintSide'),sideL:$('paintSideL'),back:$('paintBack')};
 let cv=CV.front,ctx=cv.getContext('2d');
 
 const BASES=[['奶油','#f6efe3'],['白','#fbf9f5'],['橘','#f6c27f'],['深橘','#e9a35b'],['奶茶','#d9b48f'],['灰','#a3a3a8'],['藍灰','#8d97a5'],['銀','#d3d6da'],['棕','#9b7458'],['黑','#3d3838']];
@@ -583,7 +616,7 @@ function partShapes(fill,v='front'){
   }
   return P;
 }
-function shapes(fill,v=mview){const P=partShapes(fill,v);return ORDERS[v].map(k=>P[k]).join('')}
+function shapes(fill,v=mview){v=GV(v);const P=partShapes(fill,v);return ORDERS[v].map(k=>P[k]).join('')}
 function featureParts(v='front',opt={}){
   const g=geo(),dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#3b3434',shade=mix(S.base,dark?'#ffffff':'#000000',.13);
   const F={head:'',face:'',frontL:'',frontR:''};
@@ -623,7 +656,7 @@ function featureParts(v='front',opt={}){
   }
   return F;
 }
-function topLayer(opt={},v=mview){const F=featureParts(v,opt);return F.head+F.face+F.frontL+F.frontR}
+function topLayer(opt={},v=mview){const F=featureParts(GV(v),opt);return F.head+F.face+F.frontL+F.frontR}
 function maskURL(v=mview){return`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">${shapes('#000',v)}</svg>`)}")`}
 
 function render(){
@@ -631,7 +664,7 @@ function render(){
   const m=maskURL();
   cv.style.webkitMaskImage=m;cv.style.maskImage=m;
   if(view==='home')drawHomeCat();
-  wrap.style.transform=`scale(${S.size})`;
+  wrap.style.transform=`scale(${mview==='sideL'?-S.size:S.size},${S.size})`;
   $('eyeRrow').hidden=S.eyeLink;$('eyeLlbl').textContent=S.eyeLink?'眼睛顏色':'左眼顏色';
   $('earRrow').hidden=S.earLink;$('earLlbl').textContent=S.earLink?'耳朵形狀':'左耳形狀';
   $('whRrow').hidden=S.whLink;$('whLlbl').textContent=S.whLink?'每邊根數':'左邊根數';
@@ -701,7 +734,8 @@ function sample(data,x0,y0,x1,y1,skip){
   return{cov:n?hit/n:0,c:hit?'#'+[r,g,b].map(v=>Math.round(v/hit).toString(16).padStart(2,'0')).join(''):null};
 }
 function derive(v){
-  const data=CV.front.getContext('2d').getImageData(0,0,600,600).data,g=geo();
+  let SRC=CV.front;if(v==='sideL'){SRC=document.createElement('canvas');SRC.width=SRC.height=600;const mx=SRC.getContext('2d');mx.translate(600,0);mx.scale(-1,1);mx.drawImage(CV.front,0,0)}
+  const data=SRC.getContext('2d').getImageData(0,0,600,600).data,g=geo();
   const inBody=(x,y)=>((x-150)/g.brx)**2+((y-208)/54)**2<1;
   const sL=sample(data,88,165,124,252,(x,y)=>!inBody(x,y)),sR=sample(data,176,165,212,252,(x,y)=>!inBody(x,y));
   const side=sL.cov>=sR.cov?sL:sR,chest=sample(data,132,188,168,236),legs=sample(data,128,250,172,268);
@@ -711,8 +745,8 @@ function derive(v){
   const fillIf=(s,fn,min=.4)=>{if(s.c&&s.cov>=min){c.fillStyle=s.c;c.strokeStyle=s.c;fn()}};
   const stripes=(s,fn)=>{if(s.c&&s.cov>=.08&&s.cov<.4){c.strokeStyle=s.c;c.lineWidth=7;c.lineCap='round';fn()}};
   const tailStroke=d=>()=>{c.lineWidth=g.tw;c.lineCap='round';c.lineJoin='round';c.stroke(new Path2D(d))};
-  if(v==='side'){
-    c.drawImage(CV.front,116,20,184,372,156,62,130,134);
+  if(v==='side'||v==='sideL'){
+    c.drawImage(SRC,116,20,184,372,156,62,130,134);
     const ell=()=>{c.beginPath();c.ellipse(148,208,g.sbrx,g.sbry,0,0,Math.PI*2)};
     fillIf(side,()=>{c.save();ell();c.clip();c.fillRect(50,140,200,72);c.restore()});
     stripes(side,()=>{c.save();ell();c.clip();for(let x=92;x<=200;x+=24){c.beginPath();c.moveTo(x,166);c.lineTo(x-4,198);c.stroke()}c.restore()});
@@ -721,7 +755,7 @@ function derive(v){
     fillIf(legs,()=>{c.fillRect(80,252,150,20)},.35);
   }
   if(v==='back'){
-    c.save();c.translate(300,0);c.scale(-1,1);c.drawImage(CV.front,116,0,368,236,58,0,184,158);c.restore();
+    c.save();c.translate(300,0);c.scale(-1,1);c.drawImage(SRC,116,0,368,236,58,0,184,158);c.restore();
     const ell=()=>{c.beginPath();c.ellipse(150,208,g.brx,54,0,0,Math.PI*2)};
     fillIf(side,()=>{c.save();ell();c.clip();c.fillRect(60,140,180,84);c.restore()});
     stripes(side,()=>{c.save();ell();c.clip();[176,196,216,236].forEach(y=>{c.beginPath();c.moveTo(150-g.brx*.55,y);c.quadraticCurveTo(150,y+8,150+g.brx*.55,y);c.stroke()});c.restore()});
@@ -730,20 +764,20 @@ function derive(v){
   }
   c.restore();
 }
-function autoDerive(){['side','back'].forEach(v=>{if(!S[v+'Edited'])derive(v)})}
+function autoDerive(){['side','sideL','back'].forEach(v=>{if(!S[v+'Edited'])derive(v)})}
 
 /* ===== 捏貓的角度切換 ===== */
-const hist={front:{u:[],r:[]},side:{u:[],r:[]},back:{u:[],r:[]}};
+const hist={front:{u:[],r:[]},side:{u:[],r:[]},sideL:{u:[],r:[]},back:{u:[],r:[]}};
 let undoStack=hist.front.u,redoStack=hist.front.r;
-const vhint=()=>{$('vhint').textContent=mview==='front'?'側面和背面的花紋會自動從正面帶入':(S[mview+'Edited']?'這個角度是你畫的':'這是從正面自動帶入的，不像可以直接補畫')};
-const mviewBtns=VIEWS.map(v=>{const b=document.createElement('button');b.className='chip';b.dataset.v=v;b.textContent=VNAME[v];b.onclick=()=>setMView(v);$('c-mview').appendChild(b);return b});
+const vhint=()=>{$('vhint').textContent=mview==='front'?'其他角度的花紋會自動從正面帶入，也可以上傳那個角度的照片':(S[mview+'Edited']?'這個角度是你畫的':'這是從正面自動帶入的，不像可以直接補畫')};
+const mviewBtns=['front','sideL','side','back'].map(v=>{const b=document.createElement('button');b.className='chip';b.dataset.v=v;b.textContent=VNAME[v];b.onclick=()=>setMView(v);$('c-mview').appendChild(b);return b});
 function setMView(v){
-  mview=v;VIEWS.forEach(k=>{CV[k].hidden=k!==v});cv=CV[v];ctx=cv.getContext('2d');
+  mview=v;PAINTS.forEach(k=>{CV[k].hidden=k!==v});cv=CV[v];ctx=cv.getContext('2d');
   undoStack=hist[v].u;redoStack=hist[v].r;histUI();
   $('stampRow').hidden=v!=='front';$('rederive').hidden=v==='front';
   mviewBtns.forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));vhint();render();if(typeof drawTrace==='function')drawTrace();
 }
-$('rederive').onclick=()=>{if(mview==='front')return;pushUndo();S[mview+'Edited']=false;derive(mview);vhint();save()};
+$('rederive').onclick=()=>{if(mview==='front')return;pushUndo();S[mview+'Edited']=false;S[mview+'Photo']=false;if(typeof drawViewPhotoBtns==='function')drawViewPhotoBtns();derive(mview);vhint();save()};
 
 /* painting */
 function snap(){return ctx.getImageData(0,0,600,600)}
@@ -754,7 +788,7 @@ function undo(){const d=undoStack.pop();if(!d)return;redoStack.push(snap());ctx.
 function redo(){const d=redoStack.pop();if(!d)return;undoStack.push(snap());ctx.putImageData(d,0,0);histUI();afterChange()}
 document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
   if(k==='z'&&!e.shiftKey){e.preventDefault();undo()}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();redo()}});
-function pt(e){const r=e.currentTarget.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*600,y:(e.clientY-r.top)/r.height*600}}
+function pt(e){const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*600;return{x:mview==='sideL'?600-x:x,y:(e.clientY-r.top)/r.height*600}}
 function dab1(x,y){const rad=S.brushSize;ctx.globalCompositeOperation=S.eraser?'destination-out':'source-over';
   const c=S.eraser?'#000000':S.brush;
   if(S.soft){const g=ctx.createRadialGradient(x,y,0,x,y,rad);g.addColorStop(0,rgba(c,1));g.addColorStop(.5,rgba(c,.9));g.addColorStop(1,rgba(c,0));ctx.fillStyle=g}
@@ -770,9 +804,9 @@ function tapRegion(p,mode){const W=600,img=ctx.getImageData(0,0,W,W),d=img.data,
     const x=i%W,y=(i/W)|0;if(!((x>0&&inR[i-1])||(x<W-1&&inR[i+1])||(y>0&&inR[i-W])||(y<W-1&&inR[i+W])))continue;
     if(mode==='del')d[k+3]=Math.round(d[k+3]*.4);else{d[k]=(d[k]+nc[0])>>1;d[k+1]=(d[k+1]+nc[1])>>1;d[k+2]=(d[k+2]+nc[2])>>1;d[k+3]=Math.max(d[k+3],160)}}
   ctx.putImageData(img,0,0)}
-function dab(p){dab1(p.x,p.y);if(S.sym&&mview!=='side')dab1(600-p.x,p.y)}
+function dab(p){dab1(p.x,p.y);if(S.sym&&GV(mview)!=='side')dab1(600-p.x,p.y)}
 let painting=false,last=null;
-VIEWS.forEach(k=>{const c=CV[k];
+PAINTS.forEach(k=>{const c=CV[k];
   c.addEventListener('pointerdown',e=>{if(tab!=='color')return;e.preventDefault();
     if(S.ptool==='fill'||S.ptool==='del'){if(mview!=='front'&&!S[mview+'Edited']){S[mview+'Edited']=true;vhint()}pushUndo();tapRegion(pt(e),S.ptool);afterChange();return}
     pushUndo();painting=true;
@@ -807,13 +841,13 @@ let sentPaint={};
 async function doSave(){
   if(booting)return;
   if(!user)guestDirty=true;
-  const data={S,paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintBack:CV.back.toDataURL()};
+  const data={S,paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintSideL:CV.sideL.toDataURL(),paintBack:CV.back.toDataURL()};
   try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
   if(user&&db&&!loading){
-    if(data.paint.length+data.paintSide.length+data.paintBack.length>950000){status('花紋太複雜，超過雲端單筆上限，請清掉一些');return}
+    if(data.paint.length+data.paintSide.length+data.paintSideL.length+data.paintBack.length>950000){status('花紋太複雜，超過雲端單筆上限，請清掉一些');return}
     const clean=JSON.parse(JSON.stringify(S));if(Array.isArray(clean.guideAns))clean.guideAns=clean.guideAns.map(a=>Array.isArray(a)?a.join(','):String(a??''));
-    const payload={settings:clean,updatedAt:serverTimestamp()};['paint','paintSide','paintBack'].forEach(k=>{if(sentPaint[k]!==data[k])payload[k]=data[k]});
-    try{await setDoc(doc(db,'users',user.uid,'cats','main'),payload,{mergeFields:Object.keys(payload)});['paint','paintSide','paintBack'].forEach(k=>{if(k in payload)sentPaint[k]=data[k]});status('已同步到雲端')}
+    const payload={settings:clean,updatedAt:serverTimestamp()};['paint','paintSide','paintSideL','paintBack'].forEach(k=>{if(sentPaint[k]!==data[k])payload[k]=data[k]});
+    try{await setDoc(doc(db,'users',user.uid,'cats','main'),payload,{mergeFields:Object.keys(payload)});['paint','paintSide','paintSideL','paintBack'].forEach(k=>{if(k in payload)sentPaint[k]=data[k]});status('已同步到雲端')}
     catch(e){status('雲端儲存失敗（'+(e.code||e.message)+'）')}
   }else if(!user)status('已自動儲存在這台裝置')
 }
@@ -821,19 +855,19 @@ function loadImg(c,url){return new Promise(res=>{const x=c.getContext('2d');x.cl
   const img=new Image();img.onload=()=>{x.drawImage(img,0,0);res()};img.onerror=()=>res();img.src=url})}
 async function applyData(settings,p={}){
   S={...DEF,...settings};$('catName').value=S.name;
-  VIEWS.forEach(v=>{hist[v].u.length=0;hist[v].r.length=0});histUI();
-  await Promise.all([loadImg(CV.front,p.paint),loadImg(CV.side,p.paintSide),loadImg(CV.back,p.paintBack)]);
-  if(!p.paintSide)S.sideEdited=false;if(!p.paintBack)S.backEdited=false;
-  autoDerive();vhint();render();
+  PAINTS.forEach(v=>{hist[v].u.length=0;hist[v].r.length=0});histUI();
+  await Promise.all([loadImg(CV.front,p.paint),loadImg(CV.side,p.paintSide),loadImg(CV.sideL,p.paintSideL),loadImg(CV.back,p.paintBack)]);
+  if(!p.paintSide)S.sideEdited=false;if(!p.paintSideL)S.sideLEdited=false;if(!p.paintBack)S.backEdited=false;
+  autoDerive();vhint();render();if(typeof drawViewPhotoBtns==='function')drawViewPhotoBtns();if(typeof rollDay==='function')rollDay();
 }
 let resetArm=false;
 $('resetAll').onclick=e=>{if(!resetArm){resetArm=true;e.target.textContent='再按一次確認';setTimeout(()=>{resetArm=false;e.target.textContent='全部重來'},2500);return}
   resetArm=false;e.target.textContent='全部重來';S={...DEF};$('catName').value=S.name;
-  VIEWS.forEach(v=>{CV[v].getContext('2d').clearRect(0,0,600,600);hist[v].u.length=0;hist[v].r.length=0});
+  PAINTS.forEach(v=>{CV[v].getContext('2d').clearRect(0,0,600,600);hist[v].u.length=0;hist[v].r.length=0});
   setMView('front');stamp('patch');hist.front.u.length=0;histUI();render()};
 
 /* 備份：把貓的一切下載成一個檔案，隨時可以還原 */
-$('backupOut').onclick=()=>{try{const data={app:'cat-studio',version:1,exportedAt:new Date().toISOString(),settings:JSON.parse(JSON.stringify(S)),paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintBack:CV.back.toDataURL()};
+$('backupOut').onclick=()=>{try{const data={app:'cat-studio',version:1,exportedAt:new Date().toISOString(),settings:JSON.parse(JSON.stringify(S)),paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintSideL:CV.sideL.toDataURL(),paintBack:CV.back.toDataURL()};
   const url=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`${S.name||'cat'}-備份-${today()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
   $('backupMsg').textContent='已下載備份，建議存到雲端硬碟'}catch(e){$('backupMsg').textContent='下載失敗：'+e.message}};
 let backupPending=null;
@@ -941,11 +975,12 @@ const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').match
 let BED=.8;
 const H={x:.3,target:.3,state:'sit',timer:2,t:0,hop:0,face:'normal',goSleep:false,look:0,tilt:0,wag:0,px:0,pAt:-1e9,view:'front',y:0,jump:null,inBox:false,facing:1,
   mood:.7,petAcc:0,petRecent:0,cooldown:0,faceT:0,swat:0,trap:0,hug:false,hugK:0,wriggle:0,lean:0,statusT:0,statusTxt:''};
-let HP={};
+let HP={},hFlipPat=false;
 const P01=k=>(S[k]??50)/100;
 function drawHomeCat(){
   let s='<defs>';
-  VIEWS.forEach(v=>{s+=`<image id="hpat-${v}" href="${CV[v].toDataURL()}" x="0" y="0" width="300" height="300"/>`;
+  PAINTS.forEach(v=>{s+=`<image id="hpat-${v}" href="${CV[v].toDataURL()}" x="0" y="0" width="300" height="300"/>`});
+  VIEWS.forEach(v=>{
     const M=partShapes('#fff',v);ORDERS[v].forEach(k=>{s+=`<mask id="hm-${v}-${k}" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="300">${M[k]}</mask>`})});
   s+='</defs>';
   VIEWS.forEach(v=>{const P=partShapes(S.base,v),F=featureParts(v,{face:H.face});
@@ -953,7 +988,7 @@ function drawHomeCat(){
     ORDERS[v].forEach(k=>{s+=`<g id="hp-${v}-${k}">${P[k]}<use href="#hpat-${v}" mask="url(#hm-${v}-${k})"/>`;
       s+=k==='head'?F.head+`<g id="hp-${v}-face">${F.face}</g>`:(F[k]||'');s+='</g>'});
     s+='</g>'});
-  hCat.innerHTML=s;
+  hCat.innerHTML=s;hFlipPat=false;
   HP={};VIEWS.forEach(v=>{HP[v]={};ORDERS[v].concat('face').forEach(k=>{HP[v][k]=document.getElementById(`hp-${v}-${k}`)})});
   hc.style.width=`calc(clamp(130px, 26%, 250px) * ${S.size})`;
   catchUpNeeds();drawFood();
@@ -1006,7 +1041,7 @@ function step(dt){
     else H.x+=Math.sign(d)*sp;
   }else if(H.state==='sit'&&H.timer<=0){
     if(tryActivity())return;
-    const r=Math.random(),sleepy=.15+.25*(1-P01('energy'))+(1-needs().energy)*.4;
+    const r=Math.random(),sleepy=.15+.25*(1-P01('energy'))+(1-needs().energy)*.4+(typeof todNow==='function'&&todNow()==='night'?.3:0);
     if(r<1-sleepy-.15){let t=.04+Math.random()*.92;if(Math.abs(t-H.x)<.12)t=H.x>.5?t-.3:t+.3;startWalk(Math.min(.96,Math.max(.04,t)))}
     else if(r<1-.15&&(!roomCfg().bed.on||Math.abs(H.x-BED)>.02))goSleep();
     else{H.timer=2+Math.random()*3;if(Math.random()<.5)setHView(H.view==='back'?'front':'back')}
@@ -1078,7 +1113,8 @@ function apply(dt){
   const hk=H.hugK,sc=1+.25*hk;sx*=sc;sy*=sc;if(H.hug){y+=(H.carry||0)*w;rot+=Math.max(-14,Math.min(14,(H.dragV||0)*.012))*(m||.4);if(H.warned)rot+=Math.sin(t*22)*4*(m||.4)}
   {const tg=HP.side&&HP.side.face&&HP.side.face.querySelector('.tongue');if(tg){if((st==='drink'||(st==='eat'&&H.eatSrc==='plate'))&&v==='side'){const q=m?Math.max(0,Math.sin(t*(st==='drink'?16:12))):.6;tg.setAttribute('opacity',q>.15?'1':'0');tg.setAttribute('transform',`translate(274 156) scale(1 ${.5+q*.9}) translate(-274 -156)`)}else tg.setAttribute('opacity','0')}}
   {const tf=HP.front&&HP.front.face&&HP.front.face.querySelector('.tongueF');if(tf){if((H.lickT||0)>0&&v==='front'){tf.setAttribute('opacity','1');tf.setAttribute('transform',`translate(${Math.sin(t*9)*5*(m||.3)} 0)`)}else tf.setAttribute('opacity','0')}}
-  const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';hCat.style.transformOrigin='35% 90%';
+  const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';
+  if(flip!==hFlipPat){hFlipPat=flip;hCat.querySelectorAll('#hv-side use').forEach(u=>u.setAttribute('href',flip?'#hpat-sideL':'#hpat-side'))}hCat.style.transformOrigin='35% 90%';
   hCat.style.transform=(flip?'scaleX(-1) ':'')+(v==='side'&&H.state==='scratch'?'rotate(-14deg)':'');
   hc.style.bottom=(rh*.11-w*.107)+'px';
   hc.style.transform=`translate(${px+wig}px,${-(bob+y)}px) rotate(${rot}deg) scale(${sx},${sy})`;
@@ -1251,7 +1287,7 @@ function drawLog(){const ol=$('talkLog');ol.innerHTML='';talkLog.forEach(([w,t,d
 let lastSaid='';
 async function send(text){text=(text||'').trim();if(!text)return;if(aiBusy){note(`${S.name||'牠'}還在想，等一下再說`,2);return}lastInteract=Date.now();idleFired=false;
   if(intentOf(text)!=='danger')notePending(text);
-  talkLog.push(['me',text]);drawLog();const r=(aiOn()&&intentOf(text)!=='danger')?await aiSend(text):respond(text);talkLog.push(['cat',[r.m,r.th].filter(Boolean).join(' ')||'…',r.d]);
+  talkLog.push(['me',text]);drawLog();if(typeof noteDay==='function')noteDay(`主人跟我說：「${text.slice(0,30)}」`);const r=(aiOn()&&intentOf(text)!=='danger')?await aiSend(text):respond(text);talkLog.push(['cat',[r.m,r.th].filter(Boolean).join(' ')||'…',r.d]);
   while(talkLog.length>6)talkLog.shift();drawLog();
   lastSaid=text;const sp=$('savePhrase');if(!phrases().includes(text)){sp.textContent=`＋ 把「${text.length>10?text.slice(0,10)+'…':text}」存成快捷按鈕`;sp.hidden=false;clearTimeout(send.t);send.t=setTimeout(()=>{sp.hidden=true},9000)}else sp.hidden=true}
 let editing=false;
@@ -1420,11 +1456,12 @@ function touchStory(t,wasHug){
   return`（主人摸了你的${zn}大約 ${secs} 秒${t.good?'，你覺得很舒服':''}）`;
 }
 function onHomeOpen(){
+  if(typeof rollDay==='function')rollDay();
   const last=+ls.get('neko-last-seen')||0,gap=Date.now()-last;ls.set('neko-last-seen',String(Date.now()));
   if(!last||gap>=20*60*1000){recordVisit();if(pending.length>=2)setTimeout(()=>maybeLearn(true),8000)}
   if(!aiOn()||(last&&gap<20*60*1000))return;
   const g=!last?'這是主人第一次來看你':gap<72e5?`主人離開了大約 ${Math.round(gap/6e4)} 分鐘`:gap<1728e5?`主人大約 ${Math.round(gap/36e5)} 小時沒來了`:`主人已經 ${Math.round(gap/864e5)} 天沒來看你了`;
-  setTimeout(()=>aiEvent(`（主人打開房間來看你了。${g}）`,{force:true}),1500);
+  setTimeout(()=>aiEvent(`（主人打開房間來看你了。${g}。現在是${todLabel()}）`,{force:true}),1500);
 }
 setInterval(()=>{if(view!=='home'||document.hidden)return;ls.set('neko-last-seen',String(Date.now()));
   if(!idleFired&&H.state!=='sleep'&&!H.hug&&Date.now()-lastInteract>4*60*1000){idleFired=true;aiEvent('（主人在旁邊，但已經好幾分鐘沒有理你了）')}},15000);
@@ -1434,7 +1471,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view==='h
 const PENDKEY='neko-pending',FACT_MAX=120,NEWS_MAX=8,COMPACT_AT=60,COMPACT_TO=40;
 const FACT_CATS=['習性','喜好','討厭','回憶','口頭禪與叫聲','修正','主人近況'];
 let pending=[];try{pending=JSON.parse(ls.get(PENDKEY)||'[]')}catch(e){pending=[]}
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 function learned(){if(!Array.isArray(S.learned))S.learned=[];return S.learned}
 function addFact(c,t,src){t=String(t||'').trim().slice(0,120);if(!t)return false;const L=learned();
   if(L.some(f=>f.t===t))return false;L.push({c:FACT_CATS.includes(c)?c:'習性',t,d:today(),s:src||'auto'});
@@ -1783,7 +1820,7 @@ function drawWand(){
 /* 行為紀錄 */
 const actAt={};let actAny=-1e9;
 function logAct(key,text,force,meta){const now=performance.now();if(!force&&(now-(actAt[key]??-1e9)<6000||now-actAny<2200))return;actAt[key]=now;actAny=now;
-  talkLog.push(['act',`${S.name||'牠'}${text}`,'',key,meta||null]);while(talkLog.length>8)talkLog.shift();drawLog();maybeAsk(key,text)}
+  talkLog.push(['act',`${S.name||'牠'}${text}`,'',key,meta||null]);if(typeof noteDay==='function')noteDay(text);while(talkLog.length>8)talkLog.shift();drawLog();maybeAsk(key,text)}
 const TRAIT_FIX={
   foodRun:[['牠沒那麼急',T=>{T.appetite-=2},'放飯時，牠不會一聽到聲音就衝過來']],
   canRun:[['牠沒那麼愛罐頭',T=>{T.canLove-=2},'牠沒有特別愛吃罐頭']],
@@ -1925,11 +1962,11 @@ function projectRaw(src,lm){
 function inpaint(d,cx,cy,r){const W=300,ring=[];for(let a=0;a<24;a++){const t=a/24*Math.PI*2;for(const rr of[r+3,r+7]){const px=Math.round(cx+Math.cos(t)*rr),py=Math.round(cy+Math.sin(t)*rr);if(px>=0&&py>=0&&px<W&&py<W){const i=(py*W+px)*4;if(d[i+3]>100)ring.push([d[i],d[i+1],d[i+2]])}}}
   if(!ring.length)return;ring.sort((a,b)=>(a[0]+a[1]+a[2])-(b[0]+b[1]+b[2]));const m=ring[Math.floor(ring.length*.6)];
   for(let y=Math.max(0,cy-r);y<=Math.min(W-1,cy+r);y++)for(let x=Math.max(0,cx-r);x<=Math.min(W-1,cx+r);x++){if((x-cx)**2+(y-cy)**2>r*r)continue;const i=(y*W+x)*4;if(d[i+3]>100){d[i]=m[0];d[i+1]=m[1];d[i+2]=m[2]}}}
-function quantLabels(raw,palette,baseHex){
+function quantLabels(raw,palette,baseHex,holes=[[120,130,15],[180,130,15],[150,146,10],[150,158,9]]){
   const W=300,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');
   try{x.filter='blur(2px)'}catch(e){}x.drawImage(raw,0,0);x.filter='none';
   const d=x.getImageData(0,0,W,W).data;
-  [[120,130,15],[180,130,15],[150,146,10],[150,158,9]].forEach(([a,b,r])=>inpaint(d,a,b,r));
+  holes.forEach(([a,b,r])=>inpaint(d,a,b,r));
   const pal=palette.map(rgb),bi=Math.max(0,palette.indexOf(baseHex)),lab=new Int16Array(W*W).fill(-1);
   const dist=(r,g,b,p)=>2*(r-p[0])**2+4*(g-p[1])**2+3*(b-p[2])**2;
   for(let i=0;i<W*W;i++){if(d[i*4+3]<100)continue;let best=0,bd=1e18;for(let k=0;k<pal.length;k++){const v=dist(d[i*4],d[i*4+1],d[i*4+2],pal[k]);if(v<bd){bd=v;best=k}}lab[i]=best}
@@ -1955,8 +1992,8 @@ function drawStripes(x,L){const rnd=seeded(5),g=geo(),hf=g.hf,bf=g.brx/62;
     [[[98,186],[112,188],[120,200]],[[94,204],[108,206],[116,220]],[[96,222],[106,226],[112,238]]].forEach(([a,b,cc])=>curve([X(bx,a[0]),a[1]],[X(bx,b[0]),b[1]],[X(bx,cc[0]),cc[1]],4))};
   side(false);side(true);x.restore()}
 /* 把碎點合併、邊緣變圓滑，畫成 600 的插畫花紋。lv 0~100：越大越簡化 */
-function renderLabels(L,lv){const W=300,N=W*W,lab=L.lab.slice(),K=L.pal.length;
-  for(let i=235*W;i<N;i++)lab[i]=-1; // 沒有照片資料（或被紙箱擋住）的地方：不投票，讓色塊自然收圓
+function renderLabels(L,lv,cutY=235){const W=300,N=W*W,lab=L.lab.slice(),K=L.pal.length;
+  for(let i=cutY*W;i<N;i++)lab[i]=-1; // 沒有照片資料（或被紙箱擋住）的地方：不投票，讓色塊自然收圓
   // 1) 小碎塊併進旁邊最多的顏色
   const minA=Math.round(25+lv*5),seen=new Uint8Array(N),q=new Int32Array(N);
   for(let s0=0;s0<N;s0++){if(seen[s0]||lab[s0]<0)continue;const k=lab[s0];let h=0,t=0;q[t++]=s0;seen[s0]=1;const nb={};
@@ -1990,7 +2027,7 @@ function buildProj(){const V=photoVariants;if(!V||!V.L)return null;const c=docum
   return x.getImageData(0,0,600,600)}
 function paintVariant(which){if(!photoVariants)return;const v=photoVariants[which];if(!v)return;
   if(mview!=='front')setMView('front');pushUndo();const c=CV.front.getContext('2d');c.clearRect(0,0,600,600);c.putImageData(v,0,0);
-  S.sideEdited=false;S.backEdited=false;autoDerive();render();photoVariants.cur=which;drawPhotoTools()}
+  ['side','sideL','back'].forEach(v=>{if(!S[v+'Photo'])S[v+'Edited']=false});autoDerive();render();photoVariants.cur=which;drawPhotoTools()}
 function drawPhotoTools(){const t=$('photoTools');if(!photoVariants){t.hidden=true;return}t.hidden=false;
   $('pvProj').hidden=!photoVariants.proj;$('simpRow').hidden=$('texRow').hidden=!photoVariants.proj||photoVariants.cur!=='proj';document.querySelectorAll('#texChips .chip').forEach(b=>b.setAttribute('aria-pressed',(photoVariants.tex||'none')===b.dataset.t));$('pvProj').setAttribute('aria-pressed',photoVariants.cur==='proj');$('pvBlock').setAttribute('aria-pressed',photoVariants.cur==='block');
   $('pvTrace').setAttribute('aria-pressed',traceOn);$('traceRow').hidden=!traceOn}
@@ -2103,7 +2140,7 @@ async function photoToCat(file){
     catch(err){projD=null}
     if(!raw){raw=document.createElement('canvas');raw.width=raw.height=300;const rx=raw.getContext('2d'),sc=Math.min(300/pcv.width,300/pcv.height);rx.drawImage(pcv,(300-pcv.width*sc)/2,(300-pcv.height*sc)/2,pcv.width*sc,pcv.height*sc)}
     photoVariants={...(projD?photoVariants:{}),block,proj:projD,raw,cur:projD?'proj':'block'};if(!projD)c.putImageData(block,0,0);drawPhotoTools();drawTrace();
-    S.sideEdited=false;S.backEdited=false;autoDerive();render();
+    ['side','sideL','back'].forEach(v=>{if(!S[v+'Photo'])S[v+'Edited']=false});autoDerive();render();
     msg(`畫好了：${o.summary||''} ${projD?'這是照片投影的花紋，':''}AI 生成的不一定準確，可以切換「照片花紋／色塊花紋」，或打開「描圖」照著照片，用筆刷、換色塊、刪色塊微調。`);
   }catch(e){msg('分析失敗：'+aiErrText(e))}
   finally{$('photoBtn').disabled=false;$('photoInput').value=''}
@@ -2111,6 +2148,123 @@ async function photoToCat(file){
 $('photoBtn').onclick=()=>{if(!aiKey()){$('photoMsg').textContent='分析照片需要 Gemini 金鑰，先跟著步驟申請一把（免費）';openKeyGuide();return}$('photoInput').click()};
 $('stageCam').onclick=()=>{showTab('color');$('photoBtn').click()};
 $('photoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)photoToCat(f)};
+/* ===== 白天黑夜：房間跟著真實時間變化 ===== */
+function todNow(){const h=new Date().getHours();return h>=20||h<5?'night':h<7?'dawn':h<17?'day':'dusk'}
+function todLabel(){const h=new Date().getHours();return h<5?'半夜':h<7?'清晨':h<11?'早上':h<13?'中午':h<17?'下午':h<20?'傍晚':'晚上'}
+function applyTod(){const t=todNow();if(room.dataset.tod!==t)room.dataset.tod=t;rollDay()}
+applyTod();setInterval(applyTod,60000);
+
+/* ===== 牠的日記：把一天發生的事記下來，隔天請 Gemini 用貓的口吻寫成日記 ===== */
+const DIARY_KEY='neko-diary';
+function localDay(d=new Date()){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function diaryLocal(){try{return JSON.parse(ls.get(DIARY_KEY)||'{}')||{}}catch(e){return{}}}
+function diaryPut(d,t){const D=diaryLocal();D[d]=t;try{ls.set(DIARY_KEY,JSON.stringify(D))}catch(e){}
+  if(user&&db)setDoc(doc(db,'users',user.uid,'cats','diary-'+d.slice(0,4)),{entries:{[d]:t}},{merge:true}).catch(()=>{})}
+function dayEv(){if(!S.dayEv||typeof S.dayEv!=='object'||!Array.isArray(S.dayEv.ev))S.dayEv={d:localDay(),ev:[]};return S.dayEv}
+function noteDay(t){rollDay();const E=dayEv();t=String(t||'').trim().slice(0,60);if(!t||E.ev[E.ev.length-1]===t)return;E.ev.push(t);if(E.ev.length>40)E.ev.splice(0,E.ev.length-40)}
+function rollDay(){const E=dayEv(),d=localDay();if(E.d===d)return;
+  if(E.ev.length){S.diaryTodo=(Array.isArray(S.diaryTodo)?S.diaryTodo:[]).concat({d:E.d,ev:E.ev}).slice(-7)}
+  S.dayEv={d,ev:[]};save();setTimeout(writeDiaryTodo,3000)}
+const DIARY_SCHEMA={type:'OBJECT',properties:{text:{type:'STRING'}},required:['text']};
+function diaryTemplate(ev){const n=S.name||'牠',xs=ev.map(e=>e.replace(n,'')).slice(0,4);return`今天${xs.join('，')}。`}
+async function makeDiary(d,ev){const n=S.name||'貓咪';
+  if(!aiKey())return diaryTemplate(ev);
+  const sys=`你是一隻叫「${n}」的貓，正在寫自己的日記。根據今天真的發生的事，用第一人稱「我」、台灣繁體中文寫 2 到 4 句，口吻要符合我的個性，可以可愛、帶一點貓的邏輯和小心思。稱呼主人為「主人」。
+- 只寫有發生的事，可以加上我的感受，不要編造沒發生的大事件
+- 不要提到死亡、生病、離開、天堂，不要用「以前」
+- 不要條列，寫成一小段話
+
+${catProfile()}${learnedPrompt()}`;
+  const o=await gemJSON(sys,`日期：${d}\n今天發生的事：\n${ev.map(e=>'- '+e).join('\n')}`,DIARY_SCHEMA);
+  return String(o&&o.text||'').trim().slice(0,400)||diaryTemplate(ev)}
+let diaryBusy=false;
+async function writeDiaryTodo(){if(diaryBusy||!Array.isArray(S.diaryTodo)||!S.diaryTodo.length)return;diaryBusy=true;
+  try{while(S.diaryTodo.length){const it=S.diaryTodo[0];let t;try{t=await makeDiary(it.d,it.ev)}catch(e){if(busyErr(e))break;t=diaryTemplate(it.ev)}
+    diaryPut(it.d,t);S.diaryTodo.shift();save()}}
+  finally{diaryBusy=false;if(!$('diaryPanel').hidden)drawDiary()}}
+async function loadDiaryCloud(){if(!user||!db)return;const y=new Date().getFullYear();
+  for(const yy of[y,y-1]){try{const s=await getDoc(doc(db,'users',user.uid,'cats','diary-'+yy));if(s.exists()){const e=(s.data()||{}).entries||{},D=diaryLocal();Object.assign(D,e);ls.set(DIARY_KEY,JSON.stringify(D))}}catch(e){}}}
+const WD='日一二三四五六';
+function drawDiary(msg){const D=diaryLocal(),keys=Object.keys(D).sort().reverse(),box=$('diaryList');box.innerHTML='';
+  if(!keys.length){const p=document.createElement('p');p.className='gsub';p.textContent=`還沒有日記。每天跟${S.name||'牠'}互動，隔天打開就會看到牠寫的日記，也可以按下面的按鈕先寫今天的。`;box.appendChild(p)}
+  keys.forEach(k=>{const[y,m,d]=k.split('-').map(Number),dt=new Date(y,m-1,d),el=document.createElement('div');el.className='dentry';
+    const h=document.createElement('b');h.textContent=`${m} 月 ${d} 日（${WD[dt.getDay()]}）${k===localDay()?'・今天':''}`;const p=document.createElement('p');p.textContent=D[k];el.append(h,p);box.appendChild(el)});
+  $('diaryMsg').textContent=msg||''}
+$('openDiary').onclick=async()=>{$('diaryPanel').hidden=false;$('diaryTitle').textContent=`${S.name||'牠'}的日記`;drawDiary();await loadDiaryCloud();drawDiary();writeDiaryTodo()};
+$('diaryClose').onclick=()=>{$('diaryPanel').hidden=true};
+$('diaryToday').onclick=async()=>{const E=dayEv();if(!E.ev.length){drawDiary(`今天還沒發生什麼事，先跟${S.name||'牠'}玩一下吧`);return}
+  const b=$('diaryToday');b.disabled=true;drawDiary(aiKey()?`${S.name||'牠'}正在寫日記…`:'');
+  try{diaryPut(E.d,await makeDiary(E.d,E.ev));drawDiary('寫好了，今天結束時會再用一整天的事重寫一次')}catch(e){drawDiary('寫日記失敗：'+aiErrText(e))}finally{b.disabled=false}};
+
+/* ===== 加到手機主畫面 ===== */
+let installEv=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEv=e});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+$('installBtn').onclick=async()=>{const m=$('installMsg');
+  if(matchMedia('(display-mode: standalone)').matches||navigator.standalone){m.textContent='已經是從主畫面打開的了';return}
+  if(installEv){installEv.prompt();const r=await installEv.userChoice.catch(()=>null);installEv=null;m.textContent=r&&r.outcome==='accepted'?'加好了，可以從主畫面打開':'';return}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  m.textContent=ios?'用 Safari 打開這個網頁，按下方的「分享」按鈕，再選「加入主畫面」。從主畫面打開時要再登入一次 Google。':'按瀏覽器右上角的選單（⋮），選「安裝應用程式」或「加到主畫面」。'};
+/* ===== 其他角度的照片：左側、右側、背面（屁股） ===== */
+const BOX={type:'OBJECT',properties:{x0:{type:'INTEGER'},y0:{type:'INTEGER'},x1:{type:'INTEGER'},y1:{type:'INTEGER'}}};
+const VIEW_SCHEMA={type:'OBJECT',properties:{isCat:{type:'BOOLEAN'},pose:{type:'STRING',enum:['side','back','front','other']},facing:{type:'STRING',enum:['left','right']},
+  colors:{type:'ARRAY',items:{type:'STRING'}},headBox:BOX,bodyBox:BOX,legColor:{type:'STRING'},tailColor:{type:'STRING'},summary:{type:'STRING'}},required:['isCat','pose','colors','summary']};
+const VPHOTO={side:'右側',sideL:'左側',back:'背面（屁股）'};
+function okBox(b){return b&&b.x1>b.x0+15&&b.y1>b.y0+15&&b.x0>=0&&b.y0>=0&&b.x1<=1000&&b.y1<=1000}
+function gvName(v){return{side:'右側（看得到右半邊身體）',sideL:'左側（看得到左半邊身體）',back:'背面（屁股和背）'}[v]}
+/* 側面插畫是頭朝右；照片頭朝左就先左右翻。左側畫布存的是翻過的樣子，顯示時再翻回來 */
+function projectView(src,o,v){const gv=GV(v),g=geo(),W=src.width,Hh=src.height;
+  let img=src,fl=false;if(gv==='side'&&o.facing==='left'){img=document.createElement('canvas');img.width=W;img.height=Hh;const m=img.getContext('2d');m.translate(W,0);m.scale(-1,1);m.drawImage(src,0,0);fl=true}
+  const B=b=>{const x0=(fl?1000-b.x1:b.x0)/1000*W,x1=(fl?1000-b.x0:b.x1)/1000*W;return[x0,b.y0/1000*Hh,x1-x0,(b.y1-b.y0)/1000*Hh]};
+  const c=document.createElement('canvas');c.width=c.height=300;const x=c.getContext('2d');
+  const put=(b,cx,cy,rx,ry,clip)=>{const[sx,sy,sw,sh]=B(b),kx=rx*2/sw,ky=ry*2/sh;x.save();x.beginPath();clip();x.clip();
+    x.setTransform(kx,0,0,ky,cx-rx-sx*kx,cy-ry-sy*ky);x.drawImage(img,0,0);x.restore()};
+  if(gv==='side'){
+    if(okBox(o.bodyBox))put(o.bodyBox,148,208,g.sbrx,g.sbry,()=>x.ellipse(148,208,g.sbrx+4,g.sbry+4,0,0,Math.PI*2));
+    if(okBox(o.headBox))put(o.headBox,220,140,64*g.hf,56,()=>{x.ellipse(220,140,64*g.hf+4,60,0,0,Math.PI*2);x.rect(176,30,96,70)});
+  }else{
+    if(okBox(o.bodyBox))put(o.bodyBox,150,208,g.brx,54,()=>x.ellipse(150,208,g.brx+4,58,0,0,Math.PI*2));
+    if(okBox(o.headBox))put(o.headBox,150,122,88*g.hf,70,()=>{x.ellipse(150,122,88*g.hf+6,74,0,0,Math.PI*2);x.rect(46,0,208,96)});
+  }
+  return c}
+async function viewPhoto(file,v){const msg=t=>{$('photoMsg').textContent=t},n=VPHOTO[v];
+  if(!aiKey()){msg('分析照片需要 Gemini 金鑰，先跟著步驟申請一把（免費）');openKeyGuide();return}
+  msg(`正在讀取${n}照片…`);let b64,pcv;try{const r=await shrinkImage(file);b64=r.b64;pcv=r.canvas}catch(e){msg(e.message);return}
+  msg(`Gemini 正在看${n}照片，大約需要幾秒…`);document.querySelectorAll('.vphoto').forEach(b=>b.disabled=true);
+  const sys=`你是幫忙把真實貓咪照片轉成可愛扁平插畫花紋的助手。這張應該是貓的${gvName(v)}照片。請仔細看照片，回傳 JSON：
+- isCat：照片裡有沒有清楚的貓
+- pose：照片裡的貓是側面 side、背面 back（看得到屁股和背）、正面 front，還是其他 other
+- facing：如果是側面，貓的頭朝向照片的左邊 left 還是右邊 right
+- colors：這個角度看得到的毛色（#rrggbb），最多 4 個，面積最大的放第一個。顏色用插畫風格稍微提亮、乾淨的顏色
+- headBox：頭的範圍（不含耳朵和鬍鬚），bodyBox：身體軀幹的範圍（不含頭、腳、尾巴）。座標 x、y 都用 0 到 1000（照片左上角 0,0，右下角 1000,1000），x0,y0 是左上，x1,y1 是右下
+- legColor：腳的主要顏色；tailColor：尾巴的主要顏色；看不到就空字串
+- summary：用台灣繁體中文一句話描述這個角度看到的花紋`;
+  try{const o=await gemParts(sys,[{text:'請分析這張照片。'},{inlineData:{mimeType:'image/jpeg',data:b64}}],VIEW_SCHEMA,600);
+    const want=GV(v);
+    if(!o.isCat){msg('這張照片好像看不清楚貓，換一張光線好一點的試試');return}
+    if(o.pose!==want){msg(`這張看起來不是${want==='side'?'側面':'背面'}照，換一張${n}的照片試試`);return}
+    if(!okBox(o.bodyBox)&&!okBox(o.headBox)){msg('找不到貓的身體位置，換一張貓比較完整的照片試試');return}
+    const hx=c=>HEX.test(c||'')?c.toLowerCase():null,pal=[];
+    [S.base,...(o.colors||[]).map(hx)].filter(Boolean).forEach(h=>{if(!pal.some(q=>{const a=rgb(q),b=rgb(h);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])<40}))pal.push(h)});
+    const raw=projectView(pcv,o,v),holes=want==='side'?[[250,132,13],[281,146,8]]:[];
+    const out=document.createElement('canvas');out.width=out.height=600;const ox=out.getContext('2d');
+    if(pal.length>=2)ox.drawImage(renderLabels(quantLabels(raw,pal,S.base,holes),30,300).canvas,0,0);
+    const far=c=>{const a=rgb(c),b=rgb(S.base);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])>=40};
+    ox.save();ox.scale(2,2);const g=geo(),lc=hx(o.legColor),tc=hx(o.tailColor);
+    if(lc&&far(lc)){ox.fillStyle=lc;if(want==='side')ox.fillRect(80,246,150,26);else{ox.fillRect(96,250,40,22);ox.fillRect(164,250,40,22)}}
+    const td=TAILS[want][S.tail];if(tc&&far(tc)&&td){ox.strokeStyle=tc;ox.lineWidth=g.tw+6;ox.lineCap='round';ox.lineJoin='round';ox.stroke(new Path2D(td))}
+    ox.restore();
+    if(mview!==v)setMView(v);pushUndo();const c=CV[v].getContext('2d');c.clearRect(0,0,600,600);c.drawImage(out,0,0);
+    S[v+'Edited']=true;S[v+'Photo']=true;vhint();save();render();drawViewPhotoBtns();
+    msg(`${n}畫好了：${o.summary||''} AI 生成的不一定準確，可以用筆刷、換色塊、刪色塊微調。`)}
+  catch(e){msg('分析失敗：'+aiErrText(e))}
+  finally{document.querySelectorAll('.vphoto').forEach(b=>b.disabled=false);$('photoInput2').value=''}}
+function drawViewPhotoBtns(){document.querySelectorAll('.vphoto').forEach(b=>{b.querySelector('i').textContent=S[b.dataset.v+'Photo']?' ✓':''})}
+let vphotoTarget='side';
+document.querySelectorAll('.vphoto').forEach(b=>b.onclick=()=>{vphotoTarget=b.dataset.v;$('photoInput2').click()});
+$('photoInput2').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)viewPhoto(f,vphotoTarget)};
+drawViewPhotoBtns();
+
 
 /* ===== 申請 Gemini 金鑰的引導 ===== */
 const KG=[
