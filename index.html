@@ -110,6 +110,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 @keyframes birdland{from{transform:translate(-160px,-140px) scale(.7);opacity:0}to{transform:none;opacity:1}}
 @keyframes birdbob{50%{transform:translateY(-3px) rotate(-6deg)}}
 @keyframes birdfly{to{transform:translate(200px,-220px) scale(.7);opacity:0}}
+.pannav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 0}.pannav .btn{min-width:96px}.pannav span{font-size:14px;color:var(--muted)}
 .zonetabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 0 10px}
 .zonetabs button{font:inherit;font-size:14px;background:var(--chip);color:var(--fg);border:1.5px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
 .zonetabs button.cathere::after{content:" 🐱"}.zonetabs .follow{background:transparent}
@@ -605,6 +606,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <button class="wandbtn" id="wandBtn" type="button" aria-pressed="false" aria-label="逗貓棒"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M8,34 L26,10" stroke="#a8775a" stroke-width="3" stroke-linecap="round"/><path d="M26,10 C30,14 31,20 30,26" stroke="#6b5b4c" stroke-width="1.4" fill="none"/><path d="M30,26 C25,29 25,35 28,38 C30,34 31,31 30,27Z" fill="#e5707b"/><path d="M30,26 C35,29 36,34 33,38 C32,34 31,31 30,27Z" fill="#5fb3a3"/></svg><span>逗貓棒</span></button>
   <span class="swipehint" id="swipeHint">← 左右滑動，家裡還有廚房、臥室、陽台 →</span>
   </div>
+  <div class="pannav"><button class="btn" id="panL" type="button" aria-label="畫面往左">◀ 往左</button><span id="panWhere">客廳</span><button class="btn" id="panR" type="button" aria-label="畫面往右">往右 ▶</button></div>
   <div class="toolbar" role="toolbar" aria-label="照顧工具">
     <button class="tbtn" type="button" data-t="brush" aria-pressed="false"><svg viewBox="0 0 40 40"><rect x="17" y="18" width="6" height="20" rx="3" fill="#b98a63"/><rect x="7" y="6" width="26" height="14" rx="5" fill="#e5707b"/><g stroke="#8a6448" stroke-width="2" stroke-linecap="round"><path d="M10,6 v-4"/><path d="M15,6 v-4"/><path d="M20,6 v-4"/><path d="M25,6 v-4"/><path d="M30,6 v-4"/></g></svg>梳子</button>
     <button class="tbtn" type="button" data-t="treat" aria-pressed="false"><svg viewBox="0 0 40 40"><path d="M6,20 C12,10 24,10 30,20 C24,30 12,30 6,20Z" fill="#e9a35b"/><path d="M30,20 L38,13 L37,27Z" fill="#e9a35b"/><circle cx="12" cy="18" r="1.8" fill="#5a3b2a"/></svg>零食</button>
@@ -2747,7 +2749,13 @@ var camHold=-1e9,camInit=false;
 ['touchstart','wheel','pointerdown'].forEach(t=>$('roomScroll').addEventListener(t,()=>{camHold=performance.now()},{passive:true}));
 $('roomScroll').addEventListener('scroll',()=>{if(performance.now()-camHold<1500){const h=$('swipeHint');if(!h.classList.contains('off')){h.classList.add('off');try{ls.set('neko-swiped','1')}catch(e){}}}},{passive:true});
 try{if(ls.get('neko-swiped'))$('swipeHint').classList.add('off')}catch(e){}
+var lastPtrX=null;room.addEventListener('pointermove',e=>{lastPtrX=e.clientX},{passive:true});room.addEventListener('pointerdown',e=>{lastPtrX=e.clientX},{passive:true});
+function edgePan(sc,cx,dt){const r=sc.getBoundingClientRect(),edge=Math.min(90,r.width*.16);let v=0;
+  if(cx<r.left+edge)v=-(1-Math.max(0,cx-r.left)/edge);else if(cx>r.right-edge)v=1-Math.max(0,r.right-cx)/edge;
+  if(!v)return 0;const before=sc.scrollLeft;sc.scrollLeft+=v*Math.max(300,r.width*1.1)*dt;camHold=performance.now();return sc.scrollLeft-before}
 function followCam(px,w,dt){const sc=$('roomScroll');if(sc.scrollWidth<=sc.clientWidth+2)return;
+  if(H.hug&&touch&&touch.mode==='hug'){const d=edgePan(sc,touch.x,dt);if(d)H.dragX=(H.dragX||0)+d;return}
+  if(wandOn&&PL.down&&lastPtrX!=null){const d=edgePan(sc,lastPtrX,dt);if(d)PL.x=Math.max(0,Math.min(room.clientWidth,PL.x+d));return}
   const target=Math.max(0,Math.min(sc.scrollWidth-sc.clientWidth,px+w/2-sc.clientWidth/2));
   if(!camInit){camInit=true;sc.scrollLeft=target;return}
   if(performance.now()-camHold<3500||H.hug||wandOn||roomEdit)return;
@@ -2834,6 +2842,16 @@ function migrateHouse(){if(S.houseV)return;const R=S.room&&typeof S.room==='obje
   if(typeof H.x==='number')H.x=.25+H.x*.25;S.houseV=1}
 migrateHouse();
 
+
+/* 房間下面的左右按鈕 */
+function viewZone(){const sc=$('roomScroll'),rw=room.clientWidth;if(!rw)return 1;return Math.min(ZN-1,Math.max(0,Math.floor((sc.scrollLeft+sc.clientWidth/2)/(rw/ZN))))}
+function drawPanWhere(){const sc=$('roomScroll'),t=HZ[viewZone()][1],el=$('panWhere');if(el.textContent!==t)el.textContent=t;
+  $('panL').disabled=sc.scrollLeft<=2;$('panR').disabled=sc.scrollLeft>=sc.scrollWidth-sc.clientWidth-2}
+function panBy(dir){const sc=$('roomScroll'),zw=room.clientWidth/ZN;camHold=performance.now()+9000;
+  if(zw<=sc.clientWidth*1.05){goZone(Math.min(ZN-1,Math.max(0,viewZone()+dir)));return}
+  sc.scrollBy({left:dir*sc.clientWidth*.75,behavior:'smooth'})}
+$('panL').onclick=()=>panBy(-1);$('panR').onclick=()=>panBy(1);
+$('roomScroll').addEventListener('scroll',drawPanWhere,{passive:true});setInterval(drawPanWhere,1000);
 </script>
 </body>
 </html>
