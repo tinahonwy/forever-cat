@@ -383,7 +383,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
     <div class="pane" data-pane="color">
       <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>先選一張牠的正面照（必要）</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><div class="vphotos"><span class="lbl">再補其他角度，花紋會更像（建議）</span><div class="chips"><button class="chip vphoto" type="button" data-v="sideL">左側照片<i></i></button><button class="chip vphoto" type="button" data-v="side">右側照片<i></i></button><button class="chip vphoto" type="button" data-v="back">背面（屁股）照片<i></i></button></div><input type="file" id="photoInput2" accept="image/*" hidden></div>
-        <p class="hint" id="photoMsg">先上傳一張牠的正面照片，Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
+        <p class="hint" id="photoMsg">先辨識花色家族、再按類型分析。建議使用正面且身體朝前的照片；Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
         <p class="hint aiwarn">※ 花紋和外觀是 AI 生成的，不一定準確，可以用筆刷、換色塊、刪色塊手動微調。</p>
         <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
       <div class="row"><span class="lbl">底色</span><div class="swatches" id="sw-base"></div></div>
@@ -2256,6 +2256,33 @@ const PHOTO_SCHEMA={type:'OBJECT',properties:{
   regions:{type:'ARRAY',items:{type:'OBJECT',properties:{part:{type:'STRING',enum:Object.keys(PHOTO_PARTS)},color:{type:'STRING'}},required:['part','color']}},
   frontal:{type:'BOOLEAN'},bodyFrontal:{type:'BOOLEAN'},complexPattern:{type:'BOOLEAN'},lm:{type:'OBJECT',properties:{eyeL:LM_PT,eyeR:LM_PT,chin:LM_PT,face:{type:'OBJECT',properties:{x0:{type:'INTEGER'},x1:{type:'INTEGER'},y0:{type:'INTEGER'}}},bodyBox:{type:'OBJECT',properties:{x0:{type:'INTEGER'},y0:{type:'INTEGER'},x1:{type:'INTEGER'},y1:{type:'INTEGER'}}}}},
   summary:{type:'STRING'}},required:['isCat','base','fur','eyeL','eyeR','earL','earR','tail','regions','summary']};
+/* ===== 版本 B：先分類毛色，再以專屬規則描述照片 ===== */
+const COAT_SCHEMA={type:'OBJECT',properties:{
+  isCat:{type:'BOOLEAN'},family:{type:'STRING',enum:['bicolor','tortoiseshell','calico','tabby','pointed','solid','mixed','unknown']},
+  subtypes:{type:'ARRAY',items:{type:'STRING'}},
+  baseColor:{type:'STRING'},palette:{type:'ARRAY',items:{type:'STRING'}},
+  strategy:{type:'STRING',enum:['major_blocks','mottled','colored_patches','stripes','points','solid','hybrid']},
+  patternScale:{type:'STRING',enum:['large','medium','fine','mixed']},
+  hasWhite:{type:'BOOLEAN'},confidence:{type:'NUMBER'},visibleDescription:{type:'STRING'}
+},required:['isCat','family','strategy','palette','visibleDescription']};
+const COAT_RULES={
+ bicolor:`雙色/賓士：忠實辨識白色中線、黑色眼罩、白口鼻、頸胸和背部黑白界線。從照片實際可見的色塊判斷，勿把鼻口旁或胸前添加獨立裝飾黑斑。區分白底黑塊與黑底白塊，顏色分區數量由照片決定，不強制左右對稱。`,
+ tortoiseshell:`玳瑁：保留黑、深棕、橘、奶油色交錯的雲狀/碎斑，不要強制變成三五塊大橢圓或平均散點。色塊可疏密不均，不可任意加入白色；如有白色須忠實保留。`,
+ calico:`三花：辨識真正白毛的位置、橘黑區塊的大小差異和非對稱；不是把黑橘均分或在白底均勻撒點。細碎紋理與大斑塊可並存。`,
+ tabby:`虎斑：辨識條紋種類（魚骨/經典/斑點/細毛尖）與方向；保留額頭 M 字、臉頰紋、背線與尾環，條紋不應由任意橢圓斑塊取代。有白胸/白襪需分開描述。`,
+ pointed:`重點色：臉罩、雙耳、四肢末端、尾巴較深，身體淺色；保留顏色柔和過渡，不要自造身體斑塊。`,
+ solid:`單色：忠實辨認均勻的底色和可見的小範圍差異；不要憑空增加裝飾花紋。`,
+ mixed:`混合花色：同時保留主要色塊和虎斑/玳瑁/斑點等次要圖案，不要只套用單一花色的規則。`,
+ unknown:`花色無法可靠分類時，按照片中可見的主次色與毛色邊界客觀描述；不可猜測沒拍到的一側。`
+};
+async function classifyCatCoat(b64){
+ const sys=`你是貓咪毛色辨識專家，不是插畫家。只判斷照片真正可見的毛色類別與合適的向量化策略，不畫圖，不創造不存在的圖案。不要把光影、環境反射當作花紋；可以為混合型貓分類為 mixed。分類不是簡化規則：玳瑁允許細碎交織，賓士主要保留黑白大片，虎斑保留條紋走向。顏色請用照片的真實毛色而不是為美化而提亮。若看不清請降低 confidence。輸出 JSON。`;
+ return gemParts(sys,[{text:'第一階段：請辨認這張照片的貓咪花色家族和最合適的呈現方式。'},{inlineData:{mimeType:'image/jpeg',data:b64}}],COAT_SCHEMA,850);
+}
+function specificCoatPrompt(cls){
+ const family=COAT_RULES[cls.family]?cls.family:'unknown';
+ return `【第一階段毛色分類】\n${JSON.stringify(cls)}\n【本類專屬規則】\n${COAT_RULES[family]}\n【共同約束】\n你的工作是忠實描述照片以供現有可編輯貓咪插畫使用，不是重新創作一隻可愛的貓。保留真實不對稱，拒絕憑空新增斑塊、眼罩、口罩或條紋；未知部分不得當成已觀察事實。分類只是引導，若實際觀察與分類不同，以照片為準。請優先辨識額頭與眼睛周圍、嘴鼻與胸部的色塊連續性，避免把一個連續黑白區域拆成許多互不相關的區塊。眼睛和鼻子顏色不要依插畫風格擅自改色。`;
+}
 async function gemParts(sys,parts,schema,maxTok){
   const order=[aiModel(),...AI_MODELS.map(m=>m[0]).filter(m=>m!==aiModel())];let last;
   for(let i=0;i<order.length;i++){
@@ -2307,7 +2334,11 @@ async function photoToCat(file){
   const msg=t=>{$('photoMsg').textContent=t};
   if(!aiKey()){msg('分析照片需要 Gemini 金鑰，先跟著步驟申請一把（免費）');openKeyGuide();return}
   msg('正在讀取照片…');let b64,pcv;try{const r=await shrinkImage(file);b64=r.b64;pcv=r.canvas}catch(e){msg(e.message);return}
-  msg('Gemini 正在看照片，大約需要幾秒…');$('photoBtn').disabled=true;
+  msg('第一階段：辨識貓咪花色類型…');$('photoBtn').disabled=true;
+  try{
+  const cls=await classifyCatCoat(b64);
+  if(!cls.isCat){msg('照片裡看不清楚貓咪，請換一張照片');return}
+  msg(`第二階段：依 ${({bicolor:'雙色／賓士',tortoiseshell:'玳瑁',calico:'三花',tabby:'虎斑',pointed:'重點色',solid:'單色',mixed:'混合花色'})[cls.family]||'實際花色'} 分析輪廓…`);
   const sys=`你是幫忙把真實貓咪照片轉成可愛扁平插畫參數的助手。插畫是一隻正面坐著的貓。請仔細看照片，回傳 JSON：
 - isCat：照片裡有沒有清楚的貓
 - base：最大面積的底色（#rrggbb）。白底帶色塊的貓（例如賓士、三花），底色是白色
@@ -2318,13 +2349,12 @@ async function photoToCat(file){
 - earL、earR：耳朵類型（normal 一般立耳、big 大耳、round 小圓耳、fold 折耳、curl 捲耳、tipped 被剪過一角的 TNR 剪耳、none 沒有）
 - fur：毛長；tail：長尾 long、短尾 short、麒麟尾（尾巴短而彎折）kirin、沒有尾巴 none，看不到尾巴就寫 long
 - frontal：照片裡的貓是不是大致面向鏡頭（看得到兩隻眼睛）
-- complexPattern：花紋是不是複雜、不規則（三花、玳瑁、不對稱的大斑塊、碎斑、斑點）。賓士貓、白手套、白口罩、單色、重點色、規則的虎斑這類花色是 false
+- complexPattern：花紋是不是複雜、不規則（三花、玳瑁、不對稱的大斑塊、碎斑、斑點）。只有實際觀察到多種相互交錯細斑時才是 true；雙色不規則交界但無細斑時應為 false
 - bodyFrontal：貓的身體是不是也正面對著鏡頭（看得到整個胸口、兩隻前腳並排在正前方）。身體斜坐、側坐、趴著、被擋住都算 false
 - lm：照片座標，x、y 都用 0 到 1000（左上角是 0,0，右下角是 1000,1000）。eyeL、eyeR 是照片中左邊、右邊那隻眼睛的中心，chin 是下巴（嘴巴正下方），face 是臉的範圍：x0、x1 是眼睛高度的臉頰最左、最右邊緣（不含鬍鬚），y0 是頭頂（兩耳中間）的高度，bodyBox 是身體（不含頭和尾巴）的範圍 x0,y0 左上到 x1,y1 右下。看不到的就省略
 - summary：用台灣繁體中文一句話描述這隻貓的外觀
-顏色請用插畫風格稍微提亮、乾淨的顏色，不要太灰暗。`;
-  try{
-    const o=await gemParts(sys,[{text:'請分析這隻貓。'},{inlineData:{mimeType:'image/jpeg',data:b64}}],PHOTO_SCHEMA);
+顏色請忠實反映照片毛色，不要自行提亮或美化；無法確認的區域保持保守，不要腦補。`;
+    const o=await gemParts(sys+'\n\n'+specificCoatPrompt(cls),[{text:'第二階段：依第一階段類別與照片的實際可見內容分析各部位。不要將白口鼻分裂為臉上的零星黑斑。'},{inlineData:{mimeType:'image/jpeg',data:b64}}],PHOTO_SCHEMA,2300);
     if(!o.isCat){msg('這張照片好像看不清楚貓，換一張正面、光線好一點的照片試試');return}
     if(mview!=='front')setMView('front');pushUndo();
     const hx=v=>HEX.test(v||'')?v.toLowerCase():null;
@@ -2345,9 +2375,9 @@ async function photoToCat(file){
       if(raw&&pal.length>=2){photoVariants={bodyRegs:o.bodyFrontal!==true,L:quantLabels(raw,pal,S.base),lv:+$('simpLv').value,tex:'none',regs:regs.map(r=>({part:r.part,color:hx(r.color)}))};projD=buildProj();if(projD)c.putImageData(projD,0,0)}}}
     catch(err){projD=null}
     if(!raw){raw=document.createElement('canvas');raw.width=raw.height=300;const rx=raw.getContext('2d'),sc=Math.min(300/pcv.width,300/pcv.height);rx.drawImage(pcv,(300-pcv.width*sc)/2,(300-pcv.height*sc)/2,pcv.width*sc,pcv.height*sc)}
-    const useProj=!!projD&&o.complexPattern!==false;photoVariants={...(projD?photoVariants:{}),block,proj:projD,raw,cur:useProj?'proj':'block'};if(!useProj)c.putImageData(block,0,0);drawPhotoTools();drawTrace();
+    const useProj=!!projD && (['tortoiseshell','calico','tabby','mixed'].includes(cls.family) || o.complexPattern===true || cls.family==='bicolor');photoVariants={...(projD?photoVariants:{}),block,proj:projD,raw,cur:useProj?'proj':'block'};if(!useProj)c.putImageData(block,0,0);drawPhotoTools();drawTrace();
     ['side','sideL','back'].forEach(v=>{if(!S[v+'Photo'])S[v+'Edited']=false});autoDerive();render();
-    msg(`畫好了：${o.summary||''} ${useProj?'這是照片投影的花紋，':projD?'花色比較規則，先用色塊花紋（比較乾淨），':''}AI 生成的不一定準確，可以切換「照片花紋／色塊花紋」，或打開「描圖」照著照片，用筆刷、換色塊、刪色塊微調。`);
+    msg(`完成兩階段分析（${cls.family}）：${o.summary||''} ${useProj?'這是照片投影的花紋，':projD?'花色比較規則，先用色塊花紋（比較乾淨），':''}AI 生成的不一定準確，可以切換「照片花紋／色塊花紋」，或打開「描圖」照著照片，用筆刷、換色塊、刪色塊微調。`);
   }catch(e){msg('分析失敗：'+aiErrText(e))}
   finally{$('photoBtn').disabled=false;$('photoInput').value=''}
 }
@@ -2441,16 +2471,20 @@ function projectView(src,o,v){const gv=GV(v),g=geo(),W=src.width,Hh=src.height;
 async function viewPhoto(file,v){const msg=t=>{$('photoMsg').textContent=t},n=VPHOTO[v];
   if(!aiKey()){msg('分析照片需要 Gemini 金鑰，先跟著步驟申請一把（免費）');openKeyGuide();return}
   msg(`正在讀取${n}照片…`);let b64,pcv;try{const r=await shrinkImage(file);b64=r.b64;pcv=r.canvas}catch(e){msg(e.message);return}
-  msg(`Gemini 正在看${n}照片，大約需要幾秒…`);document.querySelectorAll('.vphoto').forEach(b=>b.disabled=true);
+  msg(`第一階段：辨識${n}花色…`);document.querySelectorAll('.vphoto').forEach(b=>b.disabled=true);
+  try{
+  const cls=await classifyCatCoat(b64);
+  if(!cls.isCat){msg('照片中看不清楚貓咪，請換照片');return}
+  msg(`第二階段：分析${n}輪廓與實際色塊…`);
   const sys=`你是幫忙把真實貓咪照片轉成可愛扁平插畫花紋的助手。這張應該是貓的${gvName(v)}照片。請仔細看照片，回傳 JSON：
 - isCat：照片裡有沒有清楚的貓
 - pose：照片裡的貓是側面 side、背面 back（看得到屁股和背）、正面 front，還是其他 other
 - facing：如果是側面，貓的頭朝向照片的左邊 left 還是右邊 right
-- colors：這個角度看得到的毛色（#rrggbb），最多 4 個，面積最大的放第一個。顏色用插畫風格稍微提亮、乾淨的顏色
+- colors：這個角度看得到的毛色（#rrggbb），最多 4 個，面積最大的放第一個。顏色與照片實際毛色一致，不擅自提亮
 - headBox：頭的範圍（不含耳朵和鬍鬚），bodyBox：身體軀幹的範圍（不含頭、腳、尾巴）。座標 x、y 都用 0 到 1000（照片左上角 0,0，右下角 1000,1000），x0,y0 是左上，x1,y1 是右下
 - legColor：腳的主要顏色；tailColor：尾巴的主要顏色；看不到就空字串
 - summary：用台灣繁體中文一句話描述這個角度看到的花紋`;
-  try{const o=await gemParts(sys,[{text:'請分析這張照片。'},{inlineData:{mimeType:'image/jpeg',data:b64}}],VIEW_SCHEMA,600);
+  const o=await gemParts(sys+'\n\n'+specificCoatPrompt(cls),[{text:'請依貓咪的真實花色與這個拍攝角度標註，不要憑空添加花紋。'},{inlineData:{mimeType:'image/jpeg',data:b64}}],VIEW_SCHEMA,1100);
     const want=GV(v);
     if(!o.isCat){msg('這張照片好像看不清楚貓，換一張光線好一點的試試');return}
     if(o.pose!==want){msg(`這張看起來不是${want==='side'?'側面':'背面'}照，換一張${n}的照片試試`);return}
@@ -2467,7 +2501,7 @@ async function viewPhoto(file,v){const msg=t=>{$('photoMsg').textContent=t},n=VP
     ox.restore();
     if(mview!==v)setMView(v);pushUndo();const c=CV[v].getContext('2d');c.clearRect(0,0,600,600);c.drawImage(out,0,0);
     S[v+'Edited']=true;S[v+'Photo']=true;vhint();save();render();drawViewPhotoBtns();
-    msg(`${n}畫好了：${o.summary||''} AI 生成的不一定準確，可以用筆刷、換色塊、刪色塊微調。`)}
+    msg(`${n}完成兩階段分析（${cls.family}）：${o.summary||''} AI 生成的不一定準確，可以用筆刷、換色塊、刪色塊微調。`)}
   catch(e){msg('分析失敗：'+aiErrText(e))}
   finally{document.querySelectorAll('.vphoto').forEach(b=>b.disabled=false);$('photoInput2').value=''}}
 function drawViewPhotoBtns(){document.querySelectorAll('.vphoto').forEach(b=>{b.querySelector('i').textContent=S[b.dataset.v+'Photo']?' ✓':''})}
