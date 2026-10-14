@@ -2401,9 +2401,12 @@ const ASK_TPL=[
   [/^(bat|leap)$/,'真正的牠平常會跳起來抓東西嗎？',[['跳很高','牠會跳很高抓東西',{play_leap:2}],['只會站起來撥','牠比較會站起來用爪子撥，不太跳',{play_leap:-1,play_bat:2}],['都不太動','牠玩的時候不太動',{energy:-2}]]],
   [/^(hide|search)$/,'真正的牠平常會躲起來埋伏嗎？',[['很愛埋伏','牠很愛躲起來埋伏再衝出來',{play_hide:2}],['偶爾',null,{}],['不會','牠不太會躲起來埋伏',{play_hide:-2}]]],
 ];
-function templateQ(key,text){const n=S.name||'牠';for(const[re,q,opts]of ASK_TPL)if(re.test(key))return{question:`${n}剛剛${text.replace(n,'')}。${q}`,options:opts.map(([label,fact,eff])=>({label,fact:fact||'',effects:Object.entries(eff).map(([key,delta])=>({key,delta}))}))};
-  return{question:`${n}剛剛${text.replace(n,'')}。真正的牠也會這樣嗎？`,options:[{label:'會，很像牠',fact:`牠真的會：${text.replace(n,'')}`,effects:[]},{label:'不太會',fact:`牠不太會：${text.replace(n,'')}`,effects:[]}]}}
-const ASK_SCHEMA={type:'OBJECT',properties:{question:{type:'STRING'},options:{type:'ARRAY',items:{type:'OBJECT',properties:{label:{type:'STRING'},fact:{type:'STRING'},
+function askDone(){if(!Array.isArray(S.askDone))S.askDone=[];return S.askDone}
+function askHist(){if(!Array.isArray(S.askHist))S.askHist=[];return S.askHist}
+function templateQ(key,text){const n=S.name||'牠';for(const[re,q,opts]of ASK_TPL)if(re.test(key)){if(askDone().includes('tpl:'+re.source))return null;return{tpl:'tpl:'+re.source,question:`${n}剛剛${text.replace(n,'')}。${q}`,options:opts.map(([label,fact,eff])=>({label,fact:fact||'',effects:Object.entries(eff).map(([key,delta])=>({key,delta}))}))}}
+  if(askDone().includes('gen:'+key))return null;
+  return{tpl:'gen:'+key,question:`${n}剛剛${text.replace(n,'')}。真正的牠也會這樣嗎？`,options:[{label:'會，很像牠',fact:`牠真的會：${text.replace(n,'')}`,effects:[]},{label:'不太會',fact:`牠不太會：${text.replace(n,'')}`,effects:[]}]}}
+const ASK_SCHEMA={type:'OBJECT',properties:{skip:{type:'BOOLEAN'},question:{type:'STRING'},options:{type:'ARRAY',items:{type:'OBJECT',properties:{label:{type:'STRING'},fact:{type:'STRING'},
   effects:{type:'ARRAY',items:{type:'OBJECT',properties:{key:{type:'STRING',enum:ASK_EFFECTS},delta:{type:'INTEGER'}},required:['key','delta']}}},required:['label','fact']}}},required:['question','options']};
 async function aiQuestion(key,text){const n=S.name||'貓咪',D=askDay();
   const sys=`你在幫一位主人用小問題，慢慢讓網頁裡的虛擬${n}更像他真正的貓「${n}」。網頁裡的虛擬${n}剛剛做了一個動作，請根據這個動作，用台灣繁體中文問主人一個溫柔、具體、好回答的問題，了解真正的${n}會不會這樣、或是會怎麼做。
@@ -2412,7 +2415,10 @@ async function aiQuestion(key,text){const n=S.name||'貓咪',D=askDay();
 - 每個選項附上一句要記住的事實（用「牠」稱呼貓），以及對行為的微調 effects（-3 到 3，沒有就空陣列）。可用的 key：affection 親人、temper 脾氣、energy 活潑、appetite 貪吃、canLove 愛罐頭、picky 挑食、drink 愛喝水、demand 會討飯、groom 愛被梳毛、nip 聞貓草會不會嗨、zoom 上完大號會暴衝、gift 會叼東西送主人、love_tree/love_scratch/love_box 愛不愛貓跳台／貓抓板／紙箱、play_chase/play_stalk/play_pounce/play_bat/play_leap/play_hide 玩逗貓棒時追、偷偷靠近、撲、站起來撥、跳起來抓、躲起來埋伏
 - 不要假設貓已經不在了，不要用「以前」「生前」這類字，用「平常」「真正的${n}」來問
 - 不要問生病、死亡這類會讓主人難過的事
-- 不要重複這些最近問過的問題：${(D.recent||[]).slice(-8).join('／')||'（沒有）'}
+- 先仔細看下面的設定、基本資料和「牠記得的事」，已經知道答案的事不要再問，換句話問也不行
+- 如果這個動作最基本的問題已經知道了，就往更深一層問還不知道的：什麼時候、多常、在什麼情況下、有什麼小怪癖或小習慣、會怎麼跟主人互動
+- 真的想不到有意義的新問題，就把 skip 設成 true（question 和 options 可以留空）
+- 這些是以前問過的問題，不要再問一樣或很像的：${[...new Set([...askHist().slice(-40),...(D.recent||[]).slice(-8)])].join('／')||'（沒有）'}
 
 ${catProfile()}${learnedPrompt()}`;
   return gemParts(sys,[{text:`剛剛的動作：${text}`}],ASK_SCHEMA,700)}
@@ -2422,8 +2428,9 @@ function maybeAsk(key,text){const C=askCfg(),D=askDay();
   askBusy=true;askAt=performance.now();
   setTimeout(async()=>{let q=null;
     if(aiKey()){try{q=await aiQuestion(key,text)}catch(e){q=null}}
+    if(q&&q.skip){askBusy=false;return}
     if(!q||!q.question||!Array.isArray(q.options)||!q.options.length)q=templateQ(key,text);
-    q.options=q.options.slice(0,4);askBusy=false;showAsk(q)},1500)}
+    askBusy=false;if(!q)return;q.options=q.options.slice(0,4);showAsk(q)},1500)}
 function showAsk(q){const D=askDay();D.n++;D.recent=[...(D.recent||[]),q.question].slice(-12);save();askCur=q;
   $('askQ').textContent=q.question;$('askLeft').textContent=`今天第 ${D.n} 題，最多 ${askCfg().perDay} 題`;
   const box=$('askOpts');box.innerHTML='';
@@ -2431,6 +2438,7 @@ function showAsk(q){const D=askDay();D.n++;D.recent=[...(D.recent||[]),q.questio
   $('askText').value='';$('askHint').textContent='可以複選，選好按「記住」';$('askCard').hidden=false}
 function closeAsk(){$('askCard').hidden=true;askCur=null}
 function answerAsk(opts,free){const q=askCur;if(!q)return;const n=S.name||'牠';
+  {const H2=askHist();H2.push(String(q.question).slice(0,80));if(H2.length>80)H2.splice(0,H2.length-80);if(q.tpl&&!askDone().includes(q.tpl))askDone().push(q.tpl)}
   opts.forEach(o=>{if(o.fact)addFact('習性',o.fact,'me');(o.effects||[]).forEach(e=>{if(ASK_EFFECTS.includes(e.key))applyEffect(e.key,e.delta)})});
   if(free)addFact('習性',`${q.question.replace(/^.*?。/,'')}主人說：${free}`,'me');
   talkLog.push(['ev',`你回答：${[...opts.map(o=>o.label),free].filter(Boolean).join('、')}`]);while(talkLog.length>8)talkLog.shift();drawLog();
