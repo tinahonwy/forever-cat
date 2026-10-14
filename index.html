@@ -2133,12 +2133,12 @@ function affine3(p,q){const[[x1,y1],[x2,y2],[x3,y3]]=p,det=x1*(y2-y3)-y1*(x2-x3)
   const sol=v=>{const[a,b,c]=v;return[(a*(y2-y3)-y1*(b-c)+(b*y3-c*y2))/det,(x1*(b-c)-a*(x2-x3)+(x2*c-x3*b))/det,(x1*(y2*c-y3*b)-y1*(x2*c-x3*b)+a*(x2*y3-x3*y2))/det]};
   const[A,C,E]=sol(q.map(v=>v[0])),[B,D,F]=sol(q.map(v=>v[1]));return[A,B,C,D,E,F]}
 function rgbOf(h){return rgb(h)}
-function projectRaw(src,lm){
+function projectRaw(src,lm,useBody){
   const okPt=v=>v&&v.x>=0&&v.x<=1000&&v.y>=0&&v.y<=1000;if(!okPt(lm.eyeL)||!okPt(lm.eyeR)||!okPt(lm.chin))return null;
   const W=src.width,Hh=src.height,P=v=>[v.x/1000*W,v.y/1000*Hh];
   const c=document.createElement('canvas');c.width=c.height=300;const x=c.getContext('2d');const g=geo();
   const bb=lm.bodyBox;
-  if(bb&&bb.x1>bb.x0+20&&bb.y1>bb.y0+20)x.drawImage(src,bb.x0/1000*W,bb.y0/1000*Hh,(bb.x1-bb.x0)/1000*W,(bb.y1-bb.y0)/1000*Hh,150-g.brx-6,150,g.brx*2+12,124);
+  if(useBody&&bb&&bb.x1>bb.x0+20&&bb.y1>bb.y0+20)x.drawImage(src,bb.x0/1000*W,bb.y0/1000*Hh,(bb.x1-bb.x0)/1000*W,(bb.y1-bb.y0)/1000*Hh,150-g.brx-6,150,g.brx*2+12,124);
   const M=affine3([P(lm.eyeL),P(lm.eyeR),P(lm.chin)],[[120,130],[180,130],[150,186]]);if(!M)return null;
   // 插畫的頭比真貓的臉寬：眼睛附近照原比例，越往外越往內收，避免把背景（沙發、牆）貼到臉邊和耳朵
   const [a,b,cc,d,e,f]=M,det=a*d-b*cc,inv=(tx,ty)=>{const u=tx-e,v=ty-f;return[(d*u-cc*v)/det,(-b*u+a*v)/det]};
@@ -2217,6 +2217,8 @@ function renderLabels(L,lv,cutY=235){const W=300,N=W*W,lab=L.lab.slice(),K=L.pal
     if(aa<.02)continue;o[i*4]=rr;o[i*4+1]=gg;o[i*4+2]=bb;o[i*4+3]=aa*255}
   big.getContext('2d').putImageData(out,0,0);return{canvas:big,kmap}}
 function buildProj(){const V=photoVariants;if(!V||!V.L)return null;const c=document.createElement('canvas');c.width=c.height=600;const x=c.getContext('2d');
+  const BODY=['body_left','body_right','belly','chest','back_paws','front_paws'];
+  if(V.bodyRegs){x.save();x.scale(2,2);V.regs.filter(r=>BODY.includes(r.part)).sort((a,b)=>BODY.indexOf(a.part)-BODY.indexOf(b.part)).forEach(r=>paintRegion(x,r.part,r.color));x.restore()}
   const R=renderLabels(V.L,V.lv);x.drawImage(R.canvas,0,0);
   if(V.tex==='fleck')drawFlecks(x,R.kmap,V.L);else if(V.tex==='stripe')drawStripes(x,V.L);
   x.save();x.scale(2,2);V.regs.filter(r=>['tail','tail_tip','front_paws','back_paws'].includes(r.part)).forEach(r=>paintRegion(x,r.part,r.color));x.restore();
@@ -2236,7 +2238,7 @@ $('simpLv').onchange=()=>{const V=photoVariants;if(!V||!V.L)return;V.lv=+$('simp
 $('pvTrace').onclick=()=>{traceOn=!traceOn;drawPhotoTools();drawTrace()};$('traceOp').oninput=drawTrace;
 
 /* ===== 從照片自動畫一隻 ===== */
-const PHOTO_PARTS={forehead:'額頭到頭頂',head_left:'左半邊臉',head_right:'右半邊臉',ear_left:'左耳',ear_right:'右耳',eye_patch_left:'左眼周圍',eye_patch_right:'右眼周圍',
+const PHOTO_PARTS={forehead:'額頭到頭頂',blaze:'臉中間從額頭到鼻子的直條（例如賓士貓臉中間那條白色）',head_left:'左半邊臉',head_right:'右半邊臉',ear_left:'左耳',ear_right:'右耳',eye_patch_left:'左眼周圍',eye_patch_right:'右眼周圍',
   muzzle:'鼻子嘴巴周圍（口罩區）',chin:'下巴',chest:'胸口',body_left:'身體左側',body_right:'身體右側',belly:'肚子下半',front_paws:'前腳掌',back_paws:'後腳掌',tail:'整條尾巴',tail_tip:'尾巴尖'};
 const HEX=/^#[0-9a-fA-F]{6}$/;
 const PHOTO_SCHEMA={type:'OBJECT',properties:{
@@ -2247,7 +2249,7 @@ const PHOTO_SCHEMA={type:'OBJECT',properties:{
   tail:{type:'STRING',enum:['long','short','kirin','none']},
   tabbyColor:{type:'STRING'},
   regions:{type:'ARRAY',items:{type:'OBJECT',properties:{part:{type:'STRING',enum:Object.keys(PHOTO_PARTS)},color:{type:'STRING'}},required:['part','color']}},
-  frontal:{type:'BOOLEAN'},lm:{type:'OBJECT',properties:{eyeL:LM_PT,eyeR:LM_PT,chin:LM_PT,face:{type:'OBJECT',properties:{x0:{type:'INTEGER'},x1:{type:'INTEGER'},y0:{type:'INTEGER'}}},bodyBox:{type:'OBJECT',properties:{x0:{type:'INTEGER'},y0:{type:'INTEGER'},x1:{type:'INTEGER'},y1:{type:'INTEGER'}}}}},
+  frontal:{type:'BOOLEAN'},bodyFrontal:{type:'BOOLEAN'},complexPattern:{type:'BOOLEAN'},lm:{type:'OBJECT',properties:{eyeL:LM_PT,eyeR:LM_PT,chin:LM_PT,face:{type:'OBJECT',properties:{x0:{type:'INTEGER'},x1:{type:'INTEGER'},y0:{type:'INTEGER'}}},bodyBox:{type:'OBJECT',properties:{x0:{type:'INTEGER'},y0:{type:'INTEGER'},x1:{type:'INTEGER'},y1:{type:'INTEGER'}}}}},
   summary:{type:'STRING'}},required:['isCat','base','fur','eyeL','eyeR','earL','earR','tail','regions','summary']};
 async function gemParts(sys,parts,schema,maxTok){
   const order=[aiModel(),...AI_MODELS.map(m=>m[0]).filter(m=>m!==aiModel())];let last;
@@ -2277,6 +2279,7 @@ function paintRegion(c,part,col){
     case'ear_right':ell(210,56,40,48,.3);break;
     case'eye_patch_left':ell(118,128,27,23);break;
     case'eye_patch_right':ell(182,128,27,23);break;
+    case'blaze':c.fill(new Path2D('M150,58 C143,80 138,104 134,126 C140,140 160,140 166,126 C162,104 157,80 150,58 Z'));break;
     case'muzzle':c.fill(new Path2D('M150,104 C132,118 106,138 108,156 C120,180 180,180 192,156 C194,138 168,118 150,104 Z'));break;
     case'chin':ell(150,180,36,16);break;
     case'chest':ell(150,226,30,38);break;
@@ -2310,6 +2313,8 @@ async function photoToCat(file){
 - earL、earR：耳朵類型（normal 一般立耳、big 大耳、round 小圓耳、fold 折耳、curl 捲耳、tipped 被剪過一角的 TNR 剪耳、none 沒有）
 - fur：毛長；tail：長尾 long、短尾 short、麒麟尾（尾巴短而彎折）kirin、沒有尾巴 none，看不到尾巴就寫 long
 - frontal：照片裡的貓是不是大致面向鏡頭（看得到兩隻眼睛）
+- complexPattern：花紋是不是複雜、不規則（三花、玳瑁、不對稱的大斑塊、碎斑、斑點）。賓士貓、白手套、白口罩、單色、重點色、規則的虎斑這類花色是 false
+- bodyFrontal：貓的身體是不是也正面對著鏡頭（看得到整個胸口、兩隻前腳並排在正前方）。身體斜坐、側坐、趴著、被擋住都算 false
 - lm：照片座標，x、y 都用 0 到 1000（左上角是 0,0，右下角是 1000,1000）。eyeL、eyeR 是照片中左邊、右邊那隻眼睛的中心，chin 是下巴（嘴巴正下方），face 是臉的範圍：x0、x1 是眼睛高度的臉頰最左、最右邊緣（不含鬍鬚），y0 是頭頂（兩耳中間）的高度，bodyBox 是身體（不含頭和尾巴）的範圍 x0,y0 左上到 x1,y1 右下。看不到的就省略
 - summary：用台灣繁體中文一句話描述這隻貓的外觀
 顏色請用插畫風格稍微提亮、乾淨的顏色，不要太灰暗。`;
@@ -2324,20 +2329,20 @@ async function photoToCat(file){
     if(hx(o.eyeL))S.eyeL=hx(o.eyeL);if(hx(o.eyeR))S.eyeR=hx(o.eyeR);S.eyeLink=S.eyeL===S.eyeR;
     if(hx(o.nose))S.nose=hx(o.nose);if(hx(o.whColor))S.whColor=hx(o.whColor);
     const c=CV.front.getContext('2d');c.clearRect(0,0,600,600);c.save();c.scale(2,2);
-    const order=['body_left','body_right','belly','head_left','head_right','forehead','ear_left','ear_right','tail','tail_tip','eye_patch_left','eye_patch_right','chest','chin','muzzle','front_paws','back_paws'];
+    const order=['body_left','body_right','belly','head_left','head_right','forehead','blaze','ear_left','ear_right','tail','tail_tip','eye_patch_left','eye_patch_right','chest','chin','muzzle','front_paws','back_paws'];
     const regs=(o.regions||[]).filter(r=>PHOTO_PARTS[r.part]&&hx(r.color)).sort((a,b)=>order.indexOf(a.part)-order.indexOf(b.part));
     regs.forEach(r=>paintRegion(c,r.part,hx(r.color)));
     if(hx(o.tabbyColor))paintTabby(c,hx(o.tabbyColor));
     c.restore();
     const block=c.getImageData(0,0,600,600);let projD=null,raw=null;
-    try{if(o.lm&&o.frontal!==false){raw=projectRaw(pcv,o.lm);
+    try{if(o.lm&&o.frontal!==false){raw=projectRaw(pcv,o.lm,o.bodyFrontal===true);
       const pal=[];[S.base,...regs.map(r=>hx(r.color)),hx(o.tabbyColor)].filter(Boolean).forEach(h=>{if(!pal.some(q=>{const a=rgb(q),b=rgb(h);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])<40}))pal.push(h)});
-      if(raw&&pal.length>=2){photoVariants={L:quantLabels(raw,pal,S.base),lv:+$('simpLv').value,tex:'none',regs:regs.map(r=>({part:r.part,color:hx(r.color)}))};projD=buildProj();if(projD)c.putImageData(projD,0,0)}}}
+      if(raw&&pal.length>=2){photoVariants={bodyRegs:o.bodyFrontal!==true,L:quantLabels(raw,pal,S.base),lv:+$('simpLv').value,tex:'none',regs:regs.map(r=>({part:r.part,color:hx(r.color)}))};projD=buildProj();if(projD)c.putImageData(projD,0,0)}}}
     catch(err){projD=null}
     if(!raw){raw=document.createElement('canvas');raw.width=raw.height=300;const rx=raw.getContext('2d'),sc=Math.min(300/pcv.width,300/pcv.height);rx.drawImage(pcv,(300-pcv.width*sc)/2,(300-pcv.height*sc)/2,pcv.width*sc,pcv.height*sc)}
-    photoVariants={...(projD?photoVariants:{}),block,proj:projD,raw,cur:projD?'proj':'block'};if(!projD)c.putImageData(block,0,0);drawPhotoTools();drawTrace();
+    const useProj=!!projD&&o.complexPattern!==false;photoVariants={...(projD?photoVariants:{}),block,proj:projD,raw,cur:useProj?'proj':'block'};if(!useProj)c.putImageData(block,0,0);drawPhotoTools();drawTrace();
     ['side','sideL','back'].forEach(v=>{if(!S[v+'Photo'])S[v+'Edited']=false});autoDerive();render();
-    msg(`畫好了：${o.summary||''} ${projD?'這是照片投影的花紋，':''}AI 生成的不一定準確，可以切換「照片花紋／色塊花紋」，或打開「描圖」照著照片，用筆刷、換色塊、刪色塊微調。`);
+    msg(`畫好了：${o.summary||''} ${useProj?'這是照片投影的花紋，':projD?'花色比較規則，先用色塊花紋（比較乾淨），':''}AI 生成的不一定準確，可以切換「照片花紋／色塊花紋」，或打開「描圖」照著照片，用筆刷、換色塊、刪色塊微調。`);
   }catch(e){msg('分析失敗：'+aiErrText(e))}
   finally{$('photoBtn').disabled=false;$('photoInput').value=''}
 }
