@@ -211,7 +211,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .stagecam{position:absolute;right:14px;top:14px;z-index:4;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);color:#2e3936;border:0;border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .stagecam svg{width:20px;height:20px}
 #traceLayer{pointer-events:none;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
-.phototools{display:flex;flex-direction:column;gap:6px}.traceop{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}.traceop input{flex:1}
+.phototools{display:flex;flex-direction:column;gap:6px}.traceop{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}.traceop input{flex:1}.traceop[hidden]{display:none}
 .photorow{display:flex;flex-direction:column;gap:8px}
 .hint{font-size:13px;color:var(--muted);background:var(--chip);padding:8px 12px;border-radius:12px;margin:0}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
@@ -276,7 +276,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
     <div class="pane" data-pane="color">
       <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>拍照或從相簿選一張牠的照片</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><p class="hint" id="photoMsg">上傳一張牠的正面照片，Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。</p>
-        <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><label class="traceop"><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45" hidden></label></div></div>
+        <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><label class="traceop" id="simpRow"><span>簡化</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
       <div class="row"><span class="lbl">底色</span><div class="swatches" id="sw-base"></div></div>
       <p class="hint">在左邊的貓身上直接畫花紋，畫到身體外面的部分會自動隱藏。</p>
       <div class="row"><span class="lbl">筆刷顏色</span><div class="swatches" id="sw-brush"></div></div>
@@ -1911,30 +1911,54 @@ function projectRaw(src,lm){
 function inpaint(d,cx,cy,r){const W=300,ring=[];for(let a=0;a<24;a++){const t=a/24*Math.PI*2;for(const rr of[r+3,r+7]){const px=Math.round(cx+Math.cos(t)*rr),py=Math.round(cy+Math.sin(t)*rr);if(px>=0&&py>=0&&px<W&&py<W){const i=(py*W+px)*4;if(d[i+3]>100)ring.push([d[i],d[i+1],d[i+2]])}}}
   if(!ring.length)return;ring.sort((a,b)=>(a[0]+a[1]+a[2])-(b[0]+b[1]+b[2]));const m=ring[Math.floor(ring.length*.6)];
   for(let y=Math.max(0,cy-r);y<=Math.min(W-1,cy+r);y++)for(let x=Math.max(0,cx-r);x<=Math.min(W-1,cx+r);x++){if((x-cx)**2+(y-cy)**2>r*r)continue;const i=(y*W+x)*4;if(d[i+3]>100){d[i]=m[0];d[i+1]=m[1];d[i+2]=m[2]}}}
-function quantize(raw,palette,baseHex){
+function quantLabels(raw,palette,baseHex){
   const W=300,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');
   try{x.filter='blur(2px)'}catch(e){}x.drawImage(raw,0,0);x.filter='none';
-  const img=x.getImageData(0,0,W,W),d=img.data;
+  const d=x.getImageData(0,0,W,W).data;
   [[120,130,15],[180,130,15],[150,146,10],[150,158,9]].forEach(([a,b,r])=>inpaint(d,a,b,r));
-  const pal=palette.map(rgbOf),bi=palette.indexOf(baseHex),lab=new Int16Array(W*W).fill(-1);
+  const pal=palette.map(rgb),bi=Math.max(0,palette.indexOf(baseHex)),lab=new Int16Array(W*W).fill(-1);
   const dist=(r,g,b,p)=>2*(r-p[0])**2+4*(g-p[1])**2+3*(b-p[2])**2;
   for(let i=0;i<W*W;i++){if(d[i*4+3]<100)continue;let best=0,bd=1e18;for(let k=0;k<pal.length;k++){const v=dist(d[i*4],d[i*4+1],d[i*4+2],pal[k]);if(v<bd){bd=v;best=k}}lab[i]=best}
-  for(let pass=0;pass<2;pass++){const nl=lab.slice();for(let y=2;y<W-2;y++)for(let x2=2;x2<W-2;x2++){const i=y*W+x2;if(lab[i]<0)continue;const cnt={};
-      for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const v=lab[i+dy*W+dx];if(v>=0)cnt[v]=(cnt[v]||0)+1}
-      let bk=lab[i],bc=0;for(const k in cnt)if(cnt[k]>bc){bc=cnt[k];bk=+k}nl[i]=bk}lab.set(nl)}
-  const out=x.createImageData(W,W),o=out.data;
-  for(let i=0;i<W*W;i++){const k=lab[i];if(k<0||k===bi)continue;const p=pal[k];o[i*4]=p[0];o[i*4+1]=p[1];o[i*4+2]=p[2];o[i*4+3]=255}
-  const oc=document.createElement('canvas');oc.width=oc.height=W;oc.getContext('2d').putImageData(out,0,0);return oc}
+  return{lab,pal,bi}}
+/* 把碎點合併、邊緣變圓滑，畫成 600 的插畫花紋。lv 0~100：越大越簡化 */
+function renderLabels(L,lv){const W=300,N=W*W,lab=L.lab.slice(),K=L.pal.length;
+  for(let i=0;i<N;i++)if(lab[i]<0||i>=235*W)lab[i]=L.bi;
+  // 1) 小碎塊併進旁邊最多的顏色
+  const minA=Math.round(25+lv*5),seen=new Uint8Array(N),q=new Int32Array(N);
+  for(let s0=0;s0<N;s0++){if(seen[s0])continue;const k=lab[s0];let h=0,t=0;q[t++]=s0;seen[s0]=1;const nb={};
+    while(h<t){const i=q[h++],y=(i/W)|0,x=i%W;for(const j of[x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<W-1?i+W:-1]){if(j<0)continue;
+      if(lab[j]===k){if(!seen[j]){seen[j]=1;q[t++]=j}}else nb[lab[j]]=(nb[lab[j]]||0)+1}}
+    if(t<minA){let bk=k,bc=0;for(const kk in nb)if(nb[kk]>bc){bc=nb[kk];bk=+kk}if(bk!==k)for(let m=0;m<t;m++)lab[q[m]]=bk}}
+  // 2) 每個顏色各自模糊，取最強的 → 圓滑的邊
+  const r=4+lv*.16,S6=600,vals=[];const one=document.createElement('canvas');one.width=one.height=W;const ox=one.getContext('2d');
+  const big=document.createElement('canvas');big.width=big.height=S6;const bx=big.getContext('2d');
+  for(let k=0;k<K;k++){const im=ox.createImageData(W,W);for(let i=0;i<N;i++)if(lab[i]===k){im.data[i*4+3]=255}ox.putImageData(im,0,0);
+    bx.clearRect(0,0,S6,S6);bx.filter=`blur(${r}px)`;bx.imageSmoothingEnabled=true;bx.drawImage(one,0,0,S6,S6);bx.filter='none';
+    const a=bx.getImageData(0,0,S6,S6).data,v=new Float32Array(S6*S6);for(let i=0;i<S6*S6;i++)v[i]=a[i*4+3]/255;vals.push(v)}
+  const out=bx.createImageData(S6,S6),o=out.data;
+  for(let i=0;i<S6*S6;i++){let k1=-1,v1=-1,k2=-1,v2=-1;for(let k=0;k<K;k++){const v=vals[k][i];if(v>v1){k2=k1;v2=v1;k1=k;v1=v}else if(v>v2){k2=k;v2=v}}
+    const t=Math.max(.5,Math.min(1,.5+(v1-v2)*10));let rr,gg,bb,aa;
+    if(k2<0)k2=k1;
+    if(k1===L.bi){if(k2===L.bi)continue;const p=L.pal[k2];rr=p[0];gg=p[1];bb=p[2];aa=1-t}
+    else if(k2===L.bi){const p=L.pal[k1];rr=p[0];gg=p[1];bb=p[2];aa=t}
+    else{const p=L.pal[k1],p2=L.pal[k2];rr=p[0]*t+p2[0]*(1-t);gg=p[1]*t+p2[1]*(1-t);bb=p[2]*t+p2[2]*(1-t);aa=1}
+    if(aa<.02)continue;o[i*4]=rr;o[i*4+1]=gg;o[i*4+2]=bb;o[i*4+3]=aa*255}
+  big.getContext('2d').putImageData(out,0,0);return big}
+function buildProj(){const V=photoVariants;if(!V||!V.L)return null;const c=document.createElement('canvas');c.width=c.height=600;const x=c.getContext('2d');
+  x.drawImage(renderLabels(V.L,V.lv),0,0);x.clearRect(0,470,600,130);
+  x.save();x.scale(2,2);V.regs.filter(r=>['tail','tail_tip','front_paws','back_paws'].includes(r.part)).forEach(r=>paintRegion(x,r.part,r.color));x.restore();
+  return x.getImageData(0,0,600,600)}
 function paintVariant(which){if(!photoVariants)return;const v=photoVariants[which];if(!v)return;
   if(mview!=='front')setMView('front');pushUndo();const c=CV.front.getContext('2d');c.clearRect(0,0,600,600);c.putImageData(v,0,0);
   S.sideEdited=false;S.backEdited=false;autoDerive();render();photoVariants.cur=which;drawPhotoTools()}
 function drawPhotoTools(){const t=$('photoTools');if(!photoVariants){t.hidden=true;return}t.hidden=false;
-  $('pvProj').hidden=!photoVariants.proj;$('pvProj').setAttribute('aria-pressed',photoVariants.cur==='proj');$('pvBlock').setAttribute('aria-pressed',photoVariants.cur==='block');
-  $('pvTrace').setAttribute('aria-pressed',traceOn);$('traceOp').hidden=!traceOn}
+  $('pvProj').hidden=!photoVariants.proj;$('simpRow').hidden=!photoVariants.proj||photoVariants.cur!=='proj';$('pvProj').setAttribute('aria-pressed',photoVariants.cur==='proj');$('pvBlock').setAttribute('aria-pressed',photoVariants.cur==='block');
+  $('pvTrace').setAttribute('aria-pressed',traceOn);$('traceRow').hidden=!traceOn}
 function drawTrace(){const tl=$('traceLayer');const show=traceOn&&photoVariants&&photoVariants.raw&&mview==='front';tl.hidden=!show;if(!show)return;
   const x=tl.getContext('2d');x.clearRect(0,0,600,600);x.drawImage(photoVariants.raw,0,0,600,600);tl.style.opacity=String(+$('traceOp').value/100);
   const m=maskURL('front');tl.style.webkitMaskImage=m;tl.style.maskImage=m}
 $('pvProj').onclick=()=>paintVariant('proj');$('pvBlock').onclick=()=>paintVariant('block');
+$('simpLv').onchange=()=>{const V=photoVariants;if(!V||!V.L)return;V.lv=+$('simpLv').value;V.proj=buildProj();paintVariant('proj')};
 $('pvTrace').onclick=()=>{traceOn=!traceOn;drawPhotoTools();drawTrace()};$('traceOp').oninput=drawTrace;
 
 /* ===== 從照片自動畫一隻 ===== */
@@ -2034,11 +2058,10 @@ async function photoToCat(file){
     const block=c.getImageData(0,0,600,600);let projD=null,raw=null;
     try{if(o.lm&&o.frontal!==false){raw=projectRaw(pcv,o.lm);
       const pal=[];[S.base,...regs.map(r=>hx(r.color)),hx(o.tabbyColor)].filter(Boolean).forEach(h=>{if(!pal.some(q=>{const a=rgb(q),b=rgb(h);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])<40}))pal.push(h)});
-      if(raw&&pal.length>=2){const q=quantize(raw,pal,S.base);c.clearRect(0,0,600,600);c.imageSmoothingEnabled=true;c.drawImage(q,0,0,600,600);c.clearRect(0,470,600,130);
-        c.save();c.scale(2,2);regs.filter(r=>['tail','tail_tip','front_paws','back_paws'].includes(r.part)).forEach(r=>paintRegion(c,r.part,hx(r.color)));c.restore();projD=c.getImageData(0,0,600,600)}}}
+      if(raw&&pal.length>=2){photoVariants={L:quantLabels(raw,pal,S.base),lv:+$('simpLv').value,regs:regs.map(r=>({part:r.part,color:hx(r.color)}))};projD=buildProj();if(projD)c.putImageData(projD,0,0)}}}
     catch(err){projD=null}
     if(!raw){raw=document.createElement('canvas');raw.width=raw.height=300;const rx=raw.getContext('2d'),sc=Math.min(300/pcv.width,300/pcv.height);rx.drawImage(pcv,(300-pcv.width*sc)/2,(300-pcv.height*sc)/2,pcv.width*sc,pcv.height*sc)}
-    photoVariants={block,proj:projD,raw,cur:projD?'proj':'block'};if(!projD)c.putImageData(block,0,0);drawPhotoTools();drawTrace();
+    photoVariants={...(projD?photoVariants:{}),block,proj:projD,raw,cur:projD?'proj':'block'};if(!projD)c.putImageData(block,0,0);drawPhotoTools();drawTrace();
     S.sideEdited=false;S.backEdited=false;autoDerive();render();
     msg(`畫好了：${o.summary||''} ${projD?'這是照片投影的花紋，':''}可以在下面切換「照片花紋／色塊花紋」，或打開「描圖」照著照片用筆刷修。`);
   }catch(e){msg('分析失敗：'+aiErrText(e))}
