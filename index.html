@@ -1046,12 +1046,17 @@ $('resetAll').onclick=e=>{if(!resetArm){resetArm=true;e.target.textContent='再�
   setMView('front');stamp('patch');hist.front.u.length=0;histUI();render()};
 
 /* 備份：把貓的一切下載成一個檔案，隨時可以還原 */
-$('backupOut').onclick=()=>{try{const data={app:'cat-studio',version:1,exportedAt:new Date().toISOString(),settings:JSON.parse(JSON.stringify(S)),paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintSideL:CV.sideL.toDataURL(),paintBack:CV.back.toDataURL()};
+$('backupOut').onclick=async()=>{try{if(typeof loadDiaryCloud==='function'){try{await loadDiaryCloud()}catch(e){}}
+  const data={app:'cat-studio',version:2,exportedAt:new Date().toISOString(),settings:JSON.parse(JSON.stringify(S)),paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintSideL:CV.sideL.toDataURL(),paintBack:CV.back.toDataURL(),
+    diary:typeof diaryLocal==='function'?diaryLocal():{},chat:ls.get(CHATKEY)||'',pending:ls.get('neko-pending')||''};
   const url=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`${S.name||'cat'}-備份-${today()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
   $('backupMsg').textContent='已下載備份，建議存到雲端硬碟'}catch(e){$('backupMsg').textContent='下載失敗：'+e.message}};
 let backupPending=null;
 $('backupIn').onclick=async()=>{if(backupPending){const d=backupPending;backupPending=null;$('backupIn').textContent='從備份還原';
-    await applyData(d.settings,d);save();$('backupMsg').textContent=`已還原「${d.settings.name||'貓'}」`;return}
+    await applyData(d.settings,d);save();
+    if(d.diary&&typeof d.diary==='object')Object.entries(d.diary).forEach(([k,t])=>{if(/^\d{4}-\d\d-\d\d$/.test(k)&&typeof t==='string')diaryPut(k,t)});
+    try{if(d.chat)ls.set(CHATKEY,d.chat);if(d.pending)ls.set('neko-pending',d.pending)}catch(e){}
+    $('backupMsg').textContent=`已還原「${d.settings.name||'貓'}」${d.diary?'（含日記和聊天紀錄，聊天紀錄重新整理後會出現）':''}`;return}
   $('backupFile').click()};
 $('backupFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(d.app!=='cat-studio'||!d.settings)throw new Error('這不是貓的工作室的備份檔');
