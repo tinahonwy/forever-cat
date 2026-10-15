@@ -489,6 +489,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
         
         <p class="hint aiwarn">※ 花紋和外觀是 AI 生成的，不一定準確，可以用筆刷、換色塊、刪色塊手動微調。</p>
         <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化（越低越接近照片）</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
+      <button type="button" class="btn" id="genUndo" hidden>↩ 還原成 AI 畫之前</button>
       <button type="button" class="btn primary" id="afterPhotoEdit">🎨 畫好了？進入手動微調</button>
     </section>
     <div id="manualWorkspace">
@@ -1226,7 +1227,7 @@ function setMView(v){
   mview=v;PAINTS.forEach(k=>{CV[k].hidden=k!==v});cv=CV[v];ctx=cv.getContext('2d');
   undoStack=hist[v].u;redoStack=hist[v].r;histUI();
   $('stampRow').hidden=v!=='front';$('rederive').hidden=v==='front';
-  if(typeof clearShapePreview==='function')clearShapePreview();
+  if(typeof clearShapePreview==='function')clearShapePreview();try{drawPhotoTools()}catch(e){}
   mviewBtns.forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));vhint();render();if(typeof drawTrace==='function')drawTrace();
 }
 $('rederive').onclick=()=>{if(mview==='front')return;pushUndo();S[mview+'Edited']=false;S[mview+'Photo']=false;if(typeof drawViewPhotoBtns==='function')drawViewPhotoBtns();derive(mview);vhint();save()};
@@ -2472,7 +2473,7 @@ function playTick(dt){
   return false}
 
 /* ===== 照片投影：把照片對齊貼到貓的輪廓上，再簡化成插畫色 ===== */
-var photoSrc=null,photoVariants=null,traceOn=false;
+var photoSrc=null,photoVariants=null,traceOn=false,viewVar={},genSnaps=[];
 const LM_PT={type:'OBJECT',properties:{x:{type:'INTEGER'},y:{type:'INTEGER'}},required:['x','y']};
 function affine3(p,q){const[[x1,y1],[x2,y2],[x3,y3]]=p,det=x1*(y2-y3)-y1*(x2-x3)+(x2*y3-x3*y2);if(Math.abs(det)<1e-6)return null;
   const sol=v=>{const[a,b,c]=v;return[(a*(y2-y3)-y1*(b-c)+(b*y3-c*y2))/det,(x1*(b-c)-a*(x2-x3)+(x2*c-x3*b))/det,(x1*(y2*c-y3*b)-y1*(x2*c-x3*b)+a*(x2*y3-x3*y2))/det]};
@@ -2504,21 +2505,53 @@ function projectRaw(src,lm,useBody){
     const qx=CX+dx*(kx<1?sc(r,kx):1),qy=CY+dy*(dy<0&&ky<1?sc(r,ky):1);const[px,py]=inv(qx,qy).map(Math.round);
     if(px<0||py<0||px>=W||py>=Hh||px<faceMin||px>faceMax||py<faceTop||py>chinBottom)continue;const si=(py*W+px)*4,ti=(ty*300+tx)*4;o[ti]=sd[si];o[ti+1]=sd[si+1];o[ti+2]=sd[si+2];o[ti+3]=255}
   x.putImageData(img,0,0);
+  c.bg=bgOf(src);c.fillMask=(tx,ty)=>ty<CY||(inHead(tx,ty)&&ty<=150);
   return c}
+/* iPhone 的 Safari 不支援 canvas 的 filter:blur，所以模糊自己算（三次 box blur ≈ 高斯） */
+function blurF(v,W,H,sig){if(!(sig>.2))return v;const n=3,wI=Math.floor(Math.sqrt(12*sig*sig/n+1));let wl=wI%2?wI:wI-1;const m=Math.round((12*sig*sig-n*wl*wl-4*n*wl-3*n)/(-4*wl-4));
+  const rs=[0,1,2].map(i=>((i<m?wl:wl+2)-1)/2),t=new Float32Array(v.length);let a=v,b=t;
+  const pass=(src,dst,r,horiz)=>{const L=horiz?W:H,M=horiz?H:W,st=horiz?1:W,ln=horiz?W:1,iv=1/(r+r+1);
+    for(let j=0;j<M;j++){const o=j*ln;let acc=src[o]*(r+1);for(let k=0;k<r;k++)acc+=src[o+Math.min(k,L-1)*st];
+      for(let k=0;k<L;k++){acc+=src[o+Math.min(k+r,L-1)*st]-src[o+Math.max(k-r-1,0)*st];dst[o+k*st]=acc*iv}}};
+  for(const r of rs){if(r<1)continue;pass(a,b,r,true);pass(b,a,r,false)}return a}
+function blurRGBA(d,W,times){if(!times)return;const H=d.length/4/W,t=new Float32Array(d.length);
+  for(let n=0;n<times;n++){for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4;if(d[i+3]<100)continue;let r=0,g=0,b=0,w=0;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const j=(Y*W+X)*4;if(d[j+3]<100)continue;const k=(dx?1:2)*(dy?1:2);r+=d[j]*k;g+=d[j+1]*k;b+=d[j+2]*k;w+=k}
+      t[i]=r/w;t[i+1]=g/w;t[i+2]=b/w}
+    for(let i=0;i<d.length;i+=4)if(d[i+3]>=100){d[i]=t[i];d[i+1]=t[i+1];d[i+2]=t[i+2]}}}
+/* 照片背景色：照片四邊大多是同一個顏色才算（素色牆、背景布） */
+function bgOf(src){try{const W=src.width,H=src.height,d=src.getContext('2d').getImageData(0,0,W,H).data,bw=Math.max(2,Math.round(Math.min(W,H)*.03)),P=[];
+  for(let y=0;y<H;y+=2)for(let x=0;x<W;x+=2){if(x>=bw&&x<W-bw&&y>=bw&&y<H-bw)continue;const i=(y*W+x)*4;P.push([d[i],d[i+1],d[i+2]])}
+  if(P.length<20)return null;const med=[0,1,2].map(c=>{const a=P.map(p=>p[c]).sort((p,q)=>p-q);return a[a.length>>1]});
+  const near=P.filter(p=>Math.abs(p[0]-med[0])+Math.abs(p[1]-med[1])+Math.abs(p[2]-med[2])<45).length/P.length;return near>=.5?med:null}catch(e){return null}}
+/* 被當成背景的地方、和插畫有但照片沒拍到的地方（耳朵、頭頂），用最近的毛色補上，不再直接變成底色 */
+function fillGaps(lab,W,mask){const N=lab.length,q=new Int32Array(N);let h=0,t=0;
+  for(let i=0;i<N;i++)if(lab[i]>=0)q[t++]=i;
+  while(h<t){const i=q[h++],y=(i/W)|0,x=i%W,k=lab[i];for(const j of[x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<W-1?i+W:-1]){if(j<0||lab[j]>=0)continue;
+      if(lab[j]===-2||(lab[j]===-1&&mask&&mask(j%W,(j/W)|0))){lab[j]=k;q[t++]=j}}}
+  for(let i=0;i<N;i++)if(lab[i]===-2)lab[i]=-1}
 function inpaint(d,cx,cy,r){const W=300,ring=[];for(let a=0;a<24;a++){const t=a/24*Math.PI*2;for(const rr of[r+3,r+7]){const px=Math.round(cx+Math.cos(t)*rr),py=Math.round(cy+Math.sin(t)*rr);if(px>=0&&py>=0&&px<W&&py<W){const i=(py*W+px)*4;if(d[i+3]>100)ring.push([d[i],d[i+1],d[i+2]])}}}
   if(!ring.length)return;ring.sort((a,b)=>(a[0]+a[1]+a[2])-(b[0]+b[1]+b[2]));const m=ring[Math.floor(ring.length*.6)];
   for(let y=Math.max(0,cy-r);y<=Math.min(W-1,cy+r);y++)for(let x=Math.max(0,cx-r);x<=Math.min(W-1,cx+r);x++){if((x-cx)**2+(y-cy)**2>r*r)continue;const i=(y*W+x)*4;if(d[i+3]>100){d[i]=m[0];d[i+1]=m[1];d[i+2]=m[2]}}}
 function quantLabels(raw,palette,baseHex,holes=[[120,130,15],[180,130,15],[150,146,10],[150,158,9]],family='unknown'){
   const W=300,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');
-  try{x.filter=family==='tortoiseshell'?'blur(0.45px)':family==='calico'?'blur(0.8px)':'blur(1px)'}catch(e){}x.drawImage(raw,0,0);x.filter='none';
-  const d=x.getImageData(0,0,W,W).data;
+  x.drawImage(raw,0,0);
+  const d=x.getImageData(0,0,W,W).data;blurRGBA(d,W,family==='tortoiseshell'?0:family==='calico'?1:2);
   holes.forEach(([a,b,r])=>inpaint(d,a,b,r));
   const pal=palette.map(rgb),bi=Math.max(0,palette.indexOf(baseHex)),lab=new Int16Array(W*W).fill(-1);
   // 色彩距離同時看明暗與色相，降低照片陰影造成白毛變灰、橘毛變棕的問題。
   const dist=(r,g,b,p)=>{const lum=.2126*r+.7152*g+.0722*b,pl=.2126*p[0]+.7152*p[1]+.0722*p[2];
     const u=r-g,v=b-g,pu=p[0]-p[1],pv=p[2]-p[1];
     return 1.5*(lum-pl)**2+2.3*(u-pu)**2+1.7*(v-pv)**2};
-  for(let i=0;i<W*W;i++){if(d[i*4+3]<100)continue;let best=0,bd=1e18;for(let k=0;k<pal.length;k++){const v=dist(d[i*4],d[i*4+1],d[i*4+2],pal[k]);if(v<bd){bd=v;best=k}}lab[i]=best}
+  const bg=raw.bg&&pal.every(p=>dist(raw.bg[0],raw.bg[1],raw.bg[2],p)>1800)?raw.bg:null,cand=bg?new Uint8Array(W*W):null;
+  for(let i=0;i<W*W;i++){if(d[i*4+3]<100)continue;let best=0,bd=1e18;for(let k=0;k<pal.length;k++){const v=dist(d[i*4],d[i*4+1],d[i*4+2],pal[k]);if(v<bd){bd=v;best=k}}lab[i]=best;
+    if(bg&&dist(d[i*4],d[i*4+1],d[i*4+2],bg)<bd*.8)cand[i]=1}
+  // 只有跟照片外圍連在一起的「像背景」才算背景，貓身上的陰影不會被誤刪
+  if(bg){const q=new Int32Array(W*W);let h=0,t=0;
+    for(let i=0;i<W*W;i++){if(!cand[i])continue;const y=(i/W)|0,x=i%W;if(x===0||y===0||x===W-1||y===W-1||lab[i-1]<0||lab[i+1]<0||lab[i-W]<0||lab[i+W]<0){cand[i]=2;q[t++]=i}}
+    while(h<t){const i=q[h++],y=(i/W)|0,x=i%W;for(const j of[x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<W-1?i+W:-1])if(j>=0&&cand[j]===1){cand[j]=2;q[t++]=j}}
+    for(let i=0;i<W*W;i++)if(cand[i]===2)lab[i]=-2}
+  fillGaps(lab,W,raw.fillMask);
   return{lab,pal,bi,family}}
 function seeded(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 /* 花紋質感：玳瑁的小斑點、虎斑的彎條紋（刻意畫的，不是照片雜訊） */
@@ -2550,12 +2583,18 @@ function renderLabels(L,lv,cutY=235){const W=300,N=W*W,lab=L.lab.slice(),K=L.pal
     while(h<t){const i=q[h++],y=(i/W)|0,x=i%W;for(const j of[x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<W-1?i+W:-1]){if(j<0)continue;
       if(lab[j]===k){if(!seen[j]){seen[j]=1;q[t++]=j}}else if(lab[j]>=0)nb[lab[j]]=(nb[lab[j]]||0)+1}}
     if(t<minA){let bk=k,bc=0;for(const kk in nb)if(nb[kk]>bc){bc=nb[kk];bk=+kk}if(bk!==k)for(let m=0;m<t;m++)lab[q[m]]=bk}}
+  // 1.5) 多數決：每一點看周圍 5x5 哪個顏色最多，鋸齒、毛邊、細刺會被抹平
+  const passes=lv>=50?2:lv>=8?1:0;for(let p=0;p<passes;p++){const nl=lab.slice(),cnt=new Int16Array(K);
+    for(let y=0;y<W;y++)for(let x=0;x<W;x++){const i=y*W+x;if(lab[i]<0)continue;cnt.fill(0);
+      for(let dy=-2;dy<=2;dy++){const Y=y+dy;if(Y<0||Y>=W)continue;for(let dx=-2;dx<=2;dx++){const X=x+dx;if(X<0||X>=W)continue;const k=lab[Y*W+X];if(k>=0)cnt[k]++}}
+      let bk=lab[i],bc=cnt[bk];for(let k=0;k<K;k++)if(cnt[k]>bc){bc=cnt[k];bk=k}nl[i]=bk}
+    lab.set(nl)}
   // 2) 每個顏色各自模糊，取最強的 → 圓滑的邊
   const r=(L.family==='tortoiseshell'?1.8:L.family==='calico'?2.4:L.family==='bicolor'?2.8:3)+lv*(L.family==='tortoiseshell'?.045:.075),S6=600,vals=[];const one=document.createElement('canvas');one.width=one.height=W;const ox=one.getContext('2d');
   const big=document.createElement('canvas');big.width=big.height=S6;const bx=big.getContext('2d');
   for(let k=0;k<K;k++){const im=ox.createImageData(W,W);for(let i=0;i<N;i++)if(lab[i]===k){im.data[i*4+3]=255}ox.putImageData(im,0,0);
-    bx.clearRect(0,0,S6,S6);bx.filter=`blur(${r}px)`;bx.imageSmoothingEnabled=true;bx.drawImage(one,0,0,S6,S6);bx.filter='none';
-    const a=bx.getImageData(0,0,S6,S6).data,v=new Float32Array(S6*S6);for(let i=0;i<S6*S6;i++)v[i]=a[i*4+3]/255;vals.push(v)}
+    bx.clearRect(0,0,S6,S6);bx.imageSmoothingEnabled=true;bx.drawImage(one,0,0,S6,S6);
+    const a=bx.getImageData(0,0,S6,S6).data,v=new Float32Array(S6*S6);for(let i=0;i<S6*S6;i++)v[i]=a[i*4+3]/255;vals.push(blurF(v,S6,S6,r))}
   const kk=8;const out=bx.createImageData(S6,S6),o=out.data,kmap=new Int8Array(S6*S6).fill(L.bi);
   // 手繪感：邊緣用低頻雜訊輕輕推一下，不會像機器畫的那麼平滑
   const rnd=seeded(7),G=24,GN=Math.ceil(S6/G)+2,gx=new Float32Array(GN*GN).map(()=>rnd()*2-1),gy=new Float32Array(GN*GN).map(()=>rnd()*2-1),AMP=L.family==='bicolor'?1.5:2.2;
@@ -2581,15 +2620,27 @@ function buildProj(){const V=photoVariants;if(!V||!V.L)return null;const c=docum
 function paintVariant(which){if(!photoVariants)return;const v=photoVariants[which];if(!v)return;
   if(mview!=='front')setMView('front');pushUndo();const c=CV.front.getContext('2d');c.clearRect(0,0,600,600);c.putImageData(v,0,0);
   ['side','sideL','back'].forEach(v=>{if(!S[v+'Photo'])S[v+'Edited']=false});autoDerive();render();photoVariants.cur=which;drawPhotoTools()}
-function drawPhotoTools(){const t=$('photoTools');if(!photoVariants){t.hidden=true;return}t.hidden=false;
+function drawPhotoTools(){const t=$('photoTools'),VV=viewVar[mview];drawGenUndo();
+  if(mview!=='front'){t.hidden=!(VV&&VV.L);if(!t.hidden){t.querySelector('.chips').hidden=true;$('texRow').hidden=true;$('traceRow').hidden=true;$('simpRow').hidden=false;$('simpLv').value=VV.lv}return}
+  t.querySelector('.chips').hidden=false;
+  if(!photoVariants){t.hidden=true;return}t.hidden=false;if(photoVariants.lv!=null)$('simpLv').value=photoVariants.lv;
   $('pvProj').hidden=!photoVariants.proj;$('simpRow').hidden=$('texRow').hidden=!photoVariants.proj||photoVariants.cur!=='proj';document.querySelectorAll('#texChips .chip').forEach(b=>b.setAttribute('aria-pressed',(photoVariants.tex||'none')===b.dataset.t));$('pvProj').setAttribute('aria-pressed',photoVariants.cur==='proj');$('pvBlock').setAttribute('aria-pressed',photoVariants.cur==='block');
   $('pvTrace').setAttribute('aria-pressed',traceOn);$('traceRow').hidden=!traceOn}
 function drawTrace(){const tl=$('traceLayer');const show=traceOn&&photoVariants&&photoVariants.raw&&mview==='front';tl.hidden=!show;if(!show)return;
   const x=tl.getContext('2d');x.clearRect(0,0,600,600);x.drawImage(photoVariants.raw,0,0,600,600);tl.style.opacity=String(+$('traceOp').value/100);
   const m=maskURL('front');tl.style.webkitMaskImage=m;tl.style.maskImage=m}
+/* AI 畫貓前先把整隻貓（設定＋四個角度）存起來，畫壞了可以一鍵回去 */
+function pushGenSnap(){const cv={};PAINTS.forEach(v=>{const c=document.createElement('canvas');c.width=c.height=600;c.getContext('2d').drawImage(CV[v],0,0);cv[v]=c});
+  genSnaps.push({S:JSON.parse(JSON.stringify(S)),cv});if(genSnaps.length>5)genSnaps.shift();drawGenUndo()}
+function drawGenUndo(){const b=$('genUndo');if(!b)return;b.hidden=!genSnaps.length;b.textContent=genSnaps.length>1?`↩ 還原成 AI 畫之前（還能退 ${genSnaps.length} 次）`:'↩ 還原成 AI 畫之前'}
+$('genUndo').onclick=()=>{const g=genSnaps.pop();if(!g)return;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,g.S);
+  PAINTS.forEach(v=>{const c=CV[v].getContext('2d');c.clearRect(0,0,600,600);c.drawImage(g.cv[v],0,0);hist[v].u.length=0;hist[v].r.length=0});
+  photoVariants=null;viewVar={};traceOn=false;refreshControls();vhint();render();drawViewPhotoBtns();drawTrace();histUI();drawPhotoTools();save();
+  $('photoMsg').textContent='已經還原成 AI 畫之前的樣子'};
 $('pvProj').onclick=()=>paintVariant('proj');$('pvBlock').onclick=()=>paintVariant('block');
 document.querySelectorAll('#texChips .chip').forEach(b=>b.onclick=()=>{const V=photoVariants;if(!V||!V.L)return;V.tex=b.dataset.t;V.proj=buildProj();paintVariant('proj')});
-$('simpLv').onchange=()=>{const V=photoVariants;if(!V||!V.L)return;V.lv=+$('simpLv').value;V.proj=buildProj();paintVariant('proj')};
+$('simpLv').onchange=()=>{if(mview!=='front'){const VV=viewVar[mview];if(!VV||!VV.L)return;VV.lv=+$('simpLv').value;pushUndo();const c=CV[mview].getContext('2d');c.clearRect(0,0,600,600);c.drawImage(buildViewOut(mview),0,0);S[mview+'Edited']=true;render();save();return}
+  const V=photoVariants;if(!V||!V.L)return;V.lv=+$('simpLv').value;V.proj=buildProj();paintVariant('proj')};
 $('pvTrace').onclick=()=>{traceOn=!traceOn;drawPhotoTools();drawTrace()};$('traceOp').oninput=drawTrace;
 
 /* ===== 從照片自動畫一隻 ===== */
@@ -2706,7 +2757,7 @@ async function photoToCat(file,extraParts=[]){
 顏色請忠實反映照片毛色，不要自行提亮或美化；無法確認的區域保持保守，不要腦補。`;
     const o=await gemParts(sys+'\n\n'+specificCoatPrompt(cls),[{text:'第一張是正面主要目標，其餘是同一隻貓的左、右、背面照片，可用來確認毛色連續性，但請只回傳正面所見的位置與定位點，不要把其他角度的座標套進正面。'},{inlineData:{mimeType:'image/jpeg',data:b64}},...extraParts],PHOTO_SCHEMA,2300);
     if(!o.isCat){msg('這張照片好像看不清楚貓，換一張正面、光線好一點的照片試試');return}
-    if(mview!=='front')setMView('front');pushUndo();
+    pushGenSnap();viewVar={};if(mview!=='front')setMView('front');pushUndo();
     const hx=v=>HEX.test(v||'')?v.toLowerCase():null;
     if(hx(o.base))S.base=hx(o.base);if(['none','short','medium','long'].includes(o.fur))S.fur=o.fur;
     const ears=Object.keys(EAR).concat('none');if(ears.includes(o.earL))S.earL=o.earL;if(ears.includes(o.earR))S.earR=o.earR;S.earLink=S.earL===S.earR;
@@ -2860,6 +2911,7 @@ function projectView(src,o,v){const gv=GV(v),g=geo(),W=src.width,Hh=src.height;
     if(okBox(o.bodyBox))put(o.bodyBox,150,208,g.brx,54,()=>x.ellipse(150,208,g.brx+4,58,0,0,Math.PI*2));
     if(okBox(o.headBox))put(o.headBox,150,122,88*g.hf,70,()=>{x.ellipse(150,122,88*g.hf+6,74,0,0,Math.PI*2);x.rect(46,0,208,96)});
   }
+  c.bg=bgOf(src);c.fillMask=gv==='side'?((tx,ty)=>tx>160&&ty<150):((tx,ty)=>ty<122);
   return c}
 async function viewPhoto(file,v,extraParts=[]){const msg=t=>{$('photoMsg').textContent=t},n=VPHOTO[v];
   if(!aiKey()){msg('分析照片需要 Gemini 金鑰，先跟著步驟申請一把（免費）');openKeyGuide();return}
@@ -2885,18 +2937,19 @@ async function viewPhoto(file,v,extraParts=[]){const msg=t=>{$('photoMsg').textC
     const hx=c=>HEX.test(c||'')?c.toLowerCase():null,pal=[];
     [S.base,...(o.colors||[]).map(hx)].filter(Boolean).forEach(h=>{if(!pal.some(q=>{const a=rgb(q),b=rgb(h);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])<40}))pal.push(h)});
     const raw=projectView(pcv,o,v),holes=want==='side'?[[250,132,13],[281,146,8]]:[];
-    const out=document.createElement('canvas');out.width=out.height=600;const ox=out.getContext('2d');
-    if(pal.length>=2)ox.drawImage(renderLabels(quantLabels(raw,pal,S.base,holes),30,300).canvas,0,0);
-    const far=c=>{const a=rgb(c),b=rgb(S.base);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])>=40};
-    ox.save();ox.scale(2,2);const g=geo(),lc=hx(o.legColor),tc=hx(o.tailColor);
-    if(lc&&far(lc)){ox.fillStyle=lc;if(want==='side')ox.fillRect(80,246,150,26);else{ox.fillRect(96,250,40,22);ox.fillRect(164,250,40,22)}}
-    const td=TAILS[want][S.tail];if(tc&&far(tc)&&td){ox.strokeStyle=tc;ox.lineWidth=g.tw+6;ox.lineCap='round';ox.lineJoin='round';ox.stroke(new Path2D(td))}
-    ox.restore();
-    if(mview!==v)setMView(v);pushUndo();const c=CV[v].getContext('2d');c.clearRect(0,0,600,600);c.drawImage(out,0,0);
-    S[v+'Edited']=true;S[v+'Photo']=true;vhint();save();render();drawViewPhotoBtns();
+    pushGenSnap();viewVar[v]={L:pal.length>=2?quantLabels(raw,pal,S.base,holes):null,lv:30,want,lc:hx(o.legColor),tc:hx(o.tailColor)};
+    if(mview!==v)setMView(v);pushUndo();const c=CV[v].getContext('2d');c.clearRect(0,0,600,600);c.drawImage(buildViewOut(v),0,0);
+    S[v+'Edited']=true;S[v+'Photo']=true;vhint();save();render();drawViewPhotoBtns();drawPhotoTools();
     msg(`${n}完成兩階段分析（${cls.family}）：${o.summary||''} AI 生成的不一定準確，可以用筆刷、換色塊、刪色塊微調。`)}
   catch(e){msg('分析失敗：'+aiErrText(e))}
   finally{document.querySelectorAll('.vphoto').forEach(b=>b.disabled=false);$('photoInput2').value=''}}
+function buildViewOut(v){const V=viewVar[v],out=document.createElement('canvas');out.width=out.height=600;const ox=out.getContext('2d');if(!V)return out;
+  if(V.L)ox.drawImage(renderLabels(V.L,V.lv,300).canvas,0,0);
+  const far=c=>{const a=rgb(c),b=rgb(S.base);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])>=40};
+  ox.save();ox.scale(2,2);const g=geo(),lc=V.lc,tc=V.tc;
+  if(lc&&far(lc)){ox.fillStyle=lc;if(V.want==='side')ox.fillRect(80,246,150,26);else{ox.fillRect(96,250,40,22);ox.fillRect(164,250,40,22)}}
+  const td=TAILS[V.want][S.tail];if(tc&&far(tc)&&td){ox.strokeStyle=tc;ox.lineWidth=g.tw+6;ox.lineCap='round';ox.lineJoin='round';ox.stroke(new Path2D(td))}
+  ox.restore();return out}
 function drawViewPhotoBtns(){document.querySelectorAll('.vphoto').forEach(b=>{b.querySelector('i').textContent=S[b.dataset.v+'Photo']?' ✓':''})}
 let vphotoTarget='side';
 document.querySelectorAll('.vphoto').forEach(b=>b.onclick=()=>{if(photoBatchRunning)return;vphotoTarget=b.dataset.v;$('photoInput2').click()});
