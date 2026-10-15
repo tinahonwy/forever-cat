@@ -383,9 +383,9 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
     <div class="pane" data-pane="color">
       <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>先選一張牠的正面照（必要）</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><div class="vphotos"><span class="lbl">再補其他角度，花紋會更像（建議）</span><div class="chips"><button class="chip vphoto" type="button" data-v="sideL">左側照片<i></i></button><button class="chip vphoto" type="button" data-v="side">右側照片<i></i></button><button class="chip vphoto" type="button" data-v="back">背面（屁股）照片<i></i></button></div><input type="file" id="photoInput2" accept="image/*" hidden></div>
-        <p class="hint" id="photoMsg">先辨識花色家族、再按類型分析。建議使用正面且身體朝前的照片；Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
+        <p class="hint" id="photoMsg">先辨識花色家族、再依照照片的實際色塊邊界繪製。建議使用正面且身體朝前的照片；Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
         <p class="hint aiwarn">※ 花紋和外觀是 AI 生成的，不一定準確，可以用筆刷、換色塊、刪色塊手動微調。</p>
-        <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
+        <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化（越低越接近照片）</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
       <div class="row"><span class="lbl">底色</span><div class="swatches" id="sw-base"></div></div>
       <p class="hint">在左邊的貓身上直接畫花紋，畫到身體外面的部分會自動隱藏。</p>
       <div class="row"><span class="lbl">筆刷顏色</span><div class="swatches" id="sw-brush"></div></div>
@@ -2154,24 +2154,32 @@ function projectRaw(src,lm,useBody){
     if(r[0]-l[0]>50)half=(r[0]-l[0])/2;if(t[1]<128&&t[1]>20)top=t[1]}
   const R0=.42,kx=Math.min(1,half/A),ky=Math.min(1,(CY-top)/B),sc=(r,k)=>r<=R0?1:(R0+(r-R0)*((k-R0)/(1-R0)))/r;
   const sd=src.getContext('2d').getImageData(0,0,W,Hh).data,img=x.getImageData(0,0,300,300),o=img.data;
-  const inHead=(tx,ty)=>((tx-CX)/(A+6))**2+((ty-CY)/B)**2<=1||(ty<96&&tx>=46&&tx<=254);
+  // 只投影臉部毛色：耳朵及臉輪廓外一律交給既有插畫底色，避免把背景誤畫成斑塊。
+  const inHead=(tx,ty)=>((tx-CX)/(A+2))**2+((ty-CY)/(B+1))**2<=1;
+  const faceMin=fc&&fc.x1>fc.x0?Math.max(0,(fc.x0-22)/1000*W):0;
+  const faceMax=fc&&fc.x1>fc.x0?Math.min(W,(fc.x1+22)/1000*W):W;
+  const faceTop=fc&&fc.y0>=0?Math.max(0,(fc.y0-24)/1000*Hh):0;
+  const chinBottom=Math.min(Hh,P(lm.chin)[1]+.10*Hh);
   for(let ty=0;ty<300;ty++)for(let tx=0;tx<300;tx++){if(!inHead(tx,ty))continue;const dx=tx-CX,dy=ty-CY,r=Math.hypot(dx/A,dy/B);
     const qx=CX+dx*(kx<1?sc(r,kx):1),qy=CY+dy*(dy<0&&ky<1?sc(r,ky):1);const[px,py]=inv(qx,qy).map(Math.round);
-    if(px<0||py<0||px>=W||py>=Hh)continue;const si=(py*W+px)*4,ti=(ty*300+tx)*4;o[ti]=sd[si];o[ti+1]=sd[si+1];o[ti+2]=sd[si+2];o[ti+3]=255}
+    if(px<0||py<0||px>=W||py>=Hh||px<faceMin||px>faceMax||py<faceTop||py>chinBottom)continue;const si=(py*W+px)*4,ti=(ty*300+tx)*4;o[ti]=sd[si];o[ti+1]=sd[si+1];o[ti+2]=sd[si+2];o[ti+3]=255}
   x.putImageData(img,0,0);
   return c}
 function inpaint(d,cx,cy,r){const W=300,ring=[];for(let a=0;a<24;a++){const t=a/24*Math.PI*2;for(const rr of[r+3,r+7]){const px=Math.round(cx+Math.cos(t)*rr),py=Math.round(cy+Math.sin(t)*rr);if(px>=0&&py>=0&&px<W&&py<W){const i=(py*W+px)*4;if(d[i+3]>100)ring.push([d[i],d[i+1],d[i+2]])}}}
   if(!ring.length)return;ring.sort((a,b)=>(a[0]+a[1]+a[2])-(b[0]+b[1]+b[2]));const m=ring[Math.floor(ring.length*.6)];
   for(let y=Math.max(0,cy-r);y<=Math.min(W-1,cy+r);y++)for(let x=Math.max(0,cx-r);x<=Math.min(W-1,cx+r);x++){if((x-cx)**2+(y-cy)**2>r*r)continue;const i=(y*W+x)*4;if(d[i+3]>100){d[i]=m[0];d[i+1]=m[1];d[i+2]=m[2]}}}
-function quantLabels(raw,palette,baseHex,holes=[[120,130,15],[180,130,15],[150,146,10],[150,158,9]]){
+function quantLabels(raw,palette,baseHex,holes=[[120,130,15],[180,130,15],[150,146,10],[150,158,9]],family='unknown'){
   const W=300,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');
-  try{x.filter='blur(2px)'}catch(e){}x.drawImage(raw,0,0);x.filter='none';
+  try{x.filter=family==='tortoiseshell'?'blur(0.45px)':family==='calico'?'blur(0.8px)':'blur(1px)'}catch(e){}x.drawImage(raw,0,0);x.filter='none';
   const d=x.getImageData(0,0,W,W).data;
   holes.forEach(([a,b,r])=>inpaint(d,a,b,r));
   const pal=palette.map(rgb),bi=Math.max(0,palette.indexOf(baseHex)),lab=new Int16Array(W*W).fill(-1);
-  const dist=(r,g,b,p)=>2*(r-p[0])**2+4*(g-p[1])**2+3*(b-p[2])**2;
+  // 色彩距離同時看明暗與色相，降低照片陰影造成白毛變灰、橘毛變棕的問題。
+  const dist=(r,g,b,p)=>{const lum=.2126*r+.7152*g+.0722*b,pl=.2126*p[0]+.7152*p[1]+.0722*p[2];
+    const u=r-g,v=b-g,pu=p[0]-p[1],pv=p[2]-p[1];
+    return 1.5*(lum-pl)**2+2.3*(u-pu)**2+1.7*(v-pv)**2};
   for(let i=0;i<W*W;i++){if(d[i*4+3]<100)continue;let best=0,bd=1e18;for(let k=0;k<pal.length;k++){const v=dist(d[i*4],d[i*4+1],d[i*4+2],pal[k]);if(v<bd){bd=v;best=k}}lab[i]=best}
-  return{lab,pal,bi}}
+  return{lab,pal,bi,family}}
 function seeded(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 /* 花紋質感：玳瑁的小斑點、虎斑的彎條紋（刻意畫的，不是照片雜訊） */
 function drawFlecks(x,kmap,L){const rnd=seeded(11),g=geo(),K=L.pal.length;if(K<2)return;
@@ -2196,20 +2204,21 @@ function drawStripes(x,L){const rnd=seeded(5),g=geo(),hf=g.hf,bf=g.brx/62;
 function renderLabels(L,lv,cutY=235){const W=300,N=W*W,lab=L.lab.slice(),K=L.pal.length;
   for(let i=cutY*W;i<N;i++)lab[i]=-1; // 沒有照片資料（或被紙箱擋住）的地方：不投票，讓色塊自然收圓
   // 1) 小碎塊併進旁邊最多的顏色
-  const minA=Math.round(25+lv*5),seen=new Uint8Array(N),q=new Int32Array(N);
+  const detail=L.family==='tortoiseshell'?.14:L.family==='calico'?.38:L.family==='bicolor'?.75:.65;
+  const minA=Math.round((14+lv*2.6)*detail),seen=new Uint8Array(N),q=new Int32Array(N);
   for(let s0=0;s0<N;s0++){if(seen[s0]||lab[s0]<0)continue;const k=lab[s0];let h=0,t=0;q[t++]=s0;seen[s0]=1;const nb={};
     while(h<t){const i=q[h++],y=(i/W)|0,x=i%W;for(const j of[x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<W-1?i+W:-1]){if(j<0)continue;
       if(lab[j]===k){if(!seen[j]){seen[j]=1;q[t++]=j}}else if(lab[j]>=0)nb[lab[j]]=(nb[lab[j]]||0)+1}}
     if(t<minA){let bk=k,bc=0;for(const kk in nb)if(nb[kk]>bc){bc=nb[kk];bk=+kk}if(bk!==k)for(let m=0;m<t;m++)lab[q[m]]=bk}}
   // 2) 每個顏色各自模糊，取最強的 → 圓滑的邊
-  const r=4+lv*.16,S6=600,vals=[];const one=document.createElement('canvas');one.width=one.height=W;const ox=one.getContext('2d');
+  const r=(L.family==='tortoiseshell'?1.8:L.family==='calico'?2.4:L.family==='bicolor'?2.8:3)+lv*(L.family==='tortoiseshell'?.045:.075),S6=600,vals=[];const one=document.createElement('canvas');one.width=one.height=W;const ox=one.getContext('2d');
   const big=document.createElement('canvas');big.width=big.height=S6;const bx=big.getContext('2d');
   for(let k=0;k<K;k++){const im=ox.createImageData(W,W);for(let i=0;i<N;i++)if(lab[i]===k){im.data[i*4+3]=255}ox.putImageData(im,0,0);
     bx.clearRect(0,0,S6,S6);bx.filter=`blur(${r}px)`;bx.imageSmoothingEnabled=true;bx.drawImage(one,0,0,S6,S6);bx.filter='none';
     const a=bx.getImageData(0,0,S6,S6).data,v=new Float32Array(S6*S6);for(let i=0;i<S6*S6;i++)v[i]=a[i*4+3]/255;vals.push(v)}
   const kk=8;const out=bx.createImageData(S6,S6),o=out.data,kmap=new Int8Array(S6*S6).fill(L.bi);
   // 手繪感：邊緣用低頻雜訊輕輕推一下，不會像機器畫的那麼平滑
-  const rnd=seeded(7),G=24,GN=Math.ceil(S6/G)+2,gx=new Float32Array(GN*GN).map(()=>rnd()*2-1),gy=new Float32Array(GN*GN).map(()=>rnd()*2-1),AMP=3.5;
+  const rnd=seeded(7),G=24,GN=Math.ceil(S6/G)+2,gx=new Float32Array(GN*GN).map(()=>rnd()*2-1),gy=new Float32Array(GN*GN).map(()=>rnd()*2-1),AMP=L.family==='bicolor'?1.5:2.2;
   const nz=(g,x,y)=>{const fx=x/G,fy=y/G,ix=fx|0,iy=fy|0,tx=fx-ix,ty=fy-iy,a=g[iy*GN+ix],b=g[iy*GN+ix+1],c=g[(iy+1)*GN+ix],d=g[(iy+1)*GN+ix+1];
     const sx=tx*tx*(3-2*tx),sy=ty*ty*(3-2*ty);return(a*(1-sx)+b*sx)*(1-sy)+(c*(1-sx)+d*sx)*sy};
   for(let i=0;i<S6*S6;i++){const px=i%S6,py=(i/S6)|0,qx=Math.max(0,Math.min(S6-1,Math.round(px+nz(gx,px,py)*AMP))),qy=Math.max(0,Math.min(S6-1,Math.round(py+nz(gy,px,py)*AMP))),j=qy*S6+qx;
@@ -2225,6 +2234,7 @@ function buildProj(){const V=photoVariants;if(!V||!V.L)return null;const c=docum
   const BODY=['body_left','body_right','belly','chest','back_paws','front_paws'];
   if(V.bodyRegs){x.save();x.scale(2,2);V.regs.filter(r=>BODY.includes(r.part)).sort((a,b)=>BODY.indexOf(a.part)-BODY.indexOf(b.part)).forEach(r=>paintRegion(x,r.part,r.color));x.restore()}
   const R=renderLabels(V.L,V.lv);x.drawImage(R.canvas,0,0);
+  // 不自動灑隨機花紋：只有使用者主動選質感才附加裝飾。
   if(V.tex==='fleck')drawFlecks(x,R.kmap,V.L);else if(V.tex==='stripe')drawStripes(x,V.L);
   x.save();x.scale(2,2);V.regs.filter(r=>['tail','tail_tip','front_paws','back_paws'].includes(r.part)).forEach(r=>paintRegion(x,r.part,r.color));x.restore();
   return x.getImageData(0,0,600,600)}
@@ -2371,8 +2381,9 @@ async function photoToCat(file){
     c.restore();
     const block=c.getImageData(0,0,600,600);let projD=null,raw=null;
     try{if(o.lm&&o.frontal!==false){raw=projectRaw(pcv,o.lm,o.bodyFrontal===true);
-      const pal=[];[S.base,...regs.map(r=>hx(r.color)),hx(o.tabbyColor)].filter(Boolean).forEach(h=>{if(!pal.some(q=>{const a=rgb(q),b=rgb(h);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])<40}))pal.push(h)});
-      if(raw&&pal.length>=2){photoVariants={bodyRegs:o.bodyFrontal!==true,L:quantLabels(raw,pal,S.base),lv:+$('simpLv').value,tex:'none',regs:regs.map(r=>({part:r.part,color:hx(r.color)}))};projD=buildProj();if(projD)c.putImageData(projD,0,0)}}}
+      const pal=[];[S.base,...(Array.isArray(cls.palette)?cls.palette.map(hx):[]),...regs.map(r=>hx(r.color)),hx(o.tabbyColor)].filter(Boolean).forEach(h=>{if(!pal.some(q=>{const a=rgb(q),b=rgb(h);return Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2])<40}))pal.push(h)});
+      if(raw&&pal.length>=2){const family=cls.family||'unknown';const defaultSimp=family==='tortoiseshell'?10:family==='calico'?18:family==='bicolor'?22:family==='tabby'?25:30;
+        $('simpLv').value=defaultSimp;photoVariants={bodyRegs:o.bodyFrontal!==true,L:quantLabels(raw,pal,S.base,undefined,family),lv:defaultSimp,tex:'none',regs:regs.map(r=>({part:r.part,color:hx(r.color)}))};projD=buildProj();if(projD)c.putImageData(projD,0,0)}}}
     catch(err){projD=null}
     if(!raw){raw=document.createElement('canvas');raw.width=raw.height=300;const rx=raw.getContext('2d'),sc=Math.min(300/pcv.width,300/pcv.height);rx.drawImage(pcv,(300-pcv.width*sc)/2,(300-pcv.height*sc)/2,pcv.width*sc,pcv.height*sc)}
     const useProj=!!projD && (['tortoiseshell','calico','tabby','mixed'].includes(cls.family) || o.complexPattern===true || cls.family==='bicolor');photoVariants={...(projD?photoVariants:{}),block,proj:projD,raw,cur:useProj?'proj':'block'};if(!useProj)c.putImageData(block,0,0);drawPhotoTools();drawTrace();
