@@ -1064,9 +1064,12 @@ PAINTS.forEach(k=>{const c=CV[k];
   ['pointerup','pointercancel','pointerleave'].forEach(t=>c.addEventListener(t,()=>{if(painting){painting=false;afterChange()}}));
 });
 $('undo').onclick=undo;$('redo').onclick=redo;histUI();
-let clearArm=false;
-$('clearPaint').onclick=e=>{if(!clearArm){clearArm=true;e.target.textContent='再按一次清除';setTimeout(()=>{clearArm=false;e.target.textContent='清除花紋'},2500);return}
-  pushUndo();ctx.clearRect(0,0,600,600);clearArm=false;e.target.textContent='清除花紋';afterChange()};
+$('clearPaint').onclick=()=>{
+  if(!confirm('確定要清除目前所有花紋嗎？'))return;
+  pushUndo();
+  ctx.clearRect(0,0,600,600);
+  afterChange();
+};
 
 function stamp(kind){pushUndo();ctx.save();ctx.scale(2,2);ctx.globalCompositeOperation='source-over';
   const lines=(arr,w,c)=>{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';arr.forEach(([a,b,c2,d])=>{ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c2,d);ctx.stroke()})};
