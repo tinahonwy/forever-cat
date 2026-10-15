@@ -328,6 +328,47 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 .backup{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;font-size:12.5px;color:var(--muted)}
 .kgplain{font:inherit;font-size:14px;color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px}
 .foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);gap:8px;flex-wrap:wrap}
+
+/* Maker UX: independent photo and manual workspaces. */
+.maker-panel{min-width:0}
+.maker-choice{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+.maker-choice-btn{font:inherit;text-align:left;display:flex;align-items:center;gap:9px;min-width:0;padding:12px;background:var(--chip);border:2px solid var(--line);color:var(--fg);border-radius:15px;cursor:pointer}
+.maker-choice-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.maker-choice-icon{font-size:25px;flex:none}.maker-choice-btn b{display:block;font-size:14px;font-weight:600;line-height:1.4}.maker-choice-btn small{display:block;color:var(--muted);font-size:11px;line-height:1.5}
+.photo-workspace{display:flex;flex-direction:column;gap:12px}.photo-workspace[hidden]{display:none!important}
+.photo-workspace-head{display:flex;flex-direction:column;gap:2px}.photo-workspace-head span{font-size:12px;color:var(--muted)}
+.photo-workspace .photorow{display:flex;flex-direction:column;gap:10px}
+.photo-workspace .photobtn{padding:14px}
+#afterPhotoEdit{align-self:stretch;padding:11px}
+#manualWorkspace[hidden]{display:none!important}
+@media(max-width:820px){
+  #viewMaker{display:flex;flex-direction:column;gap:0;align-items:stretch}
+  #viewMaker[hidden]{display:none!important}
+  #viewMaker .stage-col{position:sticky;top:0;z-index:25;background:var(--bg);padding:6px 0 8px;gap:4px;box-shadow:0 5px 10px -10px rgba(0,0,0,.4)}
+  #viewMaker .stage{width:min(100%,35dvh,360px);border-radius:18px}
+  #viewMaker .stagebar{margin-top:0;padding:0}
+  #viewMaker .sbtn{font-size:12px;padding:5px 9px}
+  #viewMaker .viewpick{justify-content:center;gap:4px}
+  #viewMaker .viewpick .chip{font-size:12px;padding:3px 9px}
+  #viewMaker .vhint{font-size:11px}
+  #viewMaker .namecard{justify-content:center}
+  #viewMaker .namecard input{flex:0 1 170px;font-size:16px}
+  #viewMaker .maker-panel{margin-top:8px;max-width:100%;min-height:180px}
+  #viewMaker .tabs{overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;padding-bottom:5px;scrollbar-width:thin}
+  #viewMaker .tab{flex:none}
+}
+@media(max-width:480px){
+  body{padding-top:10px}
+  #viewMaker .stage{width:min(100%,31dvh,290px)}
+  #viewMaker .badge{font-size:10px;max-width:74%;line-height:1.3}
+  #viewMaker .stagecam{padding:5px 8px;font-size:11px;right:5px;top:5px}
+  #viewMaker .stagecam svg{width:16px;height:16px}
+  #viewMaker .maker-panel{padding:12px}
+  .maker-choice-btn{padding:9px 7px;gap:5px;flex-direction:column;text-align:center}
+  .maker-choice-btn small{font-size:10px}
+  .maker-choice-icon{font-size:22px}
+}
+@media(max-height:690px) and (max-width:820px){#viewMaker .stage{width:min(100%,26dvh,230px)}}
 </style>
 </head>
 <body>
@@ -361,7 +402,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
         <svg class="layer" id="top" viewBox="0 0 300 300" aria-hidden="true"></svg>
       </div>
       <span class="badge" id="badge" hidden>用手指或滑鼠在貓身上畫花紋</span>
-      <button class="stagecam" id="stageCam" type="button" aria-label="從照片自動畫一隻"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>照片</span></button>
+      <button class="stagecam" id="stageCam" type="button" aria-label="從照片自動畫一隻"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>AI 畫貓</span></button>
     </div>
     <div class="stagebar" id="stagebar" hidden><button class="sbtn" id="undo" type="button">↶ 上一步</button><button class="sbtn" id="eraseQuick" type="button">橡皮擦</button><button class="sbtn" id="redo" type="button">下一步 ↷</button></div>
     <div class="viewpick"><div class="chips" id="c-mview" role="group" aria-label="角度"></div><span class="vhint" id="vhint"></span></div>
@@ -371,7 +412,20 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel maker-panel" id="makerPanel">
+    <div class="maker-choice" role="group" aria-label="製作貓咪的方式">
+      <button type="button" class="maker-choice-btn" id="makerAI" aria-pressed="false"><span class="maker-choice-icon">📷</span><span><b>AI 照片畫貓</b><small>上傳照片，幫牠畫花紋</small></span></button>
+      <button type="button" class="maker-choice-btn" id="makerManual" aria-pressed="true"><span class="maker-choice-icon">🎨</span><span><b>自己動手捏貓</b><small>畫花紋、調整外觀與個性</small></span></button>
+    </div>
+    <section class="photo-workspace" id="photoWorkspace" hidden aria-label="AI 照片畫貓">
+      <div class="photo-workspace-head"><b>📷 用照片畫出真正的牠</b><span>正面必填，其他角度選填</span></div>
+      <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>先選一張牠的正面照（必要）</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><div class="vphotos"><span class="lbl">先挑選其他角度（選填），選好後按「開始畫貓」一起分析</span><div class="chips"><button class="chip vphoto" type="button" data-v="sideL">左側照片<i></i></button><button class="chip vphoto" type="button" data-v="side">右側照片<i></i></button><button class="chip vphoto" type="button" data-v="back">背面（屁股）照片<i></i></button></div><input type="file" id="photoInput2" accept="image/*" hidden></div><div class="btns"><button class="btn primary" id="photoAnalyze" type="button" disabled>🐱 開始畫貓（綜合分析）</button><button class="btn" id="photoReset" type="button" hidden>重新選照片</button></div><p class="hint" id="photoQueueStatus" aria-live="polite">尚未選擇照片。正面照必填，其他角度可以慢慢補。</p>
+        <p class="hint" id="photoMsg">先選好照片，按「開始畫貓」才會一起分析。建議使用正面且身體朝前的照片；Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
+        <p class="hint aiwarn">※ 花紋和外觀是 AI 生成的，不一定準確，可以用筆刷、換色塊、刪色塊手動微調。</p>
+        <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化（越低越接近照片）</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
+      <button type="button" class="btn primary" id="afterPhotoEdit">🎨 畫好了？進入手動微調</button>
+    </section>
+    <div id="manualWorkspace">
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="color">毛色花紋</button>
       <button class="tab" role="tab" data-tab="eyes">眼睛鼻子</button>
@@ -382,10 +436,6 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
 
     <div class="pane" data-pane="color">
-      <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>先選一張牠的正面照（必要）</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><div class="vphotos"><span class="lbl">先挑選其他角度（選填），選好後按「開始畫貓」一起分析</span><div class="chips"><button class="chip vphoto" type="button" data-v="sideL">左側照片<i></i></button><button class="chip vphoto" type="button" data-v="side">右側照片<i></i></button><button class="chip vphoto" type="button" data-v="back">背面（屁股）照片<i></i></button></div><input type="file" id="photoInput2" accept="image/*" hidden></div><div class="btns"><button class="btn primary" id="photoAnalyze" type="button" disabled>🐱 開始畫貓（綜合分析）</button><button class="btn" id="photoReset" type="button" hidden>重新選照片</button></div><p class="hint" id="photoQueueStatus" aria-live="polite">尚未選擇照片。正面照必填，其他角度可以慢慢補。</p>
-        <p class="hint" id="photoMsg">先選好照片，按「開始畫貓」才會一起分析。建議使用正面且身體朝前的照片；Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
-        <p class="hint aiwarn">※ 花紋和外觀是 AI 生成的，不一定準確，可以用筆刷、換色塊、刪色塊手動微調。</p>
-        <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化（越低越接近照片）</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
       <div class="row"><span class="lbl">底色</span><div class="swatches" id="sw-base"></div></div>
       <p class="hint">在左邊的貓身上直接畫花紋，畫到身體外面的部分會自動隱藏。</p>
       <div class="row"><span class="lbl">筆刷顏色</span><div class="swatches" id="sw-brush"></div></div>
@@ -451,6 +501,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       <div class="row"><span class="lbl">基本資料</span><button class="btn" id="openInfo2" type="button">填寫生日、品種、疫苗…</button></div>
     </div>
 
+    </div><!-- manualWorkspace -->
     <div class="foot"><span id="saved">設定會自動存在這台裝置</span><button class="btn warn" id="resetAll">全部重來</button></div>
     <div class="backup"><button class="btn" id="backupOut" type="button">下載備份</button><button class="btn" id="backupIn" type="button">從備份還原</button><input type="file" id="backupFile" accept="application/json,.json" hidden><span id="backupMsg"></span></div>
     <div class="backup"><button class="btn" id="installBtn" type="button">加到手機主畫面</button><span id="installMsg"></span></div>
@@ -900,8 +951,25 @@ $('catName').oninput=e=>{S.name=e.target.value;save()};
 /* tabs */
 function showTab(t){tab=t;document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
   document.querySelectorAll('.pane').forEach(p=>p.hidden=p.dataset.pane!==t);
-  $('stage').classList.toggle('painting',t==='color');$('badge').hidden=t!=='color';$('stagebar').hidden=t!=='color';try{localStorage.setItem(KEY+'-tab',t)}catch(e){}}
+  $('stage').classList.toggle('painting',t==='color'&&makerMode!=='photo');$('badge').hidden=t!=='color'||makerMode==='photo';$('stagebar').hidden=t!=='color'||makerMode==='photo';try{localStorage.setItem(KEY+'-tab',t)}catch(e){}}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+
+/* Two clear routes into the same cat editor. No change to saved cat data. */
+let makerMode='manual';
+function setMakerMode(mode){
+  makerMode=mode==='photo'?'photo':'manual';
+  $('photoWorkspace').hidden=makerMode!=='photo';
+  $('manualWorkspace').hidden=makerMode!=='manual';
+  $('makerAI').setAttribute('aria-pressed',String(makerMode==='photo'));
+  $('makerManual').setAttribute('aria-pressed',String(makerMode==='manual'));
+  if(makerMode==='photo'){
+    $('stage').classList.remove('painting');$('stagebar').hidden=true;$('badge').hidden=true;
+  }else{showTab(tab||'color');}
+}
+$('makerAI').onclick=()=>setMakerMode('photo');
+$('makerManual').onclick=()=>setMakerMode('manual');
+$('afterPhotoEdit').onclick=()=>{setMakerMode('manual');showTab('color')};
 
 /* ===== 側面、背面花紋：從正面自動帶入 ===== */
 let scratchCtx=null;
@@ -2461,7 +2529,7 @@ function photoQueueUI(){
 }
 function queueCatPhoto(file,v){if(!file)return;pendingCatPhotos[v]=file;photoQueueUI();$('photoMsg').textContent='照片已選好，按「開始畫貓」才會送給 Gemini 分析。';}
 $('photoBtn').onclick=()=>{$('photoInput').click()};
-$('stageCam').onclick=()=>{showTab('color');$('photoBtn').click()};
+$('stageCam').onclick=()=>setMakerMode('photo');
 $('photoInput').onchange=e=>{queueCatPhoto(e.target.files&&e.target.files[0],'front');e.target.value=''};
 $('photoReset').onclick=()=>{PHOTO_ORDER.forEach(v=>pendingCatPhotos[v]=null);photoQueueUI();$('photoMsg').textContent='已清除待分析的照片；原本畫好的貓不會被刪除。'};
 async function jointPartsFor(target,scaled){
@@ -2733,7 +2801,7 @@ document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>showView(b.datas
 (async function init(){
   let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY))}catch(e){}
   let t='color';try{t=localStorage.getItem(KEY+'-tab')||'color'}catch(e){}
-  showTab(t);setMView('front');
+  showTab(t);setMakerMode('manual');setMView('front');
   if(saved&&saved.S)await applyData(saved.S,saved);
   else{$('catName').value=S.name;stamp('patch');hist.front.u.length=0;histUI();autoDerive();render()}
   let v='maker';try{v=localStorage.getItem(KEY+'-view')||'maker'}catch(e){}
