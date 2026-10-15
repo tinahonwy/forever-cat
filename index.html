@@ -132,6 +132,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .bats{left:35%;top:5%;width:6%;height:auto;z-index:1}
 .cup{position:absolute;left:14.3%;bottom:41%;width:.85%;aspect-ratio:20/22;z-index:5;transition:left .6s ease-in,bottom .6s cubic-bezier(.6,0,1,1),transform .6s}
 .cup.down{left:16.9%;bottom:8.6%;transform:rotate(95deg);cursor:pointer}
+.ftreat{position:absolute;z-index:30;cursor:pointer;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}.ftreat.fall{transition:top .5s cubic-bezier(.5,0,1,1)}
 .fbtext{font:inherit;font-size:15px;width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);resize:vertical}
 .fbcheck{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .annbar{max-width:1060px;margin:0 auto 14px;display:flex;align-items:center;gap:10px;background:#fff3d7;border:1.5px solid #e8c27a;color:#523b18;border-radius:14px;padding:10px 14px;font-size:14px;line-height:1.6}
@@ -2118,6 +2119,7 @@ function goSleep(){if(typeof houseAct==='function'&&typeof todNow==='function'&&
 function sideSpot(k,off){const rw=room.clientWidth,w=hc.offsetWidth,R=roomCfg(),f=off*w/Math.max(1,rw-w);
   let t=R[k].x-f,face=1;if(t<.02){t=R[k].x+f;face=-1}return[Math.min(.98,Math.max(.02,t)),face]}
 function doAct(k,src,o={}){const R=roomCfg();
+  if(k==='floorTreat'){floorTreatReact(false);return}
   if(k==='litter'){goLitter();return}if(k==='gift'){bringGift();return}if(k==='nip'){nipReact();return}
   if(['birdwatch','sunbathe','hbed','counter','xmasTree','parkour'].includes(k)){houseAct(k);return}
   if(k==='tree')startWalk(R.tree.x,false,()=>{setHView('front');jumpTo(.56,()=>jumpTo(1.1,()=>{sitDown(Math.random()<.3?'back':'front');H.timer=8+Math.random()*10;note(`${S.name||'〚貓代詞〛'}跳上貓跳台了`,3)}),{pause:.35})});
@@ -2140,6 +2142,7 @@ function tryActivity(){const R=roomCfg(),en=P01('energy'),N=needs(),T=traits(),E
   if(R.tree.on)opts.push(['tree',(.1+.2*en)*itemLove('tree')*E]);
   if(R.scratch.on)opts.push(['scratch',(.06+.12*en)*itemLove('scratch')*E]);
   if(R.box.on)opts.push(['box',.12*itemLove('box')]);
+  if(typeof floorTreat!=='undefined'&&floorTreat)opts.unshift(['floorTreat',.5]);
   if(typeof litterOpt==='function'){const o2=[];litterOpt(o2);opts.unshift(...o2);giftOpt(opts)}if(typeof houseOpts==='function')houseOpts(opts);
   let r=Math.random();for(const[k,p]of opts){if(r<p){const[a,src]=k.split(':');if(a==='eat'){logAct('selfEat',`自己跑去吃${src==='plate'?'罐頭':'飼料'}`);doAct('eat',src)}else{if(a==='drink')logAct('drink','口渴了，自己跑去喝水');doAct(a)}return true}r-=p}return false}
 /* ===== 貓的狀態：飽足、水分、心情、精神（不會生病、不會受苦，餓了只會討飯） ===== */
@@ -3040,7 +3043,10 @@ function setTool(t){if(t===tool)t=null;if(t&&wandOn)setWand(false);if(t&&roomEdi
 function moveCur(cx,cy){const r=room.getBoundingClientRect(),c=$('toolCur'),w=hc.offsetWidth*.3;lastCur={x:cx,y:cy};
   c.style.width=c.style.height=w+'px';c.style.left=(cx-r.left-w/2)+'px';c.style.top=(cy-r.top-w*.75)+'px'}
 room.addEventListener('pointermove',e=>{if(!tool)return;moveCur(e.clientX,e.clientY);if(tool==='treat')treatHover(e)});
-room.addEventListener('pointerdown',e=>{if(tool)moveCur(e.clientX,e.clientY)});
+room.addEventListener('pointerdown',e=>{if(!tool)return;moveCur(e.clientX,e.clientY);
+  if(tool==='treat'&&!e.target.closest('#homecat')&&!e.target.closest('.ftreat'))treatDown={x:e.clientX,y:e.clientY,moved:0}});
+room.addEventListener('pointermove',e=>{if(treatDown)treatDown.moved=Math.max(treatDown.moved,Math.hypot(e.clientX-treatDown.x,e.clientY-treatDown.y))});
+room.addEventListener('pointerup',e=>{const d=treatDown;treatDown=null;if(d&&tool==='treat'&&d.moved<14)dropTreat(e.clientX,e.clientY)});
 document.querySelectorAll('.tbtn[data-t]').forEach(b=>b.onclick=()=>setTool(b.dataset.t));
 $('nipBtn').onclick=dropNip;
 function funHcDown(e){
@@ -3082,15 +3088,30 @@ function treatStart(){const T=traits(),n=S.name||'〚貓代詞〛',want=.35+T.ap
   if(Math.random()<want+.25){logAct('treatRun',want>.7?'一看到零食就衝過來':'走過來看看你手上的零食',true);
     comeOver(()=>{if(tool!=='treat')return;H.state='beg';H.timer=8;setHView('front');say('喵～',1200)})}
   else{logAct('treatMeh','看了零食一眼，沒什麼興趣',true);say('…',800)}}
-function treatHover(e){if(!['beg','sit'].includes(H.state)||H.y>.05||H.inBox||H.hug)return;const now=performance.now();if(now-beg2At<2600)return;
-  const r=hc.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY>r.top+r.height*.25||e.clientY<r.top-r.height*.7)return;
+function treatHover(e){if(!['beg','sit','beg2'].includes(H.state)||H.y>.05||H.inBox||H.hug)return;const now=performance.now();
+  const r=hc.getBoundingClientRect(),nearMouth=e.clientX>r.left+r.width*.2&&e.clientX<r.right-r.width*.2&&e.clientY>r.top+r.height*.05&&e.clientY<r.top+r.height*.6;
+  if(nearMouth){if(!treatNearAt)treatNearAt=now;else if(now-treatNearAt>550){treatNearAt=0;giveTreat();return}}else treatNearAt=0;
+  if(H.state==='beg2'||now-beg2At<2600)return;if(e.clientX<r.left||e.clientX>r.right||e.clientY>r.top+r.height*.25||e.clientY<r.top-r.height*.7)return;
   beg2At=now;if(Math.random()<.45+traits().demand*.08){H.state='beg2';H.timer=1.6;setHView('front');say('喵！',800);logAct('treatStand','站起來伸爪子討零食')}}
-function giveTreat(){const n=S.name||'〚貓代詞〛',now=Date.now();if(now-treatAt>20*60*1000)treatN=0;treatAt=now;
+var treatDown=null,treatNearAt=0,floorTreat=null;
+function dropTreat(cx,cy){const rr=room.getBoundingClientRect(),rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,sz=w*.24,x=cx-rr.left;
+  setTool(null);if(floorTreat&&floorTreat.el)floorTreat.el.remove();
+  const el=document.createElement('span');el.className='ftreat';el.innerHTML=CUR_SVG.treat;el.style.width=el.style.height=sz+'px';el.style.left=(x-sz/2)+'px';el.style.top=(cy-rr.top-sz/2)+'px';room.appendChild(el);
+  void el.offsetWidth;el.style.top=(rh*.89-sz*.62)+'px';el.classList.add('fall');
+  el.addEventListener('pointerdown',ev=>{ev.stopPropagation();if(floorTreat&&floorTreat.el===el){floorTreat=null;el.remove();note('你把零食撿起來了',2)}});
+  floorTreat={el,x:Math.min(.99,Math.max(.01,(x-w/2)/Math.max(1,rw-w)))};note('零食掉到地上了',2);setTimeout(()=>floorTreatReact(true),650)}
+function floorTreatReact(first){if(!floorTreat)return;const T=traits(),want=.35+T.appetite*.08+T.demand*.05+(1-needs().full)*.4;
+  if(H.hug||wandOn||['litter','roll','eat','treat','jump'].includes(H.state))return;
+  if(H.state==='sleep'){if(Math.random()>want*.7)return;wake()}
+  if(first&&Math.random()>want+.25){logAct('treatMeh','看了掉在地上的零食一眼，沒什麼興趣',true);return}
+  const tx=floorTreat.x;startWalk(tx,false,()=>{if(!floorTreat)return;setHView('front');floorTreat.el.remove();floorTreat=null;giveTreat(true)},want>.7)}
+function giveTreat(fromFloor){const n=S.name||'〚貓代詞〛',now=Date.now();if(now-treatAt>20*60*1000)treatN=0;treatAt=now;
   if(H.state==='sleep')wake();if(H.y>.05||H.inBox||H.hug)return;
   if(treatN>=5){say('（聞聞，不吃了）',1300);note('零食吃夠多了，晚點再給吧',3);logAct('treatFull','吃了好多零食，不想再吃了',true);return}
   treatN++;H.state='treat';H.timer=2.2;setHView('front');setFace('happy',2.4);H.lickT=1.8;say(pick(['吧唧吧唧','好吃！','喵嗚～']),1300);heart();
   const N=needs();N.full=Math.min(1,N.full+.04);H.mood=Math.min(1,H.mood+.1);
-  logAct('treatEat',treatN===1?'吃了你給的零食，很開心（心情上升）':`又吃了一個零食（第 ${treatN} 個）`,true);save()}
+  logAct('treatEat',fromFloor===true?'把掉在地上的零食吃掉了（心情上升）':treatN===1?'吃了你手上的零食，很開心（心情上升）':`又吃了一個零食（第 ${treatN} 個）`,true);save();
+  if(tool==='treat')setTimeout(()=>{if(tool==='treat')setTool(null)},60)}
 
 /* 貓草 */
 function placeNip(rw,rh,w){const el=$('nipToy');if(!S.nipOn){if(!el.hidden&&!el.classList.contains('gone'))el.hidden=true;return}el.hidden=false;const s=w*.26;el.style.width=s+'px';el.style.height=(s*.8)+'px';
