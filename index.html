@@ -132,6 +132,8 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .bats{left:35%;top:5%;width:6%;height:auto;z-index:1}
 .cup{position:absolute;left:14.3%;bottom:41%;width:.85%;aspect-ratio:20/22;z-index:5;transition:left .6s ease-in,bottom .6s cubic-bezier(.6,0,1,1),transform .6s}
 .cup.down{left:16.9%;bottom:8.6%;transform:rotate(95deg);cursor:pointer}
+.fbtext{font:inherit;font-size:15px;width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);resize:vertical}
+.fbcheck{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .wknav{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted)}
 .wkstats{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
 .wkstat{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--chip);border-radius:14px;padding:10px 6px}.wkstat span{font-size:22px}.wkstat b{font-size:20px}.wkstat small{font-size:12px;color:var(--muted)}
@@ -420,6 +422,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
       <span id="authStatus">尚未登入，設定只存在這台裝置</span>
       <button class="btn" id="loginBtn">用 Google 登入</button>
       <button class="btn" id="logoutBtn" hidden>登出</button>
+      <button class="btn" id="openFeedback" type="button">💬 意見回饋</button>
     </div>
   </div>
   <nav class="views" aria-label="切換畫面">
@@ -526,6 +529,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
     <div class="pane" data-pane="eyes">
       <div class="row"><span class="lbl">豆豆眼大小</span><div class="chips" id="c-eyeSize"></div></div>
+      <div class="row"><span class="lbl">腮紅</span><div class="chips" id="c-blush"></div></div>
       <div class="row"><span class="lbl">異色瞳</span><div class="chips" id="c-eyeLink"></div></div>
       <div class="row"><span class="lbl" id="eyeLlbl">眼睛顏色</span><div class="swatches" id="sw-eyeL"></div></div>
       <div class="row" id="eyeRrow"><span class="lbl">右眼顏色</span><div class="swatches" id="sw-eyeR"></div></div>
@@ -611,6 +615,18 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<div class="guide" id="fbPanel" hidden role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+  <div class="gcard">
+    <div class="ghead"><span>意見回饋</span><button class="gx" id="fbClose" type="button">關閉</button></div>
+    <h2 id="fbTitle">想要什麼功能？遇到什麼問題？</h2>
+    <p class="gsub">寫下來送出，網站作者會看到。</p>
+    <div class="chips" id="fbType"><button class="chip" type="button" data-t="idea" aria-pressed="true">💡 想要的功能</button><button class="chip" type="button" data-t="bug" aria-pressed="false">🐞 遇到問題</button><button class="chip" type="button" data-t="other" aria-pressed="false">💬 其他</button></div>
+    <textarea id="fbText" class="fbtext" rows="6" maxlength="1000" placeholder="例如：希望貓可以趴在窗邊曬太陽／在手機上按某個按鈕沒反應……"></textarea>
+    <label class="fbcheck"><input type="checkbox" id="fbEmail"> 附上我的 Email，方便回覆我</label>
+    <div class="btns"><button class="btn primary" id="fbSend" type="button">送出</button></div>
+    <p class="gsub" id="fbMsg" role="status"></p>
+  </div>
+</div>
 <div class="guide" id="weekPanel" hidden role="dialog" aria-modal="true" aria-labelledby="wkTitle">
   <div class="gcard">
     <div class="ghead"><span>每週回顧</span><button class="gx" id="wkClose" type="button">關閉</button></div>
@@ -823,7 +839,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import {getFirestore,doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 /* ===== 把 Firebase 主控台給你的設定貼在這裡 ===== */
 const firebaseConfig = {
@@ -836,7 +852,7 @@ const firebaseConfig = {
 };
 /* =============================================== */
 
-const DEF={name:'嘟嘟',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434',eyeLink:true,nose:'#e88a90',
+const DEF={name:'嘟嘟',base:'#f6efe3',eyeSize:'M',blush:true,eyeL:'#3b3434',eyeR:'#3b3434',eyeLink:true,nose:'#e88a90',
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
   brush:'#f2b06b',brushSize:22,soft:true,eraser:false,ptool:'brush',shapeType:'circle',sym:false,sideEdited:false,sideLEdited:false,backEdited:false,
@@ -979,7 +995,7 @@ function featureParts(v='front',opt={}){
     if(S.fur==='none')F.head+=`<path d="M132,72 q18,-7 36,0 M138,82 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
     F.frontL=`<path d="M130,232 L130,262" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>`;
     F.frontR=`<path d="M170,232 L170,262" stroke="${shade}" stroke-width="3" stroke-linecap="round"/>`;
-    F.face=`<ellipse cx="104" cy="148" rx="13" ry="8" fill="#f4a6a8"/><ellipse cx="196" cy="148" rx="13" ry="8" fill="#f4a6a8"/>`;
+    F.face=S.blush===false?'':`<ellipse cx="104" cy="148" rx="13" ry="8" fill="#f4a6a8"/><ellipse cx="196" cy="148" rx="13" ry="8" fill="#f4a6a8"/>`;
     F.face+=`<g class="eyes">${eye(120,130,S.eyeL)}${eye(180,130,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
     F.face+=`<ellipse cx="150" cy="142" rx="5.5" ry="4" fill="${S.nose}"/>`;
     F.face+=`<path class="tongueF" d="M145,151 q5,10 10,0Z" fill="#f08a96" opacity="0"/>`;
@@ -989,7 +1005,7 @@ function featureParts(v='front',opt={}){
   if(v==='side'){
     if(EAR[S.earL]){const e=sideEar(S.earL,'near');F.head=S.earL==='fold'?`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round"/>`:`<path d="${e.d}" fill="#f6b3b8" stroke="#f6b3b8" stroke-width="3" stroke-linejoin="round" transform="translate(${e.a[0]},${e.a[1]}) scale(.45) translate(${-e.a[0]},${-e.a[1]})"/>`}
     if(S.fur==='none')F.head+=`<path d="M196,104 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-    F.face=`<ellipse cx="246" cy="156" rx="11" ry="7" fill="#f4a6a8"/>`;
+    F.face=S.blush===false?'':`<ellipse cx="246" cy="156" rx="11" ry="7" fill="#f4a6a8"/>`;
     F.face+=`<g class="eyes">${eye(250,132,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
     F.face+=`<ellipse cx="281" cy="146" rx="4.5" ry="3.5" fill="${S.nose}"/>`;
     F.face+=`<path d="M279,152 q-3,6 -10,3" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
@@ -1074,6 +1090,7 @@ controls.push(()=>{$('shapeRow').hidden=S.ptool!=='shape';$('shapeHelp').hidden=
 chips('c-soft',[[true,'柔和'],[false,'銳利']],'soft');
 chips('c-sym',[[false,'關閉'],[true,'開啟']],'sym');
 chips('c-eyeSize',[['S','小'],['M','中'],['L','大']],'eyeSize');
+chips('c-blush',[[true,'有'],[false,'沒有']],'blush');
 chips('c-eyeLink',[[true,'兩眼同色'],[false,'左右不同色']],'eyeLink',v=>{if(!v&&S.eyeR===S.eyeL)S.eyeR=S.eyeL==='#4a90c8'?'#d9a62e':'#4a90c8'});
 swatches('sw-eyeL',EYES,'eyeL');swatches('sw-eyeR',EYES,'eyeR');swatches('sw-nose',NOSES,'nose');
 chips('c-earLink',[[true,'兩邊一樣'],[false,'左右分開']],'earLink',v=>{if(v)S.earR=S.earL});
@@ -3404,6 +3421,22 @@ function moreHomeOpen(){weekRoll();drawHoliday();drawCup();
   const h=holidayNow();if(h&&S.holSaid!==today()){S.holSaid=today();save();const g={xmas:'聖誕快樂！喵～',lny:'新年快樂！喵～',moon:'中秋快樂！一起賞月吧',halloween:'不給糖就搗蛋！喵～'}[h];setTimeout(()=>{setFace('happy',2);say(g,2400)},2600)}}
 drawHoliday();drawCup();
 
+
+/* ===== 意見回饋：送到 Firestore 的 feedback 集合 ===== */
+var fbType='idea',fbLast=0;
+document.querySelectorAll('#fbType .chip').forEach(b=>b.onclick=()=>{fbType=b.dataset.t;document.querySelectorAll('#fbType .chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
+$('openFeedback').onclick=()=>{$('fbPanel').hidden=false;$('fbMsg').textContent=user?'':'需要先用 Google 登入才能送出（避免垃圾訊息）';setTimeout(()=>$('fbText').focus(),50)};
+$('fbClose').onclick=()=>{$('fbPanel').hidden=true};
+$('fbSend').onclick=async()=>{const t=$('fbText').value.trim(),m=$('fbMsg');
+  if(!t){m.textContent='先寫一點內容再送出';$('fbText').focus();return}
+  if(!user||!db){m.textContent='請先按上面的「用 Google 登入」，登入後再送出';return}
+  if(Date.now()-fbLast<30000){m.textContent='剛剛才送出過，等一下再送';return}
+  const b=$('fbSend');b.disabled=true;m.textContent='送出中…';
+  try{await addDoc(collection(db,'feedback'),{uid:user.uid,name:String(user.displayName||'').slice(0,60),email:$('fbEmail').checked?String(user.email||''):'',
+      type:fbType,text:t.slice(0,1000),catName:String(S.name||'').slice(0,40),ua:navigator.userAgent.slice(0,200),page:location.href.split('#')[0].slice(0,200),createdAt:serverTimestamp()});
+    fbLast=Date.now();$('fbText').value='';m.textContent='收到了，謝謝你！'}
+  catch(e){m.textContent='送出失敗（'+(e.code||e.message)+'）'+((e.code||'').includes('permission')?'：Firebase 規則還沒開放 feedback':'')}
+  finally{b.disabled=false}};
 </script>
 </body>
 </html>
