@@ -92,7 +92,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .zsky .stars{inset:0;background:radial-gradient(circle at 10% 20%,#fff 0 1.5px,transparent 2px),radial-gradient(circle at 40% 12%,#fff 0 1.2px,transparent 2px),radial-gradient(circle at 60% 35%,#fff 0 1px,transparent 1.6px),radial-gradient(circle at 85% 50%,#fff 0 1.4px,transparent 2px),radial-gradient(circle at 25% 45%,#fff 0 1px,transparent 1.6px)}
 .zsky .sunball{left:12%;top:12%;width:10%;aspect-ratio:1;border-radius:50%;background:#ffe08a;box-shadow:0 0 30px #ffe08a}.room[data-tod=day] .zsky .sunball{opacity:1}
 .zsky .cloud{left:45%;top:18%;width:22%;height:9%;border-radius:999px;background:#fff;box-shadow:18px -10px 0 4px #fff}.room[data-tod=day] .zsky .cloud,.room[data-tod=dawn] .zsky .cloud{opacity:.9}
-.pillar{position:absolute;top:0;height:70%;width:.7%;transform:translateX(-50%);background:#f6efe4;box-shadow:inset -4px 0 0 rgba(0,0,0,.06)}
+.pillar{display:none}
 .cabinets{position:absolute;left:27%;top:7%;width:38%;height:20%}
 .zone .kwin{left:70%;width:18%}.zone .bwin{left:10%;width:18%}
 .counter{position:absolute;left:26%;bottom:9%;width:38%;height:32%;overflow:visible}
@@ -147,7 +147,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .irow.col{grid-template-columns:1fr}.irow input,.irow textarea{font:inherit;font-size:15px;width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg)}
 .ival{display:flex;flex-direction:column;gap:2px}.ival small{color:var(--muted);font-size:12px}
 .diarylist{display:flex;flex-direction:column;gap:10px}
-.floor{position:absolute;left:0;right:0;bottom:0;height:30%;background:transparent;border-top:10px solid #fbf6ee}
+.floor{position:absolute;left:0;right:0;bottom:0;height:30%;background:transparent;border-top:0;pointer-events:none}
 .bed{position:absolute;bottom:7%;height:12%;background:#e5868e;border-radius:50%;box-shadow:inset 0 -10px 0 rgba(0,0,0,.08)}
 .item{position:absolute;left:0;bottom:0;pointer-events:none}.item svg{display:block;width:100%;height:100%}
 .needs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:640px;margin:12px auto 0}
@@ -759,7 +759,7 @@ const firebaseConfig = {
 };
 /* =============================================== */
 
-const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434',eyeLink:true,nose:'#e88a90',
+const DEF={name:'嘟嘟',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434',eyeLink:true,nose:'#e88a90',
   earL:'normal',earR:'normal',earLink:true,fur:'short',tail:'long',size:1,fat:1,
   whColor:'#3b3434',whLen:'mid',whCurl:false,whL:3,whR:3,whLink:true,
   brush:'#f2b06b',brushSize:22,soft:true,eraser:false,sym:false,sideEdited:false,sideLEdited:false,backEdited:false,
