@@ -407,19 +407,19 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="stagebar" id="stagebar" hidden><button class="sbtn" id="undo" type="button">↶ 上一步</button><button class="sbtn" id="eraseQuick" type="button">橡皮擦</button><button class="sbtn" id="redo" type="button">下一步 ↷</button></div>
     <div class="viewpick"><div class="chips" id="c-mview" role="group" aria-label="角度"></div><span class="vhint" id="vhint"></span></div>
     <div class="namecard">
-      <label for="catName">牠的名字</label>
+      <label for="catName">〚貓代詞〛的名字</label>
       <input id="catName" maxlength="12" autocomplete="off">
     </div>
   </div>
 
   <div class="panel maker-panel" id="makerPanel">
     <div class="maker-choice" role="group" aria-label="製作貓咪的方式">
-      <button type="button" class="maker-choice-btn" id="makerAI" aria-pressed="false"><span class="maker-choice-icon">📷</span><span><b>AI 照片畫貓</b><small>上傳照片，幫牠畫花紋</small></span></button>
+      <button type="button" class="maker-choice-btn" id="makerAI" aria-pressed="false"><span class="maker-choice-icon">📷</span><span><b>AI 照片畫貓</b><small>上傳照片，幫〚貓代詞〛畫花紋</small></span></button>
       <button type="button" class="maker-choice-btn" id="makerManual" aria-pressed="true"><span class="maker-choice-icon">🎨</span><span><b>自己動手捏貓</b><small>畫花紋、調整外觀與個性</small></span></button>
     </div>
     <section class="photo-workspace" id="photoWorkspace" hidden aria-label="AI 照片畫貓">
-      <div class="photo-workspace-head"><b>📷 用照片畫出真正的牠</b><span>正面必填，其他角度選填</span></div>
-      <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>先選一張牠的正面照（必要）</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><div class="vphotos"><span class="lbl">先挑選其他角度（選填），選好後按「開始畫貓」一起分析</span><div class="chips"><button class="chip vphoto" type="button" data-v="sideL">左側照片<i></i></button><button class="chip vphoto" type="button" data-v="side">右側照片<i></i></button><button class="chip vphoto" type="button" data-v="back">背面（屁股）照片<i></i></button></div><input type="file" id="photoInput2" accept="image/*" hidden></div><div class="btns"><button class="btn primary" id="photoAnalyze" type="button" disabled>🐱 開始畫貓（綜合分析）</button><button class="btn" id="photoReset" type="button" hidden>重新選照片</button></div><p class="hint" id="photoQueueStatus" aria-live="polite">尚未選擇照片。正面照必填，其他角度可以慢慢補。</p>
+      <div class="photo-workspace-head"><b>📷 用照片畫出真正的〚貓代詞〛</b><span>正面必填，其他角度選填</span></div>
+      <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>先選一張〚貓代詞〛的正面照（必要）</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><div class="vphotos"><span class="lbl">先挑選其他角度（選填），選好後按「開始畫貓」一起分析</span><div class="chips"><button class="chip vphoto" type="button" data-v="sideL">左側照片<i></i></button><button class="chip vphoto" type="button" data-v="side">右側照片<i></i></button><button class="chip vphoto" type="button" data-v="back">背面（屁股）照片<i></i></button></div><input type="file" id="photoInput2" accept="image/*" hidden></div><div class="btns"><button class="btn primary" id="photoAnalyze" type="button" disabled>🐱 開始畫貓（綜合分析）</button><button class="btn" id="photoReset" type="button" hidden>重新選照片</button></div><p class="hint" id="photoQueueStatus" aria-live="polite">尚未選擇照片。正面照必填，其他角度可以慢慢補。</p>
         <p class="hint" id="photoMsg">先選好照片，按「開始畫貓」才會一起分析。建議使用正面且身體朝前的照片；Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
         <p class="hint aiwarn">※ 花紋和外觀是 AI 生成的，不一定準確，可以用筆刷、換色塊、刪色塊手動微調。</p>
         <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化（越低越接近照片）</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
@@ -490,7 +490,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
 
     <div class="pane" data-pane="persona">
-      <p class="hint">這些會影響牠在「貓咪的家」裡的反應：被摸、被抱、走動和睡覺。</p>
+      <p class="hint">這些會影響〚貓代詞〛在「貓咪的家」裡的反應：被摸、被抱、走動和睡覺。</p>
       <button class="btn primary" id="openGuide">用問答幫我設定個性</button>
       <div class="row"><span class="lbl">親人程度 <span id="affVal"></span></span><input type="range" id="affection" min="0" max="100" step="1"></div>
       <div class="row"><span class="lbl">脾氣・傲嬌 <span id="tempVal"></span></span><input type="range" id="temper" min="0" max="100" step="1"></div>
@@ -521,7 +521,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 <div class="guide" id="aiPanel" hidden role="dialog" aria-modal="true" aria-labelledby="aiTitle">
   <div class="gcard">
     <div class="ghead"><span>AI 說話設定</span><button class="gx" id="aiClose" type="button">關閉</button></div>
-    <h2 id="aiTitle">讓牠用自己的語氣跟你說話</h2>
+    <h2 id="aiTitle">讓〚貓代詞〛用自己的語氣跟你說話</h2>
     <div class="row"><span class="lbl">模式</span><div class="chips"><button class="chip" id="aiModeCat" type="button">貓語模式</button><button class="chip" id="aiModeAI" type="button">說話模式（AI）</button></div></div>
     <div class="row"><label class="lbl" for="aiKey">Gemini API 金鑰</label>
       <div class="keyrow"><input id="aiKey" type="password" autocomplete="off" spellcheck="false" placeholder="貼上金鑰（AQ. 或 AIza 開頭）"><button class="btn" id="aiShow" type="button">顯示</button></div></div>
@@ -549,13 +549,13 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 <div class="guide" id="infoPanel" hidden role="dialog" aria-modal="true" aria-labelledby="infoTitle">
   <div class="gcard">
     <div class="ghead"><span>基本資料</span><button class="gx" id="infoClose" type="button">完成</button></div>
-    <h2 id="infoTitle">牠的基本資料</h2>
-    <p class="gsub">都可以不填，填了會自動儲存。性別、品種、年紀這些，牠說話時也會參考。</p>
+    <h2 id="infoTitle">〚貓代詞〛的基本資料</h2>
+    <p class="gsub">都可以不填，填了會自動儲存。性別、品種、年紀這些，〚貓代詞〛說話時也會參考。</p>
     <div class="infoform">
       <div class="irow"><span>性別</span><div class="chips" data-k="sex" data-opts="公,母,不確定"></div></div>
       <div class="irow"><span>結紮</span><div class="chips" data-k="neutered" data-opts="有,沒有,不確定"></div></div>
       <label class="irow"><span>品種</span><input data-k="breed" maxlength="30" placeholder="例如：米克斯、英短、橘貓"></label>
-      <label class="irow"><span>生日</span><span class="ival"><input type="date" id="bday" aria-label="牠的生日"><small id="ageText"></small></span></label>
+      <label class="irow"><span>生日</span><span class="ival"><input type="date" id="bday" aria-label="〚貓代詞〛的生日"><small id="ageText"></small></span></label>
       <label class="irow"><span>來家裡的日子</span><input type="date" data-k="homeDay"></label>
       <label class="irow"><span>體重（公斤）</span><input type="number" data-k="weight" min="0" max="20" step="0.1" inputmode="decimal" placeholder="例如：4.2"></label>
       <label class="irow"><span>最近打疫苗</span><input type="date" data-k="vaccineDate"></label>
@@ -571,8 +571,8 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 <div class="guide" id="diaryPanel" hidden role="dialog" aria-modal="true" aria-labelledby="diaryTitle">
   <div class="gcard">
     <div class="ghead"><span>日記本</span><button class="gx" id="diaryClose" type="button">關閉</button></div>
-    <h2 id="diaryTitle">牠的日記</h2>
-    <p class="gsub">每天發生的事會偷偷記下來，隔天打開時牠會寫成一篇日記。</p>
+    <h2 id="diaryTitle">〚貓代詞〛的日記</h2>
+    <p class="gsub">每天發生的事會偷偷記下來，隔天打開時〚貓代詞〛會寫成一篇日記。</p>
     <div class="diarylist" id="diaryList"></div>
     <div class="btns"><button class="btn primary" id="diaryToday" type="button">先寫今天的</button></div>
     <p class="gsub" id="diaryMsg" role="status"></p>
@@ -581,12 +581,12 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 <div class="guide" id="memPanel" hidden role="dialog" aria-modal="true" aria-labelledby="memTitle">
   <div class="gcard">
     <div class="ghead"><span>記憶本</span><button class="gx" id="memClose" type="button">關閉</button></div>
-    <h2 id="memTitle">牠記得的事</h2>
-    <p class="gsub">你平常跟牠說的話會在背景慢慢整理成記憶，牠說話時會參考這些。記錯的可以按 ✕ 刪掉。</p>
+    <h2 id="memTitle">〚貓代詞〛記得的事</h2>
+    <p class="gsub">你平常跟〚貓代詞〛說的話會在背景慢慢整理成記憶，〚貓代詞〛說話時會參考這些。記錯的可以按 ✕ 刪掉。</p>
     <div class="gsum"><b>互動習慣</b><br><span id="memHabit"></span></div>
-    <div class="askset"><label><input type="checkbox" id="askOn"> 每天問我關於牠的小問題</label><span>每天最多</span><select id="askPer" aria-label="每天最多幾題"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select><span>題</span></div>
+    <div class="askset"><label><input type="checkbox" id="askOn"> 每天問我關於〚貓代詞〛的小問題</label><span>每天最多</span><select id="askPer" aria-label="每天最多幾題"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select><span>題</span></div>
     <div class="memlist" id="memList"></div>
-    <form class="memadd" id="memAdd"><select id="memCat" aria-label="分類"></select><input id="memText" maxlength="120" placeholder="自己補充一件關於牠的事" aria-label="補充的記憶"><button class="btn primary" type="submit">記住</button></form>
+    <form class="memadd" id="memAdd"><select id="memCat" aria-label="分類"></select><input id="memText" maxlength="120" placeholder="自己補充一件關於〚貓代詞〛的事" aria-label="補充的記憶"><button class="btn primary" type="submit">記住</button></form>
     <div class="btns"><button class="btn" id="memLearn" type="button">現在整理</button><button class="btn" id="memCompact" type="button">合併相似的記憶</button></div>
     <p class="gsub" id="memMsg" role="status"></p>
   </div>
@@ -595,8 +595,8 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 <div class="guide" id="guestPanel" hidden role="dialog" aria-modal="true" aria-labelledby="guestTitle">
   <div class="gcard">
     <h2 id="guestTitle">你現在是訪客模式</h2>
-    <p>沒有登入的話，你捏的貓、個性和記憶<b>只會存在這台裝置的這個瀏覽器</b>。換手機、換瀏覽器、用無痕視窗或清除瀏覽資料，牠就會不見。</p>
-    <p>用 Google 登入後，牠會存到雲端，任何裝置登入都找得到牠。</p>
+    <p>沒有登入的話，你捏的貓、個性和記憶<b>只會存在這台裝置的這個瀏覽器</b>。換手機、換瀏覽器、用無痕視窗或清除瀏覽資料，〚貓代詞〛就會不見。</p>
+    <p>用 Google 登入後，〚貓代詞〛會存到雲端，任何裝置登入都找得到〚貓代詞〛。</p>
     <div class="gfoot"><button class="btn" id="guestStay" type="button">先用訪客模式</button><button class="btn primary" id="guestLogin" type="button">用 Google 登入</button></div>
   </div>
 </div>
@@ -622,7 +622,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 <section class="home" id="viewHome" hidden>
-  <div class="zonetabs" id="zoneTabs" role="group" aria-label="家裡的房間"><button type="button" data-z="0">廚房</button><button type="button" data-z="1">客廳</button><button type="button" data-z="2">臥室</button><button type="button" data-z="3">陽台</button><button type="button" id="zoneFollow" class="follow">找牠</button></div>
+  <div class="zonetabs" id="zoneTabs" role="group" aria-label="家裡的房間"><button type="button" data-z="0">廚房</button><button type="button" data-z="1">客廳</button><button type="button" data-z="2">臥室</button><button type="button" data-z="3">陽台</button><button type="button" id="zoneFollow" class="follow">找〚貓代詞〛</button></div>
   <div class="roomwrap" id="roomWrap"><div class="roomscroll" id="roomScroll">
   <div class="room" id="room">
     <div class="zones" aria-hidden="true">
@@ -678,12 +678,12 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <svg class="bunting" id="bunting" hidden viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="M0,2 Q50,9 100,2" stroke="#b98a63" stroke-width=".5" fill="none"/><g><path d="M6,3 l3,0 l-1.5,5z" fill="#e5707b"/><path d="M16,4.5 l3,0 l-1.5,5z" fill="#f2c14e"/><path d="M26,5.6 l3,0 l-1.5,5z" fill="#7fb3d5"/><path d="M36,6.2 l3,0 l-1.5,5z" fill="#9ccf8a"/><path d="M46,6.5 l3,0 l-1.5,5z" fill="#e5707b"/><path d="M56,6.4 l3,0 l-1.5,5z" fill="#f2c14e"/><path d="M66,5.9 l3,0 l-1.5,5z" fill="#7fb3d5"/><path d="M76,5 l3,0 l-1.5,5z" fill="#9ccf8a"/><path d="M86,3.8 l3,0 l-1.5,5z" fill="#e5707b"/></g></svg>
     <div class="cake" id="cake" hidden role="button" aria-label="生日蛋糕，點一下吹蠟燭"><svg viewBox="0 0 40 40" width="100%" height="100%"><ellipse cx="20" cy="36" rx="17" ry="3.5" fill="#f4efe6"/><rect x="7" y="22" width="26" height="13" rx="3" fill="#f6c9cf"/><rect x="7" y="22" width="26" height="4" rx="2" fill="#fff4f0"/><g fill="#e5707b"><circle cx="11" cy="29" r="1.2"/><circle cx="17" cy="31" r="1.2"/><circle cx="23" cy="29" r="1.2"/><circle cx="29" cy="31" r="1.2"/></g><rect x="18.5" y="12" width="3" height="10" rx="1" fill="#7fb3d5"/><path id="cakeFlame" d="M20,4 C23,8 22,11 20,11.5 C18,11 17,8 20,4Z" fill="#f2b23e" style="transition:opacity .4s"/></svg></div>
     <div class="niptoy" id="nipToy" hidden aria-hidden="true"><svg viewBox="0 0 40 32" width="100%" height="100%"><path d="M8,12 C8,6 32,6 32,12 L34,28 C34,31 6,31 6,28 Z" fill="#8cc06a"/><path d="M12,10 h16" stroke="#6a9a4c" stroke-width="2" stroke-linecap="round"/><path d="M20,8 C17,2 12,2 11,4 C14,4 17,6 20,8 C23,6 26,4 29,4 C28,2 23,2 20,8Z" fill="#5f9e46"/><circle cx="16" cy="20" r="1.4" fill="#6a9a4c"/><circle cx="24" cy="22" r="1.4" fill="#6a9a4c"/></svg></div>
-    <span class="gift" id="giftEl" hidden role="button" aria-label="牠送你的禮物，點一下收下"></span>
+    <span class="gift" id="giftEl" hidden role="button" aria-label="〚貓代詞〛送你的禮物，點一下收下"></span>
     <div class="toolcur" id="toolCur" hidden aria-hidden="true"></div>
     <div class="tshade" aria-hidden="true"></div>
     <svg class="toylayer" id="wandToy" hidden aria-hidden="true"><path id="stringPath" fill="none" stroke="#6b5b4c" stroke-width="1.6"/><g id="featherG"><circle r="6" fill="#e8c14f"/><path d="M0,3 C-16,14 -18,30 -9,42 C-4,28 -1,18 0,6Z" fill="#e5707b"/><path d="M0,3 C16,14 18,30 9,42 C4,28 1,18 0,6Z" fill="#5fb3a3"/><path d="M0,4 C-3,20 0,34 0,44 C3,32 4,18 0,4Z" fill="#f6c27f"/></g></svg>
     <svg class="toylayer" id="wandStick" hidden aria-hidden="true"><path id="stickPath" stroke="#a8775a" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="homecat" id="homecat" role="button" tabindex="0" aria-label="摸摸牠">
+    <div class="homecat" id="homecat" role="button" tabindex="0" aria-label="摸摸〚貓代詞〛">
       <div class="bubble" id="bubble" hidden></div>
       <div class="shadow" aria-hidden="true"></div>
       <div class="catbox">
@@ -705,14 +705,14 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   <div class="toolbar" role="toolbar" aria-label="照顧工具">
     <button class="tbtn" type="button" data-t="brush" aria-pressed="false"><svg viewBox="0 0 40 40"><rect x="17" y="18" width="6" height="20" rx="3" fill="#b98a63"/><rect x="7" y="6" width="26" height="14" rx="5" fill="#e5707b"/><g stroke="#8a6448" stroke-width="2" stroke-linecap="round"><path d="M10,6 v-4"/><path d="M15,6 v-4"/><path d="M20,6 v-4"/><path d="M25,6 v-4"/><path d="M30,6 v-4"/></g></svg>梳子</button>
     <button class="tbtn" type="button" data-t="treat" aria-pressed="false"><svg viewBox="0 0 40 40"><path d="M6,20 C12,10 24,10 30,20 C24,30 12,30 6,20Z" fill="#e9a35b"/><path d="M30,20 L38,13 L37,27Z" fill="#e9a35b"/><circle cx="12" cy="18" r="1.8" fill="#5a3b2a"/></svg>零食</button>
-    <button class="tbtn" type="button" id="callBtn"><svg viewBox="0 0 40 40"><path d="M6,16 h8 l12,-9 v26 l-12,-9 h-8z" fill="#7fb3d5"/><path d="M30,13 q5,7 0,14 M34,9 q9,11 0,22" stroke="#7fb3d5" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>叫牠</button><button class="tbtn" type="button" id="nipBtn"><svg viewBox="0 0 40 32"><path d="M8,12 C8,6 32,6 32,12 L34,28 C34,31 6,31 6,28 Z" fill="#8cc06a"/><path d="M20,8 C17,2 12,2 11,4 C14,4 17,6 20,8 C23,6 26,4 29,4 C28,2 23,2 20,8Z" fill="#5f9e46"/></svg>貓草</button>
+    <button class="tbtn" type="button" id="callBtn"><svg viewBox="0 0 40 40"><path d="M6,16 h8 l12,-9 v26 l-12,-9 h-8z" fill="#7fb3d5"/><path d="M30,13 q5,7 0,14 M34,9 q9,11 0,22" stroke="#7fb3d5" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>叫〚貓代詞〛</button><button class="tbtn" type="button" id="nipBtn"><svg viewBox="0 0 40 32"><path d="M8,12 C8,6 32,6 32,12 L34,28 C34,31 6,31 6,28 Z" fill="#8cc06a"/><path d="M20,8 C17,2 12,2 11,4 C14,4 17,6 20,8 C23,6 26,4 29,4 C28,2 23,2 20,8Z" fill="#5f9e46"/></svg>貓草</button>
   </div>
-  <div class="askcard" id="askCard" hidden role="region" aria-label="關於牠的小問題">
+  <div class="askcard" id="askCard" hidden role="region" aria-label="關於〚貓代詞〛的小問題">
     <div class="askhead"><span>小問題</span><span id="askLeft"></span></div>
     <p class="askq" id="askQ"></p>
     <div class="chips" id="askOpts"></div>
     <p class="askhint" id="askHint">可以複選，選好按「記住」</p>
-    <div class="askfree"><input id="askText" maxlength="120" placeholder="或自己寫：真正的牠會…" aria-label="自己寫答案"><button class="btn primary" id="askSend" type="button">記住</button></div>
+    <div class="askfree"><input id="askText" maxlength="120" placeholder="或自己寫：真正的〚貓代詞〛會…" aria-label="自己寫答案"><button class="btn primary" id="askSend" type="button">記住</button></div>
     <div class="askfoot"><button class="linkbtn" id="askSkip" type="button">跳過</button><button class="linkbtn" id="askStop" type="button">今天不要再問</button><button class="linkbtn" id="askSet" type="button">設定</button></div>
   </div>
   <div class="needs" id="needsBar" aria-label="貓的狀態">
@@ -721,8 +721,8 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="meter"><span>心情</span><i><b id="nb-mood"></b></i></div>
     <div class="meter"><span>精神</span><i><b id="nb-energy"></b></i></div>
   </div>
-  <p class="homehint"><span id="homeStatus">牠在家裡</span></p>
-  <p class="homehint small">點一下打招呼・在牠身上來回滑動是摸摸・按住不放是抱抱・點家具叫牠去玩・右邊的逗貓棒可以陪牠玩・下面有梳子、零食、貓草・點貓砂盆可以鏟屎</p>
+  <p class="homehint"><span id="homeStatus">〚貓代詞〛在家裡</span></p>
+  <p class="homehint small">點一下打招呼・在〚貓代詞〛身上來回滑動是摸摸・按住不放是抱抱・點家具叫〚貓代詞〛去玩・右邊的逗貓棒可以陪〚貓代詞〛玩・下面有梳子、零食、貓草・點貓砂盆可以鏟屎</p>
   <div class="roomtools"><button class="btn" id="roomEdit" type="button">佈置房間</button></div>
   <div class="furnwrap" id="furnWrap" hidden><p class="homehint small">點家具加入或收起來，在房間裡拖曳家具可以移動位置</p><div class="furn" id="furn"></div><button class="btn" id="furnDefault" type="button">把家具分到各房間（建議擺法）</button>
     <div class="layerbar" id="layerBar" hidden><span>選取：<b id="layerName"></b>（<span id="layerWhere"></span>）</span><button class="btn" id="layerBack" type="button">往後一層</button><button class="btn" id="layerFront" type="button">往前一層</button><span class="zmove" id="zoneMove">搬到：<button class="btn" type="button" data-z="0">廚房</button><button class="btn" type="button" data-z="1">客廳</button><button class="btn" type="button" data-z="2">臥室</button><button class="btn" type="button" data-z="3">陽台</button></span></div>
@@ -735,10 +735,10 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
     <div class="phrases" id="phrases"></div>
     <form class="sayform" id="sayForm" autocomplete="off">
-      <input id="sayInput" maxlength="100" placeholder="跟牠說說話…" aria-label="跟牠說的話">
+      <input id="sayInput" maxlength="100" placeholder="跟〚貓代詞〛說說話…" aria-label="跟〚貓代詞〛說的話">
       <button class="btn primary" type="submit" id="sayBtn">說</button>
     </form>
-    <div class="ptools"><button class="linkbtn" id="openAI" type="button">說話模式：貓語</button><button class="linkbtn" id="openMem" type="button">牠的記憶本</button><button class="linkbtn" id="openDiary" type="button">牠的日記</button><button class="linkbtn" id="openInfo" type="button">基本資料</button><button class="linkbtn" id="openWeek" type="button">每週回顧</button><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
+    <div class="ptools"><button class="linkbtn" id="openAI" type="button">說話模式：貓語</button><button class="linkbtn" id="openMem" type="button">〚貓代詞〛的記憶本</button><button class="linkbtn" id="openDiary" type="button">〚貓代詞〛的日記</button><button class="linkbtn" id="openInfo" type="button">基本資料</button><button class="linkbtn" id="openWeek" type="button">每週回顧</button><button class="linkbtn" id="savePhrase" type="button" hidden></button><button class="linkbtn" id="editPhrases" type="button">編輯快捷按鈕</button></div>
     <ol class="tlog" id="talkLog" aria-live="polite"></ol>
   </div>
 </section>
@@ -767,6 +767,44 @@ const DEF={name:'豆豆',base:'#f6efe3',eyeSize:'M',eyeL:'#3b3434',eyeR:'#3b3434
 const KEY='neko-maker-v1';
 let S={...DEF},tab='color',mview='front',booting=true;
 const $=id=>document.getElementById(id);
+
+// 貓咪代詞：依基本資料切換公貓「他」、母貓「她」，未設定時「他」。
+const CAT_PRON_TOKEN='〚貓代詞〛';
+const catPronoun=()=>S.info?.sex==='母'?'她':'他';
+const resolveCatPronouns=t=>String(t??'').replaceAll(CAT_PRON_TOKEN,catPronoun());
+const catPronounTexts=new Map(),catPronounAttrs=new Map();
+let catPronounRefreshing=false;
+function refreshCatPronouns(){
+  if(catPronounRefreshing)return;
+  catPronounRefreshing=true;
+  try{
+    const walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    let node;
+    while((node=walk.nextNode())){
+      const current=node.nodeValue||'',previous=catPronounTexts.get(node);
+      if(current.includes(CAT_PRON_TOKEN))catPronounTexts.set(node,current);
+      else if(previous!==undefined&&current!==previous.replaceAll(CAT_PRON_TOKEN,'他')&&current!==previous.replaceAll(CAT_PRON_TOKEN,'她'))catPronounTexts.delete(node);
+      const original=catPronounTexts.get(node);
+      if(original!==undefined){const next=resolveCatPronouns(original);if(node.nodeValue!==next)node.nodeValue=next}
+    }
+    for(const [node] of catPronounTexts)if(!node.isConnected)catPronounTexts.delete(node);
+    for(const el of document.querySelectorAll('[aria-label],[placeholder],[title]')){
+      for(const a of ['aria-label','placeholder','title']){
+        const value=el.getAttribute(a);if(value===null)continue;
+        const key=a,record=catPronounAttrs.get(el)||{};
+        if(value.includes(CAT_PRON_TOKEN))record[key]=value;
+        else if(record[key]!==undefined&&value!==record[key].replaceAll(CAT_PRON_TOKEN,'他')&&value!==record[key].replaceAll(CAT_PRON_TOKEN,'她'))delete record[key];
+        catPronounAttrs.set(el,record);
+        if(record[key]!==undefined){const next=resolveCatPronouns(record[key]);if(value!==next)el.setAttribute(a,next)}
+      }
+    }
+    for(const [el] of catPronounAttrs)if(!el.isConnected)catPronounAttrs.delete(el);
+  }finally{catPronounRefreshing=false}
+}
+const catPronounObserver=new MutationObserver(()=>refreshCatPronouns());
+catPronounObserver.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-label','placeholder','title']});
+queueMicrotask(refreshCatPronouns);
+
 const base=$('base'),topL=$('top'),wrap=$('wrap');
 const VIEWS=['front','side','back'],PAINTS=['front','side','sideL','back'],VNAME={front:'正面',side:'右側',sideL:'左側',back:'背面'};
 const GV=v=>v==='sideL'?'side':v; // 左側用同一個側面形狀，畫面左右翻過來
@@ -1174,11 +1212,11 @@ function setupFirebase(){
 const GUIDE=[
   {k:'home',q:n=>`你回家的時候，${n}通常會？`,opts:[['跑到門口迎接你',{aff:85}],['遠遠看你一眼',{aff:55}],['繼續睡，假裝沒聽到',{aff:30}]]},
   {k:'guest',q:n=>`有客人來家裡時，${n}會？`,opts:[['躲起來不見貓',{affD:-15}],['在旁邊偷偷觀察',{affD:0}],['主動過去聞聞、討摸',{affD:15}]]},
-  {k:'pet',q:n=>`摸${n}摸太久的時候，牠會？`,opts:[['一直呼嚕，摸多久都可以',{temp:15}],['尾巴開始甩來甩去',{temp:50}],['回頭咬你一口',{temp:85}]]},
-  {k:'play',q:n=>`拿逗貓棒跟${n}玩，牠會？`,opts:[['追到停不下來',{en:85}],['玩一下就躺平',{en:50}],['只用眼睛追',{en:20}]]},
+  {k:'pet',q:n=>`摸${n}摸太久的時候，〚貓代詞〛會？`,opts:[['一直呼嚕，摸多久都可以',{temp:15}],['尾巴開始甩來甩去',{temp:50}],['回頭咬你一口',{temp:85}]]},
+  {k:'play',q:n=>`拿逗貓棒跟${n}玩，〚貓代詞〛會？`,opts:[['追到停不下來',{en:85}],['玩一下就躺平',{en:50}],['只用眼睛追',{en:20}]]},
   {k:'likes',q:n=>`${n}最喜歡被摸哪裡？`,multi:'likes'},
   {k:'dislikes',q:n=>`${n}討厭被摸哪裡？`,multi:'dislikes'},
-  {k:'hug',q:n=>`把${n}抱起來的時候，牠會？`,opts:[['乖乖讓你抱，還會呼嚕',{hug:'love'}],['看心情，有時候給抱',{hug:'mood'}],['扭來扭去，馬上跳走',{hug:'hate'}]]}
+  {k:'hug',q:n=>`把${n}抱起來的時候，〚貓代詞〛會？`,opts:[['乖乖讓你抱，還會呼嚕',{hug:'love'}],['看心情，有時候給抱',{hug:'mood'}],['扭來扭去，馬上跳走',{hug:'hate'}]]}
 ];
 const G={i:0,ans:[],likes:[],dislikes:[],notes:{}};
 function openGuide(){G.i=0;G.ans=GUIDE.map((Q,i)=>{const a=(S.guideAns||[])[i];return Array.isArray(a)?[...a]:typeof a==='string'&&a?a.split(',').map(Number):[]});G.likes=[...(S.likes||[])];G.dislikes=[...(S.dislikes||[])];G.notes={...(S.persNotes||{})};$('guide').hidden=false;drawGuide()}
@@ -1199,7 +1237,7 @@ function noteKeywords(r){
   [['likes','dislikes'],['dislikes','likes']].forEach(([k,o])=>{const t=N[k]||'';ZW.forEach(([re,z])=>{if(re.test(t)&&!r[k].includes(z)){r[k]=[...r[k],z];r[o]=r[o].filter(x=>x!==z)}})});
   return r}
 function drawGuide(){
-  const n=S.name||'牠',done=G.i>=GUIDE.length,box=$('gOpts');box.innerHTML='';box.className='gopts';
+  const n=S.name||'〚貓代詞〛',done=G.i>=GUIDE.length,box=$('gOpts');box.innerHTML='';box.className='gopts';
   $('gProg').textContent=done?'完成':`${G.i+1} / ${GUIDE.length}`;$('gBack').hidden=G.i===0;$('gNext').hidden=false;
   if(done){const r=noteKeywords(guideResult()),w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>l.map(z=>ZONES.find(x=>x[0]===z)[1]).join('、')||'沒有特別';
     $('gQ').textContent=`${n}是這樣的貓`;$('gSub').textContent='之後隨時可以在「個性」分頁微調或重新回答';
@@ -1220,7 +1258,7 @@ function drawGuide(){
   ta.value=G.notes[Q.k]||'';ta.oninput=()=>{G.notes[Q.k]=ta.value};box.after?null:0;
   const wrapT=document.createElement('div');wrapT.className='gwrap';wrapT.appendChild(ta);box.appendChild(wrapT);
 }
-$('gNext').onclick=()=>{if(G.i>=GUIDE.length){Object.assign(S,noteKeywords(guideResult()),{personaSet:true});$('guide').hidden=true;render();if(view==='home')note(`${S.name||'牠'}的個性設定好了`,3);return}G.i++;drawGuide()};
+$('gNext').onclick=()=>{if(G.i>=GUIDE.length){Object.assign(S,noteKeywords(guideResult()),{personaSet:true});$('guide').hidden=true;render();if(view==='home')note(`${S.name||'〚貓代詞〛'}的個性設定好了`,3);return}G.i++;drawGuide()};
 $('gBack').onclick=()=>{if(G.i>0){G.i--;drawGuide()}};
 $('gClose').onclick=()=>{$('guide').hidden=true;S.personaSet=true;save()};
 $('openGuide').onclick=openGuide;
@@ -1271,7 +1309,7 @@ function step(dt){
   H.mood+=(.6-H.mood)*dt*.02;H.mood=Math.max(0,Math.min(1,H.mood));
   if(H.faceT>0){H.faceT-=dt;if(H.faceT<=0&&!H.hug)setFace(H.state==='sleep'?'closed':'normal')}
   H.hugK+=((H.hug?1:0)-H.hugK)*Math.min(1,dt*6);
-  if(H.wriggle>0){H.wriggle-=dt;if(H.wriggle<=0){H.hop=.55;walkAway();note(`${S.name||'牠'}逃走了`)}return}
+  if(H.wriggle>0){H.wriggle-=dt;if(H.wriggle<=0){H.hop=.55;walkAway();note(`${S.name||'〚貓代詞〛'}逃走了`)}return}
   if(H.hug){const rw=room.clientWidth,w=hc.offsetWidth;
     if(H.dragX!=null){const tx=Math.min(1,Math.max(0,(H.dragX-w/2)/Math.max(1,rw-w))),nx=H.x+(tx-H.x)*Math.min(1,dt*10);
       H.dragV=H.dragV*.8+.2*((nx-H.x)*(rw-w)/Math.max(dt,1e-3));H.x=nx;
@@ -1387,8 +1425,8 @@ function apply(dt){
   if(typeof funApply==='function')funApply(rw,rh,w,v,flip);
   if(typeof followCam==='function')followCam(px,w,dt);
   layoutRoom(rw,rh,w);drawNeeds();
-  const n=S.name||'牠';
-  const txt=H.statusT>0?H.statusTxt:st==='pushprep'?`${n}盯著你，爪子慢慢伸向杯子…（點牠可以阻止）`:st==='roll'?`${n}抱著貓草在地上打滾`:st==='litter'?`${n}在上廁所，不要盯著看啦`:st==='treat'?`${n}在吃零食`:st==='beg2'?`${n}站起來討零食`:(st==='beg'&&tool==='treat')?`${n}盯著你手上的零食`:H.carryGift?`${n}叼著東西走過來`:H.hug?(H.warned?`${n}開始扭來扭去，想下來了`:Math.abs(H.dragV||0)>w*.3?`${n}被你抱著走來走去`:`${n}讓你抱著`):st==='chase'?`${n}在追逗貓棒`:st==='stalk'?`${n}壓低身體慢慢靠近`:st==='ready'?(wandOn&&FT.hidden?`${n}盯著逗貓棒消失的地方`:`${n}盯著逗貓棒，屁股扭扭`):st==='bat'?`${n}站起來用爪子撥`:st==='leap'?`${n}跳起來抓！`:st==='grab'?`${n}抱著逗貓棒踢踢`:st==='dash'?`${n}衝出來了！`:st==='search'?`${n}在找逗貓棒`:st==='hide'?(hiding?`${n}躲在${ROOM_ITEMS[H.hideK]?.[0]||'家具'}後面偷看`:`${n}偷偷躲起來`):walking?(H.goSleep?`${n}想去睡覺了`:H.runFast?`${n}衝過去了`:`${n}在走來走去`):sleeping?`${n}睡著了`:st==='drink'?`${n}在喝水`:st==='sniff'?`${n}在聞聞看`:st==='beg'?`${n}喵喵叫，想吃飯`:H.waitFood?`${n}等著吃${H.waitFood==='plate'?'罐頭':'飯'}`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
+  const n=S.name||'〚貓代詞〛';
+  const txt=H.statusT>0?H.statusTxt:st==='pushprep'?`${n}盯著你，爪子慢慢伸向杯子…（點〚貓代詞〛可以阻止）`:st==='roll'?`${n}抱著貓草在地上打滾`:st==='litter'?`${n}在上廁所，不要盯著看啦`:st==='treat'?`${n}在吃零食`:st==='beg2'?`${n}站起來討零食`:(st==='beg'&&tool==='treat')?`${n}盯著你手上的零食`:H.carryGift?`${n}叼著東西走過來`:H.hug?(H.warned?`${n}開始扭來扭去，想下來了`:Math.abs(H.dragV||0)>w*.3?`${n}被你抱著走來走去`:`${n}讓你抱著`):st==='chase'?`${n}在追逗貓棒`:st==='stalk'?`${n}壓低身體慢慢靠近`:st==='ready'?(wandOn&&FT.hidden?`${n}盯著逗貓棒消失的地方`:`${n}盯著逗貓棒，屁股扭扭`):st==='bat'?`${n}站起來用爪子撥`:st==='leap'?`${n}跳起來抓！`:st==='grab'?`${n}抱著逗貓棒踢踢`:st==='dash'?`${n}衝出來了！`:st==='search'?`${n}在找逗貓棒`:st==='hide'?(hiding?`${n}躲在${ROOM_ITEMS[H.hideK]?.[0]||'家具'}後面偷看`:`${n}偷偷躲起來`):walking?(H.goSleep?`${n}想去睡覺了`:H.runFast?`${n}衝過去了`:`${n}在走來走去`):sleeping?`${n}睡著了`:st==='drink'?`${n}在喝水`:st==='sniff'?`${n}在聞聞看`:st==='beg'?`${n}喵喵叫，想吃飯`:H.waitFood?`${n}等著吃${H.waitFood==='plate'?'罐頭':'飯'}`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
   if(!bubble.hidden)bubble.classList.toggle('flip',px+w*.58+bubble.offsetWidth>rw-6);
 }
@@ -1411,7 +1449,7 @@ function zoneAt(e){
   return'back';
 }
 function petTick(zone){if(touch)touch.zones.add(zone);
-  const n=S.name||'牠',liked=(S.likes||[]).includes(zone),hated=(S.dislikes||[]).includes(zone),temper=P01('temper'),aff=P01('affection');
+  const n=S.name||'〚貓代詞〛',liked=(S.likes||[]).includes(zone),hated=(S.dislikes||[]).includes(zone),temper=P01('temper'),aff=P01('affection');
   if(H.state==='sleep'){
     if(liked&&Math.random()<.8){say('呼嚕…',1200);note(`${n}睡夢中呼嚕呼嚕`);return}
     wake();setFace(hated?'annoyed':'normal',1.5);say(hated?'喵！':'喵？',1300);return;
@@ -1437,11 +1475,11 @@ function touchEnd(cancel){if(!touch)return;clearTimeout(touch.hold);const t=touc
   recordPet(t,wasHug);const ev=touchStory(t,wasHug);if(ev&&Math.random()<.7)setTimeout(()=>aiEvent(ev,{allowMove:!t.bad&&!t.hugFail&&!t.escaped}),900)}
 function hugPatience(){const pref=S.hugPref||'mood',aff=P01('affection'),tmp=P01('temper');
   const b=pref==='love'?40:pref==='hate'?2.5:5+aff*10+H.mood*6;return b*(1.3-tmp*.6)*(.8+Math.random()*.4)}
-function escapeHug(){const n=S.name||'牠';logAct('hugEscape','抱太久了，掙脫跳下來（心情下降）',true);H.hug=false;H.y=H.carry||0;H.carry=0;H.dragV=0;H.wriggle=.7;H.state='sit';
+function escapeHug(){const n=S.name||'〚貓代詞〛';logAct('hugEscape','抱太久了，掙脫跳下來（心情下降）',true);H.hug=false;H.y=H.carry||0;H.carry=0;H.dragV=0;H.wriggle=.7;H.state='sit';
   setFace('annoyed',1.4);say('喵嗚！放開我',1400);note(`${n}掙脫跳下來了`,2.5);H.mood-=.06;H.cooldown=4;
   if(touch){touch.escaped=true;touch.mode='done';clearTimeout(touch.hold)}}
 function startHug(){
-  const n=S.name||'牠',pref=S.hugPref||'mood',aff=P01('affection');
+  const n=S.name||'〚貓代詞〛',pref=S.hugPref||'mood',aff=P01('affection');
   let p=pref==='love'?.9:pref==='hate'?.1:.25+H.mood*.45+aff*.25;if(H.cooldown>0)p*=.3;
   if(H.state==='sleep')p*=.6;
   if(Math.random()<p){const rr=room.getBoundingClientRect();H.dragX=touch.x-rr.left;H.dragY=H.dragY0=touch.y-rr.top;H.carry=0;H.dragV=0;H.warned=false;H.patience=hugPatience();
@@ -1474,7 +1512,7 @@ function poke(){lastInteract=Date.now();idleFired=false;
 hc.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();poke()}});
 const track=e=>{const r=room.getBoundingClientRect();H.px=e.clientX-r.left;H.pAt=performance.now()};
 room.addEventListener('pointermove',track);room.addEventListener('pointerdown',track);
-/* ===== 跟牠說話（貓語模式） ===== */
+/* ===== 跟〚貓代詞〛說話（貓語模式） ===== */
 const DEF_PHRASES=['我回來了','早安','晚安','想你','要吃罐罐嗎','乖乖'];
 const INTENTS=[
   ['danger',/想死|不想活|自殺|活不下去|結束生命|去找你|跟你走|陪你走|消失就好|傷害自己/],
@@ -1498,7 +1536,7 @@ function comeOver(after){if(H.hug){after&&after();return}if(H.state==='sleep')wa
   if(H.y>.05||H.inBox||H.state==='jump'){if(H.state!=='jump')startWalk(vx,false,after);return}
   if(Math.abs(H.x-vx)<.015){sitDown('front');after&&after();return}startWalk(vx,false,after)}
 function respond(text){
-  const n=S.name||'牠',it=intentOf(text),aff=P01('affection'),tmp=P01('temper'),en=P01('energy');
+  const n=S.name||'〚貓代詞〛',it=intentOf(text),aff=P01('affection'),tmp=P01('temper'),en=P01('energy');
   const warm=aff>=.55,tsun=tmp>=.55&&aff<.75,lazy=en<.35,asleep=H.state==='sleep';
   if(it==='danger'){$('care').hidden=false;comeOver(()=>{setFace('closed',3);H.lean=1});sayBoth('咪…',null);
     const d=`${n}安靜地走過來，坐在你身邊`;note(d,4);return{m:'咪…',th:null,d}}
@@ -1546,12 +1584,12 @@ function perform(r,th,asleep,ms){
 }
 const talkLog=[];
 function drawLog(){const ol=$('talkLog');ol.innerHTML='';talkLog.forEach(([w,t,d],i)=>{const li=document.createElement('li');li.className=w;
-  const who=document.createElement('b');who.textContent=w==='me'?'你':(S.name||'牠');if(w!=='ev'&&w!=='act')li.append(who);li.append(document.createTextNode(t));
+  const who=document.createElement('b');who.textContent=w==='me'?'你':(S.name||'〚貓代詞〛');if(w!=='ev'&&w!=='act')li.append(who);li.append(document.createTextNode(t));
   if(w==='act'){const fx=document.createElement('button');fx.type='button';fx.className='notlike';fx.textContent='不該這樣';fx.onclick=()=>openActFix(i,li);li.appendChild(fx)}
-  if(w==='cat'){const fx=document.createElement('button');fx.type='button';fx.className='notlike';fx.textContent='不像牠';fx.onclick=()=>openFix(i,li);li.appendChild(fx)}
+  if(w==='cat'){const fx=document.createElement('button');fx.type='button';fx.className='notlike';fx.textContent='不像〚貓代詞〛';fx.onclick=()=>openFix(i,li);li.appendChild(fx)}
   if(d){const s=document.createElement('small');s.textContent=d;li.appendChild(s)}ol.appendChild(li)})}
 let lastSaid='';
-async function send(text){text=(text||'').trim();if(!text)return;if(aiBusy){note(`${S.name||'牠'}還在想，等一下再說`,2);return}lastInteract=Date.now();idleFired=false;
+async function send(text){text=(text||'').trim();if(!text)return;if(aiBusy){note(`${S.name||'〚貓代詞〛'}還在想，等一下再說`,2);return}lastInteract=Date.now();idleFired=false;
   if(intentOf(text)!=='danger')notePending(text);
   talkLog.push(['me',text]);drawLog();if(typeof noteDay==='function')noteDay(`主人跟我說：「${text.slice(0,30)}」`);const r=(aiOn()&&intentOf(text)!=='danger')?await aiSend(text):respond(text);talkLog.push(['cat',[r.m,r.th].filter(Boolean).join(' ')||'…',r.d]);
   while(talkLog.length>6)talkLog.shift();drawLog();
@@ -1609,7 +1647,7 @@ ${catProfile()}${learnedPrompt()}
 - 盡量自然地用上主人寫的習慣，但不要每句都提。
 - 你不知道人類世界很複雜的事，聽不懂時就用貓的方式回應。
 - 不要談論死亡、天堂、彩虹橋，也不要替自己做「我不怪你」「我在天上很好」這類宣告。主人說到這些時，就用貓的方式陪著他，例如靠過去、說「我在這裡」。
-- 如果主人真心問你是不是真的牠，溫柔誠實地說你是主人用回憶做出來陪他的小貓。
+- 如果主人真心問你是不是真的〚貓代詞〛，溫柔誠實地說你是主人用回憶做出來陪他的小貓。
 - 主人難過時溫柔陪伴，也可以像貓一樣提醒他去吃飯、睡覺、找朋友聊聊。
 - 你肚子餓的時候可以跟主人討飯、討罐頭；吃飽了就懶洋洋的。
 - 以「（」開頭、用括號包起來的訊息是旁白，描述主人對你做了什麼或發生了什麼，不是主人說的話；請用貓的方式對這件事反應，例如被摸得舒服就呼嚕撒嬌、被摸到討厭的地方就抱怨、主人很久沒來就撒嬌或鬧脾氣。
@@ -1632,7 +1670,7 @@ async function askGeminiOnce(text,model){
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
   try{
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':aiKey()},body:JSON.stringify(body),signal:ctl.signal});
+      {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':aiKey()},body:JSON.stringify(body).replaceAll(CAT_PRON_TOKEN,catPronoun()),signal:ctl.signal});
     const j=await res.json().catch(()=>({}));
     if(!res.ok){const e=new Error((j.error&&j.error.message)||('HTTP '+res.status));e.status=res.status;throw e}
     const raw=(((j.candidates||[])[0]||{}).content||{}).parts?.map(p=>p.text||'').join('')||'';
@@ -1650,7 +1688,7 @@ function aiErrText(e){const s=e.status;
   return'連不上 AI（'+(e.message||'網路問題')+'）'}
 let aiBusy=false;
 async function aiSend(text){
-  const n=S.name||'牠',asleep=H.state==='sleep';
+  const n=S.name||'〚貓代詞〛',asleep=H.state==='sleep';
   aiBusy=true;$('sayBtn').disabled=true;
   if(!asleep){H.tilt=(Math.random()<.5?-1:1)*6;if(H.view==='back'&&H.state==='sit')setHView('front')}
   sayBoth('…',null,20000);note(`${n}在想要怎麼回你`,20);
@@ -1687,7 +1725,7 @@ $('aiDel').onclick=()=>{$('aiKey').value='';doAiSave()};
 async function doAiSave(){const k=$('aiKey').value.trim();ls.set(AIKEY,k);ls.set(AIMODEL,$('aiModel').value);ls.set('neko-gemini-model-custom',$('aiModelCustom').value.trim());
   if(!k){$('aiMsg').textContent='已清除這台裝置的金鑰';if(S.talkMode==='ai'){S.talkMode='cat';save()}aiLabel();return}
   $('aiMsg').textContent='已儲存，正在測試…';
-  try{const o=await askGemini('（主人剛打開房間）');$('aiMsg').textContent=`成功！${S.name||'牠'}說：「${o.say}」`+(modelOverride?`（${aiModel()} 太忙，這次改用 ${modelOverride}）`:'');
+  try{const o=await askGemini('（主人剛打開房間）');$('aiMsg').textContent=`成功！${S.name||'〚貓代詞〛'}說：「${o.say}」`+(modelOverride?`（${aiModel()} 太忙，這次改用 ${modelOverride}）`:'');
     if(S.talkMode!=='ai'){S.talkMode='ai';save();$('aiModeCat').setAttribute('aria-pressed',false);$('aiModeAI').setAttribute('aria-pressed',true)}}
   catch(e){$('aiMsg').textContent=aiErrText(e)}aiLabel()}
 $('aiForget').onclick=()=>{chatHist=[];ls.set(CHATKEY,'');$('aiMsg').textContent='已清除這台裝置上的對話記憶'};
@@ -1736,7 +1774,7 @@ setInterval(()=>{if(view!=='home'||document.hidden)return;ls.set('neko-last-seen
   if(!idleFired&&H.state!=='sleep'&&!H.hug&&Date.now()-lastInteract>4*60*1000){idleFired=true;aiEvent('（主人在旁邊，但已經好幾分鐘沒有理你了）')}},15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&view==='home')onHomeOpen()});
 
-/* ===== 日積月累：從主人的話和互動裡，慢慢學會真正的牠 ===== */
+/* ===== 日積月累：從主人的話和互動裡，慢慢學會真正的〚貓代詞〛 ===== */
 const PENDKEY='neko-pending',FACT_MAX=120,NEWS_MAX=8,COMPACT_AT=60,COMPACT_TO=40;
 const FACT_CATS=['習性','喜好','討厭','回憶','口頭禪與叫聲','修正','主人近況'];
 let pending=[];try{pending=JSON.parse(ls.get(PENDKEY)||'[]')}catch(e){pending=[]}
@@ -1772,16 +1810,16 @@ async function maybeLearn(force){
   learning=true;const batch=pending.slice(),n=S.name||'貓咪';
   const known=learned().map(f=>`[${f.c}] ${f.t}`).join('\n')||'（還沒有）';
   const sys=`你在幫一位主人整理他的貓「${n}」的資料。主人在一個網頁裡跟虛擬的${n}聊天，下面是主人最近說的話（只有主人的話，虛擬貓的回答是 AI 編的，所以不在這裡）。
-請只根據主人明確說出的內容，找出關於「真實的${n}」的新資訊，用台灣繁體中文、每則一句話記下，用「牠」稱呼貓：
+請只根據主人明確說出的內容，找出關於「真實的${n}」的新資訊，用台灣繁體中文、每則一句話記下，用「〚貓代詞〛」稱呼貓：
 - 習性：作息、行為、小動作（例如：每天早上五點會踩主人的臉叫人起床）
 - 喜好、討厭：食物、玩具、地方、聲音、人
 - 回憶：主人提到的過去的事
-- 口頭禪與叫聲：牠的叫聲、主人對牠的暱稱、主人常對牠說的話
+- 口頭禪與叫聲：〚貓代詞〛的叫聲、主人對〚貓代詞〛的暱稱、主人常對〚貓代詞〛說的話
 - 主人近況：主人提到自己最近的生活（例如最近工作很忙、下週要出差），只記和陪伴有關、不敏感的事
 不要推測、不要把主人的情緒或問句當成事實、不要重複已經記得的事。沒有新資訊就回傳空陣列。
-affection（親人）、temper（脾氣）、energy（活潑）是對個性的微調，範圍 -5 到 5，只有主人明確描述牠的個性時才填非 0，例如「你超黏我」affection +3。
+affection（親人）、temper（脾氣）、energy（活潑）是對個性的微調，範圍 -5 到 5，只有主人明確描述〚貓代詞〛的個性時才填非 0，例如「你超黏我」affection +3。
 appetite（貪吃程度）、canLove（愛不愛罐頭）、picky（挑食）、drink（愛喝水）、demand（餓了會不會討飯）也是 -3 到 3 的微調，只有主人明確提到時才填非 0，例如「你一聽到開罐頭就衝過來」canLove +3、「你都吃一半就跑掉」picky +2。
-likes、dislikes 只在主人明確說到牠喜歡或討厭被摸哪裡時才填，代碼：${ZONES.map(([z,zn])=>z+'='+zn).join('、')}。
+likes、dislikes 只在主人明確說到〚貓代詞〛喜歡或討厭被摸哪裡時才填，代碼：${ZONES.map(([z,zn])=>z+'='+zn).join('、')}。
 
 已經記得的事：
 ${known}`;
@@ -1806,7 +1844,7 @@ async function compactMemory(force){const L=learned(),facts=L.filter(f=>f.c!=='�
   const sys=`你在幫主人整理貓咪「${n}」的記憶本。下面是累積的記憶（越下面越新），請整理成最多 ${COMPACT_TO} 條：
 - 合併重複或意思相近的，保留具體細節（時間、地點、食物、玩具名稱）
 - 有矛盾時，以「修正」和比較新的為準，舊的那條刪掉
-- 每條一句話，用「牠」稱呼貓，用台灣繁體中文
+- 每條一句話，用「〚貓代詞〛」稱呼貓，用台灣繁體中文
 - 分類只能用：${FACT_CATS.filter(c=>c!=='主人近況').join('、')}
 - 不要新增記憶裡沒有的事`;
   try{const o=await gemParts(sys,[{text:facts.map(f=>`[${f.c}] ${f.t}`).join('\n')}],{type:'OBJECT',properties:{facts:{type:'ARRAY',items:{type:'OBJECT',properties:{c:{type:'STRING',enum:FACT_CATS.filter(c=>c!=='主人近況')},t:{type:'STRING'}},required:['c','t']}}},required:['facts']},2000);
@@ -1821,7 +1859,7 @@ function recordPet(t,wasHug){const st=stats(),secs=Math.max(0,(performance.now()
   if(t.mode==='pet'&&t.zones&&t.zones.size){const each=secs/t.zones.size;t.zones.forEach(z=>{st.pet[z]=Math.round(((st.pet[z]||0)+each)*10)/10})}
   save()}
 function recordVisit(){const st=stats();st.visits++;st.hours[new Date().getHours()]++;save()}
-function habitText(){const st=stats(),n=S.name||'牠';const out=[];
+function habitText(){const st=stats(),n=S.name||'〚貓代詞〛';const out=[];
   const top=Object.entries(st.pet).sort((a,b)=>b[1]-a[1]).filter(([,v])=>v>=15).slice(0,2).map(([z])=>ZONE_NAME[z]);
   if(top.length)out.push(`主人最常摸你的${top.join('和')}`);
   if(st.visits>=5){const b=[['早上',5,11],['中午',11,14],['下午',14,18],['晚上',18,23],['深夜',23,29]].map(([l,a,z])=>{let c=0;for(let h=a;h<z;h++)c+=st.hours[h%24];return[l,c]}).sort((a,b)=>b[1]-a[1])[0];
@@ -1834,21 +1872,21 @@ function learnedPrompt(){const L=learned(),facts=L.filter(f=>f.c!=='主人近況
   const h=habitText();if(h)s+=`\n你觀察到的主人習慣：${h}。`;
   return s}
 
-/* 「不像牠」修正 */
+/* 「不像〚貓代詞〛」修正 */
 function openFix(i,li){if(li.querySelector('.fix'))return;const cat=talkLog[i][1];let prev='';for(let k=i-1;k>=0;k--)if(talkLog[k][0]!=='cat'){prev=talkLog[k][1];break}
-  const f=document.createElement('form');f.className='fix';const inp=document.createElement('input');inp.id='fix-'+i;inp.maxLength=100;inp.placeholder=`真正的${S.name||'牠'}會怎麼做、怎麼回？`;inp.setAttribute('aria-label','真正的牠會怎麼反應');
+  const f=document.createElement('form');f.className='fix';const inp=document.createElement('input');inp.id='fix-'+i;inp.maxLength=100;inp.placeholder=`真正的${S.name||'〚貓代詞〛'}會怎麼做、怎麼回？`;inp.setAttribute('aria-label','真正的〚貓代詞〛會怎麼反應');
   const ok=document.createElement('button');ok.className='btn primary';ok.textContent='記住';f.append(inp,ok);li.appendChild(f);inp.focus();
-  f.onsubmit=e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;addFact('修正',`${prev?`主人${/^主人/.test(prev)?'那時':'說「'+prev.slice(0,30)+'」'}時，`:''}真正的牠會：${v}（不是「${cat.slice(0,30)}」）`,'me');save();memLabel();
-    f.replaceWith(Object.assign(document.createElement('small'),{textContent:`記住了，${S.name||'牠'}下次會更像牠`}))}}
+  f.onsubmit=e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;addFact('修正',`${prev?`主人${/^主人/.test(prev)?'那時':'說「'+prev.slice(0,30)+'」'}時，`:''}真正的〚貓代詞〛會：${v}（不是「${cat.slice(0,30)}」）`,'me');save();memLabel();
+    f.replaceWith(Object.assign(document.createElement('small'),{textContent:`記住了，${S.name||'〚貓代詞〛'}下次會更像〚貓代詞〛`}))}}
 
 /* 記憶本 */
-function memLabel(){const n=learned().length;$('openMem').textContent=`${S.name||'牠'}的記憶本（${n}）`}
+function memLabel(){const n=learned().length;$('openMem').textContent=`${S.name||'〚貓代詞〛'}的記憶本（${n}）`}
 function drawMem(msg){
   const box=$('memList');box.innerHTML='';const L=learned();
   $('memMsg').textContent=msg||(pending.length?`還有 ${pending.length} 句你說過的話等著整理${aiKey()?'，累積到 6 句會自動整理':'（需要先在 AI 說話設定貼上金鑰）'}`:'目前沒有待整理的話');
   $('memLearn').disabled=!pending.length||!aiKey()||learning;
-  const h=habitText();$('memHabit').textContent=h?h.replace(/你/g,S.name||'牠')+'。':'互動還不夠多，再陪牠一陣子就會看出習慣。';
-  if(!L.length){const p=document.createElement('p');p.className='gsub';p.textContent='還沒有記住的事。平常跟牠聊天時聊聊真正的牠，或在下面自己寫。';box.appendChild(p)}
+  const h=habitText();$('memHabit').textContent=h?h.replace(/你/g,S.name||'〚貓代詞〛')+'。':'互動還不夠多，再陪〚貓代詞〛一陣子就會看出習慣。';
+  if(!L.length){const p=document.createElement('p');p.className='gsub';p.textContent='還沒有記住的事。平常跟〚貓代詞〛聊天時聊聊真正的〚貓代詞〛，或在下面自己寫。';box.appendChild(p)}
   FACT_CATS.forEach(c=>{const items=L.map((f,i)=>[f,i]).filter(([f])=>f.c===c);if(!items.length)return;
     const h3=document.createElement('h3');h3.textContent=c;box.appendChild(h3);
     const ul=document.createElement('ul');items.forEach(([f,i])=>{const li=document.createElement('li');const sp=document.createElement('span');sp.textContent=f.t;
@@ -1908,7 +1946,7 @@ function sideSpot(k,off){const rw=room.clientWidth,w=hc.offsetWidth,R=roomCfg(),
 function doAct(k,src,o={}){const R=roomCfg();
   if(k==='litter'){goLitter();return}if(k==='gift'){bringGift();return}if(k==='nip'){nipReact();return}
   if(['birdwatch','sunbathe','hbed','counter','xmasTree','parkour'].includes(k)){houseAct(k);return}
-  if(k==='tree')startWalk(R.tree.x,false,()=>{setHView('front');jumpTo(.56,()=>jumpTo(1.1,()=>{sitDown(Math.random()<.3?'back':'front');H.timer=8+Math.random()*10;note(`${S.name||'牠'}跳上貓跳台了`,3)}),{pause:.35})});
+  if(k==='tree')startWalk(R.tree.x,false,()=>{setHView('front');jumpTo(.56,()=>jumpTo(1.1,()=>{sitDown(Math.random()<.3?'back':'front');H.timer=8+Math.random()*10;note(`${S.name||'〚貓代詞〛'}跳上貓跳台了`,3)}),{pause:.35})});
   if(k==='scratch'){const[t,face]=sideSpot('scratch',.42);startWalk(t,false,()=>{H.state='scratch';H.facing=face;H.timer=3.5+Math.random()*3;setHView('side');if(Math.random()<.5)say('咔咔咔',1200)})}
   if(k==='box')startWalk(R.box.x,false,()=>{setHView('front');jumpTo(.15,()=>{H.y=0;H.inBox=true;H.state='box';H.timer=8+Math.random()*8;setHView('front')})});
   if(k==='eat'){const it=src==='plate'?'plate':'bowl';const[t,face]=sideSpot(it,.3);startWalk(t,false,()=>{H.facing=face;setHView('side');
@@ -1987,7 +2025,7 @@ function catchUpNeeds(){
     if(drank)parts.push('自己喝了水');
     if(slept>=1200)parts.push('睡了一會兒');
     if(usedLitter)parts.push('上了貓砂盆');
-    S.offlineSummary=parts.length?`你不在時，${S.name||'牠'}${parts.join('、')}。`:`你不在時，${S.name||'牠'}在家裡悠閒地待著。`;
+    S.offlineSummary=parts.length?`你不在時，${S.name||'〚貓代詞〛'}${parts.join('、')}。`:`你不在時，${S.name||'〚貓代詞〛'}在家裡悠閒地待著。`;
   }
   save();
 }
@@ -2022,7 +2060,7 @@ function fillBowl(byOwner){const R=roomCfg();if(!R.bowl.on)return;setFood('bowl'
   setTimeout(()=>foodReact('bowl',{sound:true}),400);
   if(byOwner)setTimeout(()=>aiEvent('（主人幫你的碗倒了飼料）',{allowMove:false}),2600)}
 $('it-bowl').addEventListener('click',()=>{if(roomEdit||wandOn)return;lastInteract=Date.now();idleFired=false;
-  if(foodAmt('bowl')>.6){note('碗裡還有飼料',2);return}note(`你幫${S.name||'牠'}倒了飼料`,3);fillBowl(true)});
+  if(foodAmt('bowl')>.6){note('碗裡還有飼料',2);return}note(`你幫${S.name||'〚貓代詞〛'}倒了飼料`,3);fillBowl(true)});
 /* ===== 罐頭口味：每隻貓有自己的喜好 ===== */
 const FLAVORS={'鮪魚':['#e5707b','#d99a8a'],'雞肉':['#e9a35b','#e3c08f'],'鮭魚':['#f08a5d','#f0a07a'],'牛肉':['#9b5a45','#9a5a45'],'鯖魚':['#6f8fa8','#b8a290'],'鴨肉':['#8a6448','#a8735a'],'海鮮':['#4a90c8','#d99a7c'],'羊肉':['#b07a5a','#b0806a']};
 const FL_NAMES=Object.keys(FLAVORS);
@@ -2035,7 +2073,7 @@ function setFlavorPref(f,v){if(!S.flavors||typeof S.flavors!=='object')S.flavors
 function canName(){const f=plateFlavor();return f?`${f}罐頭`:'罐頭'}
 let canBusy=false;
 function popText(x,y,t){const el=document.createElement('span');el.className='heart pop';el.textContent=t;el.style.left=x+'px';el.style.top=y+'px';room.appendChild(el);setTimeout(()=>el.remove(),1300)}
-function openCan(fl){const R=roomCfg(),n=S.name||'牠';if(canBusy||roomEdit)return;if(wandOn)setWand(false);
+function openCan(fl){const R=roomCfg(),n=S.name||'〚貓代詞〛';if(canBusy||roomEdit)return;if(wandOn)setWand(false);
   if(!R.plate.on){R.plate.on=true;save()}
   if(foodAmt('plate')>.5){note('盤子裡還有罐頭',2);return}
   fl=FLAVORS[fl]?fl:FL_NAMES[Math.floor(Math.random()*FL_NAMES.length)];R.plate.flavor=fl;
@@ -2053,7 +2091,7 @@ $('canBtn').addEventListener('click',e=>{e.stopPropagation();if(canBusy)return;i
 (()=>{const m=$('flavorMenu');const add=(t,f)=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=e=>{e.stopPropagation();m.hidden=true;openCan(f)};m.appendChild(b)};
   add('隨機口味',null);FL_NAMES.forEach(f=>add(f,f));document.addEventListener('pointerdown',e=>{if(!m.hidden&&!e.target.closest('#flavorMenu')&&!e.target.closest('#canBtn'))m.hidden=true})})();
 function canAge(){const at=roomCfg().plate.at;return at?(Date.now()-at)/60000:0}
-function takeCan(){const R=roomCfg(),n=S.name||'牠',left=foodAmt('plate');if(left<=.01||canBusy)return;
+function takeCan(){const R=roomCfg(),n=S.name||'〚貓代詞〛',left=foodAmt('plate');if(left<=.01||canBusy)return;
   const mins=canAge(),eating=H.state==='eat'&&H.eatSrc==='plate',T=traits(),N=needs();
   const cnm=canName();setFood('plate',0);R.plate.at=0;save();lastInteract=Date.now();idleFired=false;note(`你把沒吃完的${cnm}收起來了`,3);
   let line,face=null,text;
@@ -2082,10 +2120,10 @@ Object.entries(IT).forEach(([k,els])=>els.forEach(el=>{
     const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);save()};
     el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)})}));
 
-/* ===== 點家具叫牠去玩 ===== */
+/* ===== 點家具叫〚貓代詞〛去玩 ===== */
 const ITEM_CALL={tree:['貓跳台','tree'],scratch:['貓抓板','scratch'],box:['紙箱','box'],bed:['貓窩','bed'],fountain:['飲水機','drink'],plate:['盤子','plate']};
 Object.entries(ITEM_CALL).forEach(([k,[name,act]])=>IT[k].forEach(el=>el.addEventListener('click',()=>{
-  if(roomEdit||wandOn||H.hug)return;lastInteract=Date.now();idleFired=false;const n=S.name||'牠',N=needs();
+  if(roomEdit||wandOn||H.hug)return;lastInteract=Date.now();idleFired=false;const n=S.name||'〚貓代詞〛',N=needs();
   if(act==='plate'){if(foodAmt('plate')>.01)foodReact('plate',{});else note('點右邊的「罐頭」可以開罐頭放到盤子裡',3);return}
   if(H.state==='sleep'&&act!=='bed'){if(Math.random()<.5){note(`${n}睡得很熟，沒有理你`,2.5);logAct(`lazy_${k}`,`睡得很熟，沒理你拍${name}`,true);return}wake()}
   let lazy=(.45*(1-P01('energy'))+(H.mood<.35?.3:0)+(1-N.energy)*.3)/itemLove(k);
@@ -2146,50 +2184,50 @@ function drawWand(){
 /* 行為紀錄 */
 const actAt={};let actAny=-1e9;
 function logAct(key,text,force,meta){const now=performance.now();if(!force&&(now-(actAt[key]??-1e9)<6000||now-actAny<2200))return;actAt[key]=now;actAny=now;
-  talkLog.push(['act',`${S.name||'牠'}${text}`,'',key,meta||null]);if(typeof weekLog==='function')weekLog(key,text);if(typeof noteDay==='function')noteDay(text);while(talkLog.length>8)talkLog.shift();drawLog();maybeAsk(key,text)}
+  talkLog.push(['act',`${S.name||'〚貓代詞〛'}${text}`,'',key,meta||null]);if(typeof weekLog==='function')weekLog(key,text);if(typeof noteDay==='function')noteDay(text);while(talkLog.length>8)talkLog.shift();drawLog();maybeAsk(key,text)}
 const TRAIT_FIX={
-  foodRun:[['牠沒那麼急',T=>{T.appetite-=2},'放飯時，牠不會一聽到聲音就衝過來']],
-  canRun:[['牠沒那麼愛罐頭',T=>{T.canLove-=2},'牠沒有特別愛吃罐頭']],
-  selfEat:[['牠不會自己去吃',T=>{T.appetite-=1},'牠不太會自己跑去吃飯，要叫牠']],
-  foodLater:[['牠會馬上吃',T=>{T.appetite+=2},'放飯時牠通常會馬上吃']],
-  foodIgnore:[['牠一定會吃',T=>{T.appetite+=2;T.picky-=2},'牠不挑食，放了飯就會吃']],
-  foodSleep:[['牠一聽到就會醒',T=>{T.appetite+=1;T.canLove+=1},'牠睡覺時一聽到放飯的聲音就會醒來']],
-  eatAll:[['牠通常會剩一點',T=>{T.picky+=2},'牠吃飯通常會剩一點']],
-  leftover:[['牠都會吃光',T=>{T.picky-=2;T.appetite+=1},'牠吃飯都會吃光光']],
-  demand:[['牠不會這樣討飯',T=>{T.demand-=3},'牠肚子餓時不太會討飯'],['牠討飯更兇',T=>{T.demand+=2},'牠肚子餓時會一直喵喵叫討飯']],
-  canTaken:[['牠不會在意',T=>{T.canLove-=1},'罐頭沒吃完被收走，牠不太在意'],['牠會很生氣',T=>{T.canLove+=1},'罐頭沒吃完被收走，牠會很生氣']],
-  drink:[['牠很少喝水',T=>{T.drink-=2},'牠很少喝水'],['牠很愛喝水',T=>{T.drink+=2},'牠很愛喝水']]
+  foodRun:[['〚貓代詞〛沒那麼急',T=>{T.appetite-=2},'放飯時，〚貓代詞〛不會一聽到聲音就衝過來']],
+  canRun:[['〚貓代詞〛沒那麼愛罐頭',T=>{T.canLove-=2},'〚貓代詞〛沒有特別愛吃罐頭']],
+  selfEat:[['〚貓代詞〛不會自己去吃',T=>{T.appetite-=1},'〚貓代詞〛不太會自己跑去吃飯，要叫〚貓代詞〛']],
+  foodLater:[['〚貓代詞〛會馬上吃',T=>{T.appetite+=2},'放飯時〚貓代詞〛通常會馬上吃']],
+  foodIgnore:[['〚貓代詞〛一定會吃',T=>{T.appetite+=2;T.picky-=2},'〚貓代詞〛不挑食，放了飯就會吃']],
+  foodSleep:[['〚貓代詞〛一聽到就會醒',T=>{T.appetite+=1;T.canLove+=1},'〚貓代詞〛睡覺時一聽到放飯的聲音就會醒來']],
+  eatAll:[['〚貓代詞〛通常會剩一點',T=>{T.picky+=2},'〚貓代詞〛吃飯通常會剩一點']],
+  leftover:[['〚貓代詞〛都會吃光',T=>{T.picky-=2;T.appetite+=1},'〚貓代詞〛吃飯都會吃光光']],
+  demand:[['〚貓代詞〛不會這樣討飯',T=>{T.demand-=3},'〚貓代詞〛肚子餓時不太會討飯'],['〚貓代詞〛討飯更兇',T=>{T.demand+=2},'〚貓代詞〛肚子餓時會一直喵喵叫討飯']],
+  canTaken:[['〚貓代詞〛不會在意',T=>{T.canLove-=1},'罐頭沒吃完被收走，〚貓代詞〛不太在意'],['〚貓代詞〛會很生氣',T=>{T.canLove+=1},'罐頭沒吃完被收走，〚貓代詞〛會很生氣']],
+  drink:[['〚貓代詞〛很少喝水',T=>{T.drink-=2},'〚貓代詞〛很少喝水'],['〚貓代詞〛很愛喝水',T=>{T.drink+=2},'〚貓代詞〛很愛喝水']]
 };
-TRAIT_FIX.go_fountain=TRAIT_FIX.drink;TRAIT_FIX.lazy_fountain=[['牠很愛喝水',T=>{T.drink+=2},'牠很愛喝水']];
+TRAIT_FIX.go_fountain=TRAIT_FIX.drink;TRAIT_FIX.lazy_fountain=[['〚貓代詞〛很愛喝水',T=>{T.drink+=2},'〚貓代詞〛很愛喝水']];
 const PLAY_KEYS=['chase','stalk','pounce','bat','leap','hide','dash','search','caught','tired','watch'];
-function openActFix(i,li){if(li.querySelector('.fix'))return;const[,text,,key,meta]=talkLog[i];const pk=PREF_OF[key],tk=todKey(),n=S.name||'牠';
+function openActFix(i,li){if(li.querySelector('.fix'))return;const[,text,,key,meta]=talkLog[i];const pk=PREF_OF[key],tk=todKey(),n=S.name||'〚貓代詞〛';
   const f=document.createElement('div');f.className='fix actfix';
-  const inp=document.createElement('input');inp.id='afix-'+i;inp.maxLength=100;inp.placeholder=`真正的${n}會怎麼做？（可以不寫）`;inp.setAttribute('aria-label','真正的牠會怎麼做');
+  const inp=document.createElement('input');inp.id='afix-'+i;inp.maxLength=100;inp.placeholder=`真正的${n}會怎麼做？（可以不寫）`;inp.setAttribute('aria-label','真正的〚貓代詞〛會怎麼做');
   const mk=(t,fn)=>{const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=t;b.onclick=fn;return b};
   const done=msg=>{save();memLabel();f.replaceWith(Object.assign(document.createElement('small'),{textContent:msg}))};
-  const extra=()=>inp.value.trim()?`，真正的牠會：${inp.value.trim()}`:'';
+  const extra=()=>inp.value.trim()?`，真正的〚貓代詞〛會：${inp.value.trim()}`:'';
   const btns=[];
-  if(pk)btns.push(mk('牠不會這樣玩',()=>{const P=playPrefs();P[pk]=Math.max(.1,Math.round(P[pk]*.5*100)/100);addFact('修正',`玩逗貓棒時，牠不太會「${PREF_NAME[pk]}」${extra()}`,'me');done(`記住了，${n}以後比較少這樣玩`)}));
+  if(pk)btns.push(mk('〚貓代詞〛不會這樣玩',()=>{const P=playPrefs();P[pk]=Math.max(.1,Math.round(P[pk]*.5*100)/100);addFact('修正',`玩逗貓棒時，〚貓代詞〛不太會「${PREF_NAME[pk]}」${extra()}`,'me');done(`記住了，${n}以後比較少這樣玩`)}));
   if(meta&&meta.zone&&ZONE_NAME[meta.zone]){const z=meta.zone,zn=ZONE_NAME[z],toL=()=>{S.likes=[...new Set([...(S.likes||[]),z])];S.dislikes=(S.dislikes||[]).filter(x=>x!==z)},toD=()=>{S.dislikes=[...new Set([...(S.dislikes||[]),z])];S.likes=(S.likes||[]).filter(x=>x!==z)};
-    if(key==='petHate'||key==='petTrap')btns.push(mk(`牠其實喜歡被摸${zn}`,()=>{toL();addFact('喜好',`牠喜歡被摸${zn}${extra()}`,'me');done(`記住了，${n}喜歡被摸${zn}`)}));
-    if(key==='petLike')btns.push(mk(`牠其實不喜歡被摸${zn}`,()=>{toD();addFact('討厭',`牠不喜歡被摸${zn}${extra()}`,'me');done(`記住了，${n}不喜歡被摸${zn}`)}));
-    if(key==='petOver'||key==='petHate')btns.push(mk('牠可以被摸很久',()=>{S.temper=Math.max(0,(S.temper??40)-15);S.affection=Math.min(100,(S.affection??60)+10);addFact('習性',`牠很能忍耐，可以被摸很久${extra()}`,'me');done(`記住了，${n}可以被摸久一點`)}));
-    if(key==='petLike')btns.push(mk('牠沒那麼愛被摸',()=>{S.affection=Math.max(0,(S.affection??60)-10);addFact('習性',`牠沒那麼愛被摸${extra()}`,'me');done('記住了')}))}
-  if(['hugFail','hugEscape'].includes(key))btns.push(mk('牠其實很愛被抱',()=>{S.hugPref='love';addFact('喜好',`牠很愛被抱${extra()}`,'me');done(`記住了，${n}很愛被抱`)}),mk('牠可以抱久一點',()=>{S.hugPref=S.hugPref==='hate'?'mood':S.hugPref;S.temper=Math.max(0,(S.temper??40)-10);addFact('習性',`牠可以讓人抱久一點${extra()}`,'me');done('記住了')}));
-  if(key==='hugOk')btns.push(mk('牠其實不愛被抱',()=>{S.hugPref='hate';addFact('討厭',`牠不喜歡被抱${extra()}`,'me');done(`記住了，${n}不愛被抱`)}));
+    if(key==='petHate'||key==='petTrap')btns.push(mk(`〚貓代詞〛其實喜歡被摸${zn}`,()=>{toL();addFact('喜好',`〚貓代詞〛喜歡被摸${zn}${extra()}`,'me');done(`記住了，${n}喜歡被摸${zn}`)}));
+    if(key==='petLike')btns.push(mk(`〚貓代詞〛其實不喜歡被摸${zn}`,()=>{toD();addFact('討厭',`〚貓代詞〛不喜歡被摸${zn}${extra()}`,'me');done(`記住了，${n}不喜歡被摸${zn}`)}));
+    if(key==='petOver'||key==='petHate')btns.push(mk('〚貓代詞〛可以被摸很久',()=>{S.temper=Math.max(0,(S.temper??40)-15);S.affection=Math.min(100,(S.affection??60)+10);addFact('習性',`〚貓代詞〛很能忍耐，可以被摸很久${extra()}`,'me');done(`記住了，${n}可以被摸久一點`)}));
+    if(key==='petLike')btns.push(mk('〚貓代詞〛沒那麼愛被摸',()=>{S.affection=Math.max(0,(S.affection??60)-10);addFact('習性',`〚貓代詞〛沒那麼愛被摸${extra()}`,'me');done('記住了')}))}
+  if(['hugFail','hugEscape'].includes(key))btns.push(mk('〚貓代詞〛其實很愛被抱',()=>{S.hugPref='love';addFact('喜好',`〚貓代詞〛很愛被抱${extra()}`,'me');done(`記住了，${n}很愛被抱`)}),mk('〚貓代詞〛可以抱久一點',()=>{S.hugPref=S.hugPref==='hate'?'mood':S.hugPref;S.temper=Math.max(0,(S.temper??40)-10);addFact('習性',`〚貓代詞〛可以讓人抱久一點${extra()}`,'me');done('記住了')}));
+  if(key==='hugOk')btns.push(mk('〚貓代詞〛其實不愛被抱',()=>{S.hugPref='hate';addFact('討厭',`〚貓代詞〛不喜歡被抱${extra()}`,'me');done(`記住了，${n}不愛被抱`)}));
   if(meta&&meta.flavor){const f=meta.flavor;
-    btns.push(mk(`牠超愛${f}`,()=>{setFlavorPref(f,3);addFact('喜好',`牠超愛${f}口味的罐頭${extra()}`,'me');done(`記住了，${n}最愛${f}`)}));
-    btns.push(mk(`牠不喜歡${f}`,()=>{setFlavorPref(f,-3);addFact('討厭',`牠不喜歡${f}口味的罐頭${extra()}`,'me');done(`記住了，${n}不愛${f}`)}))}
-  (TRAIT_FIX[key]||[]).forEach(([lab,fn,fact])=>btns.push(mk(lab,()=>{const T=traits();fn(T);Object.keys(T).forEach(k=>{T[k]=Math.max(-5,Math.min(5,T[k]))});addFact('修正',fact+extra(),'me');done(`記住了，${n}以後會更像牠`)})));
+    btns.push(mk(`〚貓代詞〛超愛${f}`,()=>{setFlavorPref(f,3);addFact('喜好',`〚貓代詞〛超愛${f}口味的罐頭${extra()}`,'me');done(`記住了，${n}最愛${f}`)}));
+    btns.push(mk(`〚貓代詞〛不喜歡${f}`,()=>{setFlavorPref(f,-3);addFact('討厭',`〚貓代詞〛不喜歡${f}口味的罐頭${extra()}`,'me');done(`記住了，${n}不愛${f}`)}))}
+  (TRAIT_FIX[key]||[]).forEach(([lab,fn,fact])=>btns.push(mk(lab,()=>{const T=traits();fn(T);Object.keys(T).forEach(k=>{T[k]=Math.max(-5,Math.min(5,T[k]))});addFact('修正',fact+extra(),'me');done(`記住了，${n}以後會更像〚貓代詞〛`)})));
   const m=/^(go|lazy)_(\w+)$/.exec(key||'');
   if(m&&m[2]!=='fountain'&&ROOM_ITEMS[m[2]]){const k=m[2],nm=ROOM_ITEMS[k][0];if(!S.itemLove||typeof S.itemLove!=='object')S.itemLove={};
-    if(m[1]==='go')btns.push(mk(`牠不太愛${nm}`,()=>{S.itemLove[k]=Math.max(.2,Math.round(itemLove(k)*.6*100)/100);addFact('喜好',`牠不太愛${nm}${extra()}`,'me');done(`記住了，${n}以後比較少去${nm}`)}));
-    else btns.push(mk(`牠很愛${nm}`,()=>{S.itemLove[k]=Math.min(3,Math.round(itemLove(k)*1.6*100)/100);addFact('喜好',`牠很喜歡${nm}，叫牠就會過去${extra()}`,'me');done(`記住了，${n}以後會更常去${nm}`)}))}
-  if(PLAY_KEYS.includes(key))btns.push(mk(`牠${TOD_NAME[tk]}不想玩`,()=>{const P=playPrefs();P[tk]=Math.max(.15,Math.round((P[tk]??1)*.6*100)/100);addFact('修正',`牠${TOD_NAME[tk]}通常不太想玩逗貓棒${extra()}`,'me');done(`記住了，${n}${TOD_NAME[tk]}會比較懶得玩`)}));
-  btns.push(mk('只記下我寫的',()=>{if(!inp.value.trim()){inp.focus();inp.placeholder='先寫下真正的牠會怎麼做';return}addFact('修正',`（${text.replace(n,'牠')}）真正的牠會：${inp.value.trim()}`,'me');done('記住了')}));
+    if(m[1]==='go')btns.push(mk(`〚貓代詞〛不太愛${nm}`,()=>{S.itemLove[k]=Math.max(.2,Math.round(itemLove(k)*.6*100)/100);addFact('喜好',`〚貓代詞〛不太愛${nm}${extra()}`,'me');done(`記住了，${n}以後比較少去${nm}`)}));
+    else btns.push(mk(`〚貓代詞〛很愛${nm}`,()=>{S.itemLove[k]=Math.min(3,Math.round(itemLove(k)*1.6*100)/100);addFact('喜好',`〚貓代詞〛很喜歡${nm}，叫〚貓代詞〛就會過去${extra()}`,'me');done(`記住了，${n}以後會更常去${nm}`)}))}
+  if(PLAY_KEYS.includes(key))btns.push(mk(`〚貓代詞〛${TOD_NAME[tk]}不想玩`,()=>{const P=playPrefs();P[tk]=Math.max(.15,Math.round((P[tk]??1)*.6*100)/100);addFact('修正',`〚貓代詞〛${TOD_NAME[tk]}通常不太想玩逗貓棒${extra()}`,'me');done(`記住了，${n}${TOD_NAME[tk]}會比較懶得玩`)}));
+  btns.push(mk('只記下我寫的',()=>{if(!inp.value.trim()){inp.focus();inp.placeholder='先寫下真正的〚貓代詞〛會怎麼做';return}addFact('修正',`（${text.replace(n,'〚貓代詞〛')}）真正的〚貓代詞〛會：${inp.value.trim()}`,'me');done('記住了')}));
   f.append(inp,...btns);li.appendChild(f)}
 /* 抓到 */
-function caught(){const n=S.name||'牠',now=performance.now();if(now-PL.caughtAt<1500)return;PL.caughtAt=now;PL.caught++;
+function caught(){const n=S.name||'〚貓代詞〛',now=performance.now();if(now-PL.caughtAt<1500)return;PL.caughtAt=now;PL.caught++;
   H.mood=Math.min(1,H.mood+.08);heart();setFace('happy',1.4);say(pick(['抓到了！','喵！','嘿！']),1200);
   H.state='grab';H.timer=1.2+Math.random()*.6;H.leapT=0;PL.lunge=0;PL.grabbed=true;setHView('front');logAct('caught','抓到逗貓棒，抱著踢踢')}
 function release(){PL.grabbed=false;FT.vx=(Math.random()-.5)*500;FT.vy=-650}
@@ -2199,7 +2237,7 @@ function nearestHide(cpx,w){const R=roomCfg(),rw=room.clientWidth;let best=null;
 function pounce(dx,adx,w,rw){const d=Math.min(adx,w*.85)/Math.max(1,rw-w);PL.lunge=.45;PL.lungeV=Math.sign(dx)*d/.45;H.hop=.55}
 function startLeap(dx,w,rw,feetY){H.state='leap';setHView('front');H.leapT=.7;H.leapH=Math.max(.3,Math.min(1.3,(feetY-FT.y)/w-.8));H.leapV=dx/Math.max(1,rw-w)/.7*.8;logAct('leap','跳起來抓半空中的逗貓棒')}
 function playTick(dt){
-  const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,cpx=H.x*(rw-w)+w/2,feetY=rh*.89,n=S.name||'牠';
+  const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,cpx=H.x*(rw-w)+w/2,feetY=rh*.89,n=S.name||'〚貓代詞〛';
   const P=playPrefs(),en=P01('energy'),interest=(.3+.7*en)*P.interest*(P[todKey()]??1)*(.35+.65*needs().energy);
   const dx=FT.x-cpx,adx=Math.abs(dx),low=FT.y>feetY-w*.5,high=FT.y<feetY-w*.95,vis=!FT.hidden,moving=performance.now()-PL.moveAt<1500;
   const face=()=>{H.facing=Math.sign(dx)||H.facing},toward=(tx,sp)=>{sp/=ZN;H.target=tx;H.facing=Math.sign(tx-H.x)||H.facing;if(Math.abs(tx-H.x)<=sp){H.x=tx;return true}H.x+=Math.sign(tx-H.x)*sp;return false};
@@ -2528,7 +2566,7 @@ function photoQueueUI(){
   $('photoReset').hidden=ready.length===0;
   $('photoQueueStatus').textContent=ready.length?'已選：'+ready.map(v=>PHOTO_LABEL[v]).join('、')+'。'+(pendingCatPhotos.front?'可以開始畫貓；還想補照片可繼續選。':'請先補正面照。'):'尚未選擇照片。正面照必填，其他角度可以慢慢補。';
   document.querySelectorAll('.vphoto').forEach(b=>{const picked=!!pendingCatPhotos[b.dataset.v];b.querySelector('i').textContent=picked?' ✓':(S[b.dataset.v+'Photo']?'（已畫）':'')});
-  const b=$('photoBtn');b.querySelector('small').textContent=pendingCatPhotos.front?'✓ 已選正面照（點此可換照片）':'先選一張牠的正面照（必要）';
+  const b=$('photoBtn');b.querySelector('small').textContent=pendingCatPhotos.front?'✓ 已選正面照（點此可換照片）':'先選一張〚貓代詞〛的正面照（必要）';
 }
 function queueCatPhoto(file,v){if(!file)return;pendingCatPhotos[v]=file;photoQueueUI();$('photoMsg').textContent='照片已選好，按「開始畫貓」才會送給 Gemini 分析。';}
 $('photoBtn').onclick=()=>{$('photoInput').click()};
@@ -2573,7 +2611,7 @@ $('todChip').onclick=()=>{const order=['dawn','day','dusk','night'],cur=todPrevi
   todPreview=nx===todNow()&&todPreview?null:nx;clearTimeout(todPrevT);if(todPreview)todPrevT=setTimeout(()=>{todPreview=null;applyTod()},8000);applyTod()};
 applyTod();setInterval(applyTod,30000);
 
-/* ===== 牠的日記：把一天發生的事記下來，隔天請 Gemini 用貓的口吻寫成日記 ===== */
+/* ===== 〚貓代詞〛的日記：把一天發生的事記下來，隔天請 Gemini 用貓的口吻寫成日記 ===== */
 const DIARY_KEY='neko-diary';
 function localDay(d=new Date()){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function diaryLocal(){try{return JSON.parse(ls.get(DIARY_KEY)||'{}')||{}}catch(e){return{}}}
@@ -2585,7 +2623,7 @@ function rollDay(){const E=dayEv(),d=localDay();if(E.d===d)return;
   if(E.ev.length){S.diaryTodo=(Array.isArray(S.diaryTodo)?S.diaryTodo:[]).concat({d:E.d,ev:E.ev}).slice(-7)}
   S.dayEv={d,ev:[]};save();setTimeout(writeDiaryTodo,3000)}
 const DIARY_SCHEMA={type:'OBJECT',properties:{text:{type:'STRING'}},required:['text']};
-function diaryTemplate(ev){const n=S.name||'牠',xs=ev.map(e=>e.replace(n,'')).slice(0,4);return`今天${xs.join('，')}。`}
+function diaryTemplate(ev){const n=S.name||'〚貓代詞〛',xs=ev.map(e=>e.replace(n,'')).slice(0,4);return`今天${xs.join('，')}。`}
 async function makeDiary(d,ev){const n=S.name||'貓咪';
   if(!aiKey())return diaryTemplate(ev);
   const sys=`你是一隻叫「${n}」的貓，正在寫自己的日記。根據今天真的發生的事，用第一人稱「我」、台灣繁體中文寫 2 到 4 句，口吻要符合我的個性，可以可愛、帶一點貓的邏輯和小心思。稱呼主人為「主人」。
@@ -2605,14 +2643,14 @@ async function loadDiaryCloud(){if(!user||!db)return;const y=new Date().getFullY
   for(const yy of[y,y-1]){try{const s=await getDoc(doc(db,'users',user.uid,'cats','diary-'+yy));if(s.exists()){const e=(s.data()||{}).entries||{},D=diaryLocal();Object.assign(D,e);ls.set(DIARY_KEY,JSON.stringify(D))}}catch(e){}}}
 const WD='日一二三四五六';
 function drawDiary(msg){const D=diaryLocal(),keys=Object.keys(D).sort().reverse(),box=$('diaryList');box.innerHTML='';
-  if(!keys.length){const p=document.createElement('p');p.className='gsub';p.textContent=`還沒有日記。每天跟${S.name||'牠'}互動，隔天打開就會看到牠寫的日記，也可以按下面的按鈕先寫今天的。`;box.appendChild(p)}
+  if(!keys.length){const p=document.createElement('p');p.className='gsub';p.textContent=`還沒有日記。每天跟${S.name||'〚貓代詞〛'}互動，隔天打開就會看到〚貓代詞〛寫的日記，也可以按下面的按鈕先寫今天的。`;box.appendChild(p)}
   keys.forEach(k=>{const[y,m,d]=k.split('-').map(Number),dt=new Date(y,m-1,d),el=document.createElement('div');el.className='dentry';
     const h=document.createElement('b');h.textContent=`${m} 月 ${d} 日（${WD[dt.getDay()]}）${k===localDay()?'・今天':''}`;const p=document.createElement('p');p.textContent=D[k];el.append(h,p);box.appendChild(el)});
   $('diaryMsg').textContent=msg||''}
-$('openDiary').onclick=async()=>{$('diaryPanel').hidden=false;$('diaryTitle').textContent=`${S.name||'牠'}的日記`;drawDiary();await loadDiaryCloud();drawDiary();writeDiaryTodo()};
+$('openDiary').onclick=async()=>{$('diaryPanel').hidden=false;$('diaryTitle').textContent=`${S.name||'〚貓代詞〛'}的日記`;drawDiary();await loadDiaryCloud();drawDiary();writeDiaryTodo()};
 $('diaryClose').onclick=()=>{$('diaryPanel').hidden=true};
-$('diaryToday').onclick=async()=>{const E=dayEv();if(!E.ev.length){drawDiary(`今天還沒發生什麼事，先跟${S.name||'牠'}玩一下吧`);return}
-  const b=$('diaryToday');b.disabled=true;drawDiary(aiKey()?`${S.name||'牠'}正在寫日記…`:'');
+$('diaryToday').onclick=async()=>{const E=dayEv();if(!E.ev.length){drawDiary(`今天還沒發生什麼事，先跟${S.name||'〚貓代詞〛'}玩一下吧`);return}
+  const b=$('diaryToday');b.disabled=true;drawDiary(aiKey()?`${S.name||'〚貓代詞〛'}正在寫日記…`:'');
   try{diaryPut(E.d,await makeDiary(E.d,E.ev));drawDiary('寫好了，今天結束時會再用一整天的事重寫一次')}catch(e){drawDiary('寫日記失敗：'+aiErrText(e))}finally{b.disabled=false}};
 
 /* ===== 加到手機主畫面 ===== */
@@ -2691,7 +2729,7 @@ drawViewPhotoBtns();photoQueueUI();
 
 /* ===== 申請 Gemini 金鑰的引導 ===== */
 const KG=[
-  {t:'讓牠可以跟你說話',b:'<p>要讓貓用自己的語氣說話、或從照片自動畫貓，需要一把 Google 的「Gemini API 金鑰」。</p><ul><li>免費，不用綁信用卡</li><li>大約 3 分鐘就能申請好</li><li>金鑰只會存在你這台裝置，不會給別人；換手機或換電腦要再貼一次</li></ul><p class="gsub">免費版的對話內容，Google 可能會拿來改善他們的服務。</p>'},
+  {t:'讓〚貓代詞〛可以跟你說話',b:'<p>要讓貓用自己的語氣說話、或從照片自動畫貓，需要一把 Google 的「Gemini API 金鑰」。</p><ul><li>免費，不用綁信用卡</li><li>大約 3 分鐘就能申請好</li><li>金鑰只會存在你這台裝置，不會給別人；換手機或換電腦要再貼一次</li></ul><p class="gsub">免費版的對話內容，Google 可能會拿來改善他們的服務。</p>'},
   {t:'1. 打開 Google AI Studio',b:'<p>按下面的按鈕，會開一個新分頁。用你的 Google 帳號登入，第一次進去要勾選同意條款。</p><p><a class="btn primary kglink" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">打開 Google AI Studio</a></p><p class="gsub">弄好之後回到這個分頁，按「下一步」。</p>'},
   {t:'2. 建立金鑰',b:'<p>在「API Keys」頁面，按 <b>Create API key</b>（建立 API 金鑰）。</p><p>如果它要你選專案，選第一個或讓它幫你建一個新的都可以。</p><p class="gsub">看到「Set up billing」（設定付費）不要按，維持免費方案就好。</p>'},
   {t:'3. 複製金鑰',b:'<p>畫面會出現一串很長的文字，通常是 <b>AQ.</b> 或 <b>AIza</b> 開頭，按旁邊的複製按鈕。</p><p class="gsub">這串就像密碼，不要傳給別人或貼到聊天裡。</p>'},
@@ -2713,7 +2751,7 @@ $('kgTest').onclick=async()=>{const k=$('kgKey').value.trim(),m=$('kgMsg');m.hid
   if(/^成功/.test(r)){m.textContent=r+' 已經開好說話模式了！';$('kgNext').hidden=true;$('kgClose').textContent='完成';aiLabel()}};
 $('kgOpen').onclick=()=>{$('aiPanel').hidden=true;openKeyGuide()};
 
-/* ===== 每日小問題：看牠做了什麼，偶爾問你真正的牠是不是也這樣 ===== */
+/* ===== 每日小問題：看〚貓代詞〛做了什麼，偶爾問你真正的〚貓代詞〛是不是也這樣 ===== */
 const ASK_EFFECTS=['affection','temper','energy','appetite','canLove','picky','drink','demand','love_tree','love_scratch','love_box','play_chase','play_stalk','play_pounce','play_bat','play_leap','play_hide'];
 function askCfg(){const d={on:true,perDay:5};const c=S.askCfg&&typeof S.askCfg==='object'?S.askCfg:{};S.askCfg={...d,...c};return S.askCfg}
 function askDay(){const t=today();if(!S.askDay||S.askDay.d!==t)S.askDay={d:t,n:0,recent:(S.askDay&&S.askDay.recent)||[]};return S.askDay}
@@ -2724,34 +2762,34 @@ function applyEffect(k,d){d=Math.max(-3,Math.min(3,Math.round(+d||0)));if(!d)ret
   else if(k.startsWith('love_')){const it=k.slice(5);itemLove(it);S.itemLove[it]=Math.max(.2,Math.min(3,Math.round(itemLove(it)*(1+d*.25)*100)/100))}
   else if(k.startsWith('play_')){const P=playPrefs(),pk=k.slice(5);if(pk in P)P[pk]=Math.max(.1,Math.min(3,Math.round(P[pk]*(1+d*.25)*100)/100))}}
 const ASK_TPL=[
-  [/^(go|lazy)_scratch$/,'真正的牠平常也愛抓貓抓板嗎？',[['很愛抓','牠很愛抓貓抓板',{love_scratch:2}],['偶爾抓','牠偶爾會抓貓抓板',{}],['都抓沙發','牠不愛貓抓板，都去抓沙發',{love_scratch:-2}]]],
-  [/^(go|lazy)_tree$/,'真正的牠平常喜歡爬高嗎？',[['超愛爬高','牠很喜歡爬到高的地方',{love_tree:2,energy:1}],['普通','牠偶爾會爬高',{}],['不太爬','牠不太爬高',{love_tree:-2}]]],
-  [/^(go|lazy)_box$/,'真正的牠平常喜歡躲紙箱嗎？',[['看到箱子就鑽','牠看到紙箱就會鑽進去',{love_box:2}],['偶爾','牠偶爾會躲紙箱',{}],['不太理紙箱','牠對紙箱沒興趣',{love_box:-2}]]],
-  [/^(canRun|foodSleep)$/,'真正的牠平常聽到開罐頭的聲音會怎樣？',[['馬上衝過來','牠一聽到開罐頭的聲音就會衝過來',{canLove:2}],['慢慢走過來','牠聽到開罐頭會慢慢走過來',{}],['沒什麼反應','牠對罐頭沒什麼特別反應',{canLove:-2}]]],
-  [/^(foodRun|foodLater|foodIgnore|selfEat)$/,'真正的牠平常放飯時會馬上吃嗎？',[['馬上吃','放飯時牠會馬上吃',{appetite:2}],['晚點才吃','牠常常放了飯晚點才去吃',{appetite:-1}],['很挑食','牠很挑食，不喜歡的就不吃',{picky:2}]]],
-  [/^(eatAll|leftover)$/,'真正的牠平常吃飯會吃光嗎？',[['都吃光光','牠吃飯都會吃光',{picky:-2}],['常常剩一點','牠吃飯常常剩一點',{picky:2}],['吃很少','牠食量很小',{appetite:-2}]]],
-  [/^(drink|go_fountain|lazy_fountain)$/,'真正的牠平常愛喝水嗎？',[['很愛喝','牠很愛喝水',{drink:2}],['普通',null,{}],['要哄才喝','牠很少喝水，要哄才會喝',{drink:-2}]]],
-  [/^demand$/,'真正的牠平常肚子餓會怎麼討飯？',[['一直喵喵叫','牠肚子餓時會一直喵喵叫討飯',{demand:2}],['坐在碗旁邊等','牠肚子餓時會安靜坐在碗旁邊等',{demand:-1}],['不太討飯','牠不太會討飯',{demand:-3}]]],
-  [/^(chase|dash)$/,'真正的牠平常玩逗貓棒會一直追嗎？',[['追到停不下來','牠玩逗貓棒會一直追',{play_chase:2,energy:1}],['追一下就累','牠玩逗貓棒追一下就累了',{play_chase:-1,energy:-1}],['只用眼睛看','牠玩逗貓棒通常只用眼睛看',{play_chase:-2,energy:-2}]]],
-  [/^(stalk|pounce)$/,'真正的牠平常會壓低身體扭屁股再撲嗎？',[['常常這樣','牠玩的時候常常壓低身體扭屁股再撲',{play_pounce:2,play_stalk:2}],['偶爾',null,{}],['不會','牠不太會扭屁股撲',{play_pounce:-2}]]],
-  [/^(bat|leap)$/,'真正的牠平常會跳起來抓東西嗎？',[['跳很高','牠會跳很高抓東西',{play_leap:2}],['只會站起來撥','牠比較會站起來用爪子撥，不太跳',{play_leap:-1,play_bat:2}],['都不太動','牠玩的時候不太動',{energy:-2}]]],
-  [/^(hide|search)$/,'真正的牠平常會躲起來埋伏嗎？',[['很愛埋伏','牠很愛躲起來埋伏再衝出來',{play_hide:2}],['偶爾',null,{}],['不會','牠不太會躲起來埋伏',{play_hide:-2}]]],
+  [/^(go|lazy)_scratch$/,'真正的〚貓代詞〛平常也愛抓貓抓板嗎？',[['很愛抓','〚貓代詞〛很愛抓貓抓板',{love_scratch:2}],['偶爾抓','〚貓代詞〛偶爾會抓貓抓板',{}],['都抓沙發','〚貓代詞〛不愛貓抓板，都去抓沙發',{love_scratch:-2}]]],
+  [/^(go|lazy)_tree$/,'真正的〚貓代詞〛平常喜歡爬高嗎？',[['超愛爬高','〚貓代詞〛很喜歡爬到高的地方',{love_tree:2,energy:1}],['普通','〚貓代詞〛偶爾會爬高',{}],['不太爬','〚貓代詞〛不太爬高',{love_tree:-2}]]],
+  [/^(go|lazy)_box$/,'真正的〚貓代詞〛平常喜歡躲紙箱嗎？',[['看到箱子就鑽','〚貓代詞〛看到紙箱就會鑽進去',{love_box:2}],['偶爾','〚貓代詞〛偶爾會躲紙箱',{}],['不太理紙箱','〚貓代詞〛對紙箱沒興趣',{love_box:-2}]]],
+  [/^(canRun|foodSleep)$/,'真正的〚貓代詞〛平常聽到開罐頭的聲音會怎樣？',[['馬上衝過來','〚貓代詞〛一聽到開罐頭的聲音就會衝過來',{canLove:2}],['慢慢走過來','〚貓代詞〛聽到開罐頭會慢慢走過來',{}],['沒什麼反應','〚貓代詞〛對罐頭沒什麼特別反應',{canLove:-2}]]],
+  [/^(foodRun|foodLater|foodIgnore|selfEat)$/,'真正的〚貓代詞〛平常放飯時會馬上吃嗎？',[['馬上吃','放飯時〚貓代詞〛會馬上吃',{appetite:2}],['晚點才吃','〚貓代詞〛常常放了飯晚點才去吃',{appetite:-1}],['很挑食','〚貓代詞〛很挑食，不喜歡的就不吃',{picky:2}]]],
+  [/^(eatAll|leftover)$/,'真正的〚貓代詞〛平常吃飯會吃光嗎？',[['都吃光光','〚貓代詞〛吃飯都會吃光',{picky:-2}],['常常剩一點','〚貓代詞〛吃飯常常剩一點',{picky:2}],['吃很少','〚貓代詞〛食量很小',{appetite:-2}]]],
+  [/^(drink|go_fountain|lazy_fountain)$/,'真正的〚貓代詞〛平常愛喝水嗎？',[['很愛喝','〚貓代詞〛很愛喝水',{drink:2}],['普通',null,{}],['要哄才喝','〚貓代詞〛很少喝水，要哄才會喝',{drink:-2}]]],
+  [/^demand$/,'真正的〚貓代詞〛平常肚子餓會怎麼討飯？',[['一直喵喵叫','〚貓代詞〛肚子餓時會一直喵喵叫討飯',{demand:2}],['坐在碗旁邊等','〚貓代詞〛肚子餓時會安靜坐在碗旁邊等',{demand:-1}],['不太討飯','〚貓代詞〛不太會討飯',{demand:-3}]]],
+  [/^(chase|dash)$/,'真正的〚貓代詞〛平常玩逗貓棒會一直追嗎？',[['追到停不下來','〚貓代詞〛玩逗貓棒會一直追',{play_chase:2,energy:1}],['追一下就累','〚貓代詞〛玩逗貓棒追一下就累了',{play_chase:-1,energy:-1}],['只用眼睛看','〚貓代詞〛玩逗貓棒通常只用眼睛看',{play_chase:-2,energy:-2}]]],
+  [/^(stalk|pounce)$/,'真正的〚貓代詞〛平常會壓低身體扭屁股再撲嗎？',[['常常這樣','〚貓代詞〛玩的時候常常壓低身體扭屁股再撲',{play_pounce:2,play_stalk:2}],['偶爾',null,{}],['不會','〚貓代詞〛不太會扭屁股撲',{play_pounce:-2}]]],
+  [/^(bat|leap)$/,'真正的〚貓代詞〛平常會跳起來抓東西嗎？',[['跳很高','〚貓代詞〛會跳很高抓東西',{play_leap:2}],['只會站起來撥','〚貓代詞〛比較會站起來用爪子撥，不太跳',{play_leap:-1,play_bat:2}],['都不太動','〚貓代詞〛玩的時候不太動',{energy:-2}]]],
+  [/^(hide|search)$/,'真正的〚貓代詞〛平常會躲起來埋伏嗎？',[['很愛埋伏','〚貓代詞〛很愛躲起來埋伏再衝出來',{play_hide:2}],['偶爾',null,{}],['不會','〚貓代詞〛不太會躲起來埋伏',{play_hide:-2}]]],
 ];
 function askDone(){if(!Array.isArray(S.askDone))S.askDone=[];return S.askDone}
 function askHist(){if(!Array.isArray(S.askHist))S.askHist=[];return S.askHist}
-function templateQ(key,text){const n=S.name||'牠';for(const[re,q,opts]of ASK_TPL)if(re.test(key)){if(askDone().includes('tpl:'+re.source))return null;return{tpl:'tpl:'+re.source,question:`${n}剛剛${text.replace(n,'')}。${q}`,options:opts.map(([label,fact,eff])=>({label,fact:fact||'',effects:Object.entries(eff).map(([key,delta])=>({key,delta}))}))}}
+function templateQ(key,text){const n=S.name||'〚貓代詞〛';for(const[re,q,opts]of ASK_TPL)if(re.test(key)){if(askDone().includes('tpl:'+re.source))return null;return{tpl:'tpl:'+re.source,question:`${n}剛剛${text.replace(n,'')}。${q}`,options:opts.map(([label,fact,eff])=>({label,fact:fact||'',effects:Object.entries(eff).map(([key,delta])=>({key,delta}))}))}}
   if(askDone().includes('gen:'+key))return null;
-  return{tpl:'gen:'+key,question:`${n}剛剛${text.replace(n,'')}。真正的牠也會這樣嗎？`,options:[{label:'會，很像牠',fact:`牠真的會：${text.replace(n,'')}`,effects:[]},{label:'不太會',fact:`牠不太會：${text.replace(n,'')}`,effects:[]}]}}
+  return{tpl:'gen:'+key,question:`${n}剛剛${text.replace(n,'')}。真正的〚貓代詞〛也會這樣嗎？`,options:[{label:'會，很像〚貓代詞〛',fact:`〚貓代詞〛真的會：${text.replace(n,'')}`,effects:[]},{label:'不太會',fact:`〚貓代詞〛不太會：${text.replace(n,'')}`,effects:[]}]}}
 const ASK_SCHEMA={type:'OBJECT',properties:{skip:{type:'BOOLEAN'},question:{type:'STRING'},options:{type:'ARRAY',items:{type:'OBJECT',properties:{label:{type:'STRING'},fact:{type:'STRING'},
   effects:{type:'ARRAY',items:{type:'OBJECT',properties:{key:{type:'STRING',enum:ASK_EFFECTS},delta:{type:'INTEGER'}},required:['key','delta']}}},required:['label','fact']}}},required:['question','options']};
 async function aiQuestion(key,text){const n=S.name||'貓咪',D=askDay();
   const sys=`你在幫一位主人用小問題，慢慢讓網頁裡的虛擬${n}更像他真正的貓「${n}」。網頁裡的虛擬${n}剛剛做了一個動作，請根據這個動作，用台灣繁體中文問主人一個溫柔、具體、好回答的問題，了解真正的${n}會不會這樣、或是會怎麼做。
-- 問題一句話，開頭先說${n}剛剛做了什麼，例如「${n}剛剛抓了貓抓板，真正的牠平常最愛在哪裡磨爪？」
+- 問題一句話，開頭先說${n}剛剛做了什麼，例如「${n}剛剛抓了貓抓板，真正的〚貓代詞〛平常最愛在哪裡磨爪？」
 - 給 2 到 4 個簡短選項（每個 12 字以內），涵蓋不同可能
-- 每個選項附上一句要記住的事實（用「牠」稱呼貓），以及對行為的微調 effects（-3 到 3，沒有就空陣列）。可用的 key：affection 親人、temper 脾氣、energy 活潑、appetite 貪吃、canLove 愛罐頭、picky 挑食、drink 愛喝水、demand 會討飯、groom 愛被梳毛、nip 聞貓草會不會嗨、zoom 上完大號會暴衝、gift 會叼東西送主人、call 叫名字會不會過來、naughty 調皮搗蛋（推東西、跳流理台、半夜跑酷）、love_tree/love_scratch/love_box 愛不愛貓跳台／貓抓板／紙箱、play_chase/play_stalk/play_pounce/play_bat/play_leap/play_hide 玩逗貓棒時追、偷偷靠近、撲、站起來撥、跳起來抓、躲起來埋伏
+- 每個選項附上一句要記住的事實（用「〚貓代詞〛」稱呼貓），以及對行為的微調 effects（-3 到 3，沒有就空陣列）。可用的 key：affection 親人、temper 脾氣、energy 活潑、appetite 貪吃、canLove 愛罐頭、picky 挑食、drink 愛喝水、demand 會討飯、groom 愛被梳毛、nip 聞貓草會不會嗨、zoom 上完大號會暴衝、gift 會叼東西送主人、call 叫名字會不會過來、naughty 調皮搗蛋（推東西、跳流理台、半夜跑酷）、love_tree/love_scratch/love_box 愛不愛貓跳台／貓抓板／紙箱、play_chase/play_stalk/play_pounce/play_bat/play_leap/play_hide 玩逗貓棒時追、偷偷靠近、撲、站起來撥、跳起來抓、躲起來埋伏
 - 不要假設貓已經不在了，不要用「以前」「生前」這類字，用「平常」「真正的${n}」來問
 - 不要問生病、死亡這類會讓主人難過的事
-- 先仔細看下面的設定、基本資料和「牠記得的事」，已經知道答案的事不要再問，換句話問也不行
+- 先仔細看下面的設定、基本資料和「〚貓代詞〛記得的事」，已經知道答案的事不要再問，換句話問也不行
 - 如果這個動作最基本的問題已經知道了，就往更深一層問還不知道的：什麼時候、多常、在什麼情況下、有什麼小怪癖或小習慣、會怎麼跟主人互動
 - 真的想不到有意義的新問題，就把 skip 設成 true（question 和 options 可以留空）
 - 這些是以前問過的問題，不要再問一樣或很像的：${[...new Set([...askHist().slice(-40),...(D.recent||[]).slice(-8)])].join('／')||'（沒有）'}
@@ -2773,12 +2811,12 @@ function showAsk(q){const D=askDay();D.n++;D.recent=[...(D.recent||[]),q.questio
   q.options.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=o.label;b.setAttribute('aria-pressed','false');b._opt=o;b.onclick=()=>b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');box.appendChild(b)});
   $('askText').value='';$('askHint').textContent='可以複選，選好按「記住」';$('askCard').hidden=false}
 function closeAsk(){$('askCard').hidden=true;askCur=null}
-function answerAsk(opts,free){const q=askCur;if(!q)return;const n=S.name||'牠';
+function answerAsk(opts,free){const q=askCur;if(!q)return;const n=S.name||'〚貓代詞〛';
   {const H2=askHist();H2.push(String(q.question).slice(0,80));if(H2.length>80)H2.splice(0,H2.length-80);if(q.tpl&&!askDone().includes(q.tpl))askDone().push(q.tpl)}
   opts.forEach(o=>{if(o.fact)addFact('習性',o.fact,'me');(o.effects||[]).forEach(e=>{if(ASK_EFFECTS.includes(e.key))applyEffect(e.key,e.delta)})});
   if(free)addFact('習性',`${q.question.replace(/^.*?。/,'')}主人說：${free}`,'me');
   talkLog.push(['ev',`你回答：${[...opts.map(o=>o.label),free].filter(Boolean).join('、')}`]);while(talkLog.length>8)talkLog.shift();drawLog();
-  save();memLabel();render();closeAsk();note(`記住了，${n}會越來越像牠`,3);setTimeout(()=>compactMemory(),1500)}
+  save();memLabel();render();closeAsk();note(`記住了，${n}會越來越像〚貓代詞〛`,3);setTimeout(()=>compactMemory(),1500)}
 $('askSend').onclick=()=>{const v=$('askText').value.trim(),opts=[...$('askOpts').children].filter(b=>b.getAttribute('aria-pressed')==='true').map(b=>b._opt);
   if(!v&&!opts.length){$('askHint').textContent='先選一個或寫一句喔';return}answerAsk(opts,v)};
 $('askText').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('askSend').click()}});
@@ -2822,7 +2860,7 @@ function setTool(t){if(t===tool)t=null;if(t&&wandOn)setWand(false);if(t&&roomEdi
   document.querySelectorAll('.tbtn[data-t]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===tool)));
   const c=$('toolCur');c.hidden=!t;c.innerHTML=t?CUR_SVG[t]:'';
   if(t){const r=$('roomScroll').getBoundingClientRect();moveCur(r.left+r.width*.62,r.top+r.height*.4)}
-  if(t==='brush')note('拿起梳子，在牠身上來回刷',3);
+  if(t==='brush')note('拿起梳子，在〚貓代詞〛身上來回刷',3);
   if(t==='treat')treatStart();
   if(!t&&['beg','beg2'].includes(H.state))sitDown('front')}
 function moveCur(cx,cy){const r=room.getBoundingClientRect(),c=$('toolCur'),w=hc.offsetWidth*.3;lastCur={x:cx,y:cy};
@@ -2832,10 +2870,10 @@ room.addEventListener('pointerdown',e=>{if(tool)moveCur(e.clientX,e.clientY)});
 document.querySelectorAll('.tbtn[data-t]').forEach(b=>b.onclick=()=>setTool(b.dataset.t));
 $('nipBtn').onclick=dropNip;
 function funHcDown(e){
-  if(H.state==='pushprep'&&!tool){H.state='sit';H.timer=4;say('（假裝沒事）',1200);note(`${S.name||'牠'}被你發現了，假裝沒事`,2.5);logAct('pushStop','準備推杯子被你發現，假裝沒事',true);return true}
+  if(H.state==='pushprep'&&!tool){H.state='sit';H.timer=4;say('（假裝沒事）',1200);note(`${S.name||'〚貓代詞〛'}被你發現了，假裝沒事`,2.5);logAct('pushStop','準備推杯子被你發現，假裝沒事',true);return true}
   if(H.onPillow&&H.state==='sleep'&&!tool&&Math.random()<.6){setFace('annoyed',1.5);say('（瞪）…這是我的位置',1500);logAct('pillowGlare','被你吵醒，瞪你一眼，繼續霸佔枕頭',true);return true}
   if(H.onCounter&&H.y>.05&&!tool){H.onCounter=false;setFace('annoyed',1.5);say('喵…（不甘願）',1200);logAct('counterDown','被你趕下流理台，有點不甘願',true);jumpDown(()=>sitDown('front'));return true}
-  if(H.state==='litter'){say('（瞪你）',900);note(`${S.name||'牠'}在上廁所，等一下再摸`,2);return true}
+  if(H.state==='litter'){say('（瞪你）',900);note(`${S.name||'〚貓代詞〛'}在上廁所，等一下再摸`,2);return true}
   if(!tool)return false;try{hc.setPointerCapture(e.pointerId)}catch(_){}moveCur(e.clientX,e.clientY);lastInteract=Date.now();idleFired=false;
   if(tool==='brush'){brushSess={n:0,good:0,bad:0};brushAcc=0}
   if(tool==='treat')giveTreat();
@@ -2849,7 +2887,7 @@ function funHcUp(){if(!tool)return false;if(tool==='brush'&&brushSess)finishBrus
 function furPuff(x,y){const r=room.getBoundingClientRect(),cols=[S.base];
   for(let i=0;i<3;i++){const f=document.createElement('span');f.className='fur';f.style.left=(x-r.left+(Math.random()-.5)*20)+'px';f.style.top=(y-r.top+(Math.random()-.5)*14)+'px';
     f.style.background=cols[0];f.style.setProperty('--dx',((Math.random()-.5)*40)+'px');room.appendChild(f);setTimeout(()=>f.remove(),1400)}}
-function brushStroke(e){const T=traits(),n=S.name||'牠',s=brushSess;s.n++;furPuff(e.clientX,e.clientY);
+function brushStroke(e){const T=traits(),n=S.name||'〚貓代詞〛',s=brushSess;s.n++;furPuff(e.clientX,e.clientY);
   if(H.state==='sleep'){if(T.groom>=0&&Math.random()<.7){say('呼嚕…',1000);note(`${n}睡夢中被梳得很舒服`);s.good++;return}wake();setFace('annoyed',1.2);say('喵？',900);return}
   if(['walk','scratch','eat','drink','beg'].includes(H.state))sitDown('front');if(H.view!=='front'&&Math.random()<.5)setHView('front');
   H.timer=Math.max(H.timer,3);
@@ -2863,7 +2901,7 @@ function finishBrush(){const s=brushSess;brushSess=null;if(!s||s.n<3)return;
   else logAct('groomHate','被梳毛，不太開心，想躲開（心情下降）',true);save()}
 
 /* 零食 */
-function treatStart(){const T=traits(),n=S.name||'牠',want=.35+T.appetite*.08+T.demand*.05+(1-needs().full)*.4;note('你拿出零食',2);
+function treatStart(){const T=traits(),n=S.name||'〚貓代詞〛',want=.35+T.appetite*.08+T.demand*.05+(1-needs().full)*.4;note('你拿出零食',2);
   if(H.hug||wandOn)return;
   if(H.state==='sleep'){if(Math.random()<want*.8){wake();say('（鼻子動動）',1000)}else{logAct('treatSleep','睡得很熟，沒發現你拿出零食',true);return}}
   if(['litter','roll','eat'].includes(H.state))return;
@@ -2873,7 +2911,7 @@ function treatStart(){const T=traits(),n=S.name||'牠',want=.35+T.appetite*.08+T
 function treatHover(e){if(!['beg','sit'].includes(H.state)||H.y>.05||H.inBox||H.hug)return;const now=performance.now();if(now-beg2At<2600)return;
   const r=hc.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY>r.top+r.height*.25||e.clientY<r.top-r.height*.7)return;
   beg2At=now;if(Math.random()<.45+traits().demand*.08){H.state='beg2';H.timer=1.6;setHView('front');say('喵！',800);logAct('treatStand','站起來伸爪子討零食')}}
-function giveTreat(){const n=S.name||'牠',now=Date.now();if(now-treatAt>20*60*1000)treatN=0;treatAt=now;
+function giveTreat(){const n=S.name||'〚貓代詞〛',now=Date.now();if(now-treatAt>20*60*1000)treatN=0;treatAt=now;
   if(H.state==='sleep')wake();if(H.y>.05||H.inBox||H.hug)return;
   if(treatN>=5){say('（聞聞，不吃了）',1300);note('零食吃夠多了，晚點再給吧',3);logAct('treatFull','吃了好多零食，不想再吃了',true);return}
   treatN++;H.state='treat';H.timer=2.2;setHView('front');setFace('happy',2.4);H.lickT=1.8;say(pick(['吧唧吧唧','好吃！','喵嗚～']),1300);heart();
@@ -2886,13 +2924,13 @@ function placeNip(rw,rh,w){const el=$('nipToy');if(!S.nipOn){if(!el.hidden&&!el.
   else{el.style.left=((S.nipX??.5)*(rw-w)+w/2-s/2)+'px';el.style.bottom=(rh*.11-w*.02)+'px';el.style.transform=''}
   el.style.zIndex=String(CATZ+1)}
 $('nipToy').addEventListener('click',e=>{e.stopPropagation();if(roomEdit||H.state==='roll')return;nipGone();note('你把貓草包收起來了',2)});
-function dropNip(){if(roomEdit)return;if(wandOn)setWand(false);if(tool)setTool(null);const n=S.name||'牠',el=$('nipToy');
+function dropNip(){if(roomEdit)return;if(wandOn)setWand(false);if(tool)setTool(null);const n=S.name||'〚貓代詞〛',el=$('nipToy');
   if(S.nipOn){note('貓草包已經在地上了，點一下可以收起來',2.5);return}
   if(H.hug||H.state==='litter'){note(`${n}現在沒空，等一下再給`,2);return}
   S.nipX=clamp01(viewX()+(Math.random()<.5?-.03:.03));S.nipOn=true;el.hidden=false;el.classList.remove('gone');save();note(`你丟了一包貓草給${n}`,3);lastInteract=Date.now();idleFired=false;
   setTimeout(nipReact,700)}
 function nipGone(){S.nipOn=false;save();const el=$('nipToy');el.classList.add('gone');setTimeout(()=>{el.hidden=true;el.classList.remove('gone')},600)}
-function nipReact(){const T=traits(),n=S.name||'牠';if(H.hug){setTimeout(nipReact,1500);return}if(H.state==='sleep')wake();
+function nipReact(){const T=traits(),n=S.name||'〚貓代詞〛';if(H.hug){setTimeout(nipReact,1500);return}if(H.state==='sleep')wake();
   const tgt=S.nipX;startWalk(clamp01(tgt+(H.x<tgt?-.012:.012)),false,()=>{setHView('front');H.state='sit';H.timer=99;say('嗅嗅…',1200);
     setTimeout(()=>{const cool=Date.now()-(S.nipLast||0)<10*60*1000,p=T.nip<=-3?.05:Math.min(.97,.8+T.nip*.04);
       if(!cool&&Math.random()<p){S.nipLast=Date.now();H.state='roll';H.timer=9+Math.random()*5;setFace('happy',14);say('喵嗚～～',1500);note(`${n}聞了貓草，嗨起來了！`,4);logAct('nipHigh','聞了貓草，在地上打滾變得超嗨',true)}
@@ -2910,7 +2948,7 @@ function bringGift(){const g=pick(GIFTS),side=zoneEdge(true);S.giftAt=Date.now()
 function dropGift(g,x){S.giftOn={e:g[0],t:g[1],x:Math.min(.99,x+.015)};save()}
 function placeGift(rw,rh,w){const el=$('giftEl'),G=S.giftOn;el.hidden=!G;if(!G)return;if(el.textContent!==G.e)el.textContent=G.e;
   el.style.fontSize=(w*.17)+'px';el.style.left=(G.x*(rw-w)+w/2-w*.1)+'px';el.style.bottom=(rh*.11-w*.03)+'px';el.style.zIndex='30'}
-$('giftEl').onclick=e=>{e.stopPropagation();const G=S.giftOn,n=S.name||'牠';if(!G||roomEdit)return;S.giftOn=null;
+$('giftEl').onclick=e=>{e.stopPropagation();const G=S.giftOn,n=S.name||'〚貓代詞〛';if(!G||roomEdit)return;S.giftOn=null;
   S.gifts=S.gifts&&typeof S.gifts==='object'?S.gifts:{};S.gifts[G.t]=(S.gifts[G.t]||0)+1;
   const r=e.currentTarget.getBoundingClientRect(),rr=room.getBoundingClientRect();popText(r.left-rr.left+r.width/2,r.top-rr.top,'謝謝！');
   note(`你收下了${G.t}，${n}很得意`,3);if(H.state!=='sleep'&&!H.hug){setFace('happy',2);heart();say('喵～',1000)}
@@ -2928,20 +2966,20 @@ function funCatchUp(dt,opt={}){const R=roomCfg();
 function litterOpt(opts){const R=roomCfg();if(R.litter&&R.litter.on&&(needs().toilet||0)>.8)opts.push(['litter',2])}
 function drawLitter(){const g=$('litterDirt');if(!g)return;const d=litterDirt(),key=d.join(',');if(g.dataset.k===key)return;g.dataset.k=key;
   g.innerHTML=d.slice(0,6).map((k,i)=>{const x=22+i*11+(i%2)*3,y=11+(i%3);return k==='poop'?`<ellipse cx="${x}" cy="${y}" rx="4.2" ry="2.6" fill="#7a5a3e"/><ellipse cx="${x+3}" cy="${y-1}" rx="3" ry="2" fill="#8a6a4c"/>`:`<ellipse cx="${x}" cy="${y}" rx="5" ry="2.8" fill="#cdb48a"/>`}).join('')}
-function goLitter(){const R=roomCfg(),n=S.name||'牠';if(!R.litter.on)return;
+function goLitter(){const R=roomCfg(),n=S.name||'〚貓代詞〛';if(!R.litter.on)return;
   startWalk(R.litter.x,false,()=>{setHView('front');
     if(litterDirt().length>=3&&!H.complained){H.complained=true;say('（聞聞）…喵！',1500);setFace('annoyed',1.5);H.mood-=.05;
       logAct('litterDirty','覺得貓砂盆太髒，不太想用，跑來跟你抱怨（心情下降）',true);setTimeout(()=>comeOver(()=>{H.state='beg';H.timer=4;say('喵～（砂盆好髒）',1600)}),1200);return}
     H.complained=false;
     jumpTo(.12,()=>{H.y=0;H.inLitter=true;H.state='litter';H.litterK=Math.random()<.6?'pee':'poop';H.timer=5+Math.random()*3;setHView('front');setFace('normal');
-      say(H.litterK==='poop'?'（嗯…專心）':'（專心）',1500);note(`${n}在上廁所，不要盯著牠看啦`,5)})})}
+      say(H.litterK==='poop'?'（嗯…專心）':'（專心）',1500);note(`${n}在上廁所，不要盯著〚貓代詞〛看啦`,5)})})}
 function sandPuff(){const R=roomCfg(),rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,cx=R.litter.x*(rw-w)+w/2;
   for(let i=0;i<6;i++){const c=document.createElement('span');c.className='crumb sand';c.style.left=(cx+(Math.random()-.5)*w*.5)+'px';c.style.top=(rh*.89-w*.2)+'px';c.style.setProperty('--dx',((Math.random()-.5)*50)+'px');room.appendChild(c);setTimeout(()=>c.remove(),800)}}
-function finishLitter(){const n=S.name||'牠',k=H.litterK||'pee',d=litterDirt();d.push(k);if(d.length>6)d.shift();needs().toilet=0;say('（撥沙撥沙）',1200);sandPuff();
+function finishLitter(){const n=S.name||'〚貓代詞〛',k=H.litterK||'pee',d=litterDirt();d.push(k);if(d.length>6)d.shift();needs().toilet=0;say('（撥沙撥沙）',1200);sandPuff();
   H.inLitter=false;H.hop=.55;const T=traits(),zoom=k==='poop'&&Math.random()<.45+T.zoom*.08+P01('energy')*.2;
   logAct(zoom?'litterZoom':'litter',k==='poop'?(zoom?'上完大號撥撥沙，突然暴衝跑了一圈':'去貓砂盆上大號，撥沙蓋好'):'去貓砂盆尿尿，撥沙蓋好',true);save();drawLitter();
   if(zoom)setTimeout(()=>{say('喵喵喵！',900);startWalk(zoneEdge(true),false,()=>startWalk(viewX(),false,null,true),true)},500);else sitDown('front')}
-function scoop(){const n=S.name||'牠';if(roomEdit||wandOn)return;lastInteract=Date.now();idleFired=false;
+function scoop(){const n=S.name||'〚貓代詞〛';if(roomEdit||wandOn)return;lastInteract=Date.now();idleFired=false;
   if(H.state==='litter'){note(`${n}正在用，等一下再鏟`,2);return}
   const d=litterDirt();if(!d.length){note('貓砂很乾淨',2);return}
   const c=d.length;d.length=0;save();drawLitter();
@@ -2951,7 +2989,7 @@ function scoop(){const n=S.name||'牠';if(roomEdit||wandOn)return;lastInteract=D
 IT.litter.forEach(el=>el.addEventListener('click',()=>{if(roomEdit)return;scoop()}));
 
 /* 狀態推進與畫面 */
-function funStep(dt){const st=H.state,n=S.name||'牠';
+function funStep(dt){const st=H.state,n=S.name||'〚貓代詞〛';
   if(st==='treat'){if(H.timer<=0){if(tool==='treat'){H.state='beg';H.timer=6}else sitDown('front')}return true}
   if(st==='beg2'){if(H.timer<=0){if(tool==='treat'){H.state='beg';H.timer=5}else sitDown('front')}return true}
   if(st==='litter'){if(H.timer<=0)finishLitter();return true}
@@ -2980,8 +3018,8 @@ function drawBday(){const on=isBday();$('bunting').toggleAttribute('hidden',!on)
   if(on&&(S.cakeX==null||S.cakeD!==today()||S.cakeX>.5)){S.cakeX=.33;S.cakeD=today()}}
 function placeCake(rw,rh,w){const el=$('cake');if(el.hidden)return;const s=w*.42;el.style.width=s+'px';el.style.height=s+'px';el.style.left=((S.cakeX??.5)*(rw-w)+w/2-s/2)+'px';el.style.bottom=(rh*.11-w*.03)+'px'}
 function bdayHello(){if(!isBday()||S.bdaySaid===today())return;S.bdaySaid=today();save();
-  setTimeout(()=>{if(H.state==='sleep')wake();setFace('happy',3);heart();say('今天是我的生日！喵～',2600);note(`今天是${S.name||'牠'}的生日 🎂`,5);logAct('bday','過生日，收到你的祝福（心情上升）',true);H.mood=Math.min(1,H.mood+.1)},1600)}
-$('cake').onclick=e=>{e.stopPropagation();if(roomEdit||H.hug)return;const n=S.name||'牠',f=$('cakeFlame');lastInteract=Date.now();
+  setTimeout(()=>{if(H.state==='sleep')wake();setFace('happy',3);heart();say('今天是我的生日！喵～',2600);note(`今天是${S.name||'〚貓代詞〛'}的生日 🎂`,5);logAct('bday','過生日，收到你的祝福（心情上升）',true);H.mood=Math.min(1,H.mood+.1)},1600)}
+$('cake').onclick=e=>{e.stopPropagation();if(roomEdit||H.hug)return;const n=S.name||'〚貓代詞〛',f=$('cakeFlame');lastInteract=Date.now();
   startWalk(clamp01((S.cakeX??.33)+(H.x<(S.cakeX??.33)?-.02:.02)),false,()=>{setHView('front');setFace('happy',3);say('（吹蠟燭）呼～',1500);
     f.style.opacity='0';setTimeout(()=>{f.style.opacity='1'},6000);for(let i=0;i<3;i++)setTimeout(heart,i*300);note(`生日快樂，${n}！`,3);logAct('bdayCake','跟你一起吹了生日蛋糕的蠟燭',true)})};
 function syncBday(){$('bday').value=S.birthday||''}
@@ -2991,34 +3029,34 @@ controls.push(syncBday);syncBday();
 /* 讓每日小問題和修正也認得這些新動作 */
 ASK_EFFECTS.push('groom','nip','zoom','gift','call','naughty');
 ASK_TPL.push(
-  [/^groom(Like|Hate)$/,'真正的牠喜歡被梳毛嗎？',[['很愛，會瞇眼呼嚕','牠很喜歡被梳毛',{groom:2}],['普通',null,{}],['很討厭，會咬梳子','牠不喜歡被梳毛',{groom:-2}]]],
-  [/^nip(High|None|Cool)$/,'真正的牠聞到貓草會怎樣？',[['超嗨，會打滾','牠聞到貓草會很嗨，在地上打滾',{nip:3}],['有一點反應',null,{}],['完全沒反應','牠對貓草沒什麼反應',{nip:-3}]]],
-  [/^treat(Run|Meh|Eat|Stand|Full|Sleep)$/,'真正的牠看到零食會怎樣？',[['衝過來站起來討','牠看到零食會衝過來，還會站起來討',{appetite:1,demand:2}],['走過來吃',null,{}],['不太愛零食','牠不太愛吃零食',{appetite:-2}]]],
-  [/^litter(Zoom)?$/,'真正的牠上完大號會暴衝嗎？',[['會！跑超快','牠上完大號會暴衝跑一圈',{zoom:3}],['偶爾',null,{}],['不會','牠上完廁所很安靜，不會暴衝',{zoom:-3}]]],
-  [/^gift(Taken)?$/,'真正的牠會叼東西送你嗎？',[['常常叼東西來','牠常常叼小東西來送主人',{gift:2}],['偶爾',null,{}],['從來不會','牠不會叼東西送主人',{gift:-3}]]]);
+  [/^groom(Like|Hate)$/,'真正的〚貓代詞〛喜歡被梳毛嗎？',[['很愛，會瞇眼呼嚕','〚貓代詞〛很喜歡被梳毛',{groom:2}],['普通',null,{}],['很討厭，會咬梳子','〚貓代詞〛不喜歡被梳毛',{groom:-2}]]],
+  [/^nip(High|None|Cool)$/,'真正的〚貓代詞〛聞到貓草會怎樣？',[['超嗨，會打滾','〚貓代詞〛聞到貓草會很嗨，在地上打滾',{nip:3}],['有一點反應',null,{}],['完全沒反應','〚貓代詞〛對貓草沒什麼反應',{nip:-3}]]],
+  [/^treat(Run|Meh|Eat|Stand|Full|Sleep)$/,'真正的〚貓代詞〛看到零食會怎樣？',[['衝過來站起來討','〚貓代詞〛看到零食會衝過來，還會站起來討',{appetite:1,demand:2}],['走過來吃',null,{}],['不太愛零食','〚貓代詞〛不太愛吃零食',{appetite:-2}]]],
+  [/^litter(Zoom)?$/,'真正的〚貓代詞〛上完大號會暴衝嗎？',[['會！跑超快','〚貓代詞〛上完大號會暴衝跑一圈',{zoom:3}],['偶爾',null,{}],['不會','〚貓代詞〛上完廁所很安靜，不會暴衝',{zoom:-3}]]],
+  [/^gift(Taken)?$/,'真正的〚貓代詞〛會叼東西送你嗎？',[['常常叼東西來','〚貓代詞〛常常叼小東西來送主人',{gift:2}],['偶爾',null,{}],['從來不會','〚貓代詞〛不會叼東西送主人',{gift:-3}]]]);
 ASK_TPL.push(
-  [/^call(Come|Meow|Ear|Ignore)$/,'真正的牠聽到你叫名字會怎樣？',[['會跑過來','牠聽到主人叫名字會跑過來',{call:3}],['只會喵一聲','牠聽到名字會喵一聲回應，但不一定過來',{call:0}],['耳朵動一下','牠聽到名字只會動動耳朵',{call:-2}],['完全不理','牠聽到名字通常不理人',{call:-4}]]],
-  [/^(pushCup|pushStop|counter)$/,'真正的牠會把東西推下桌嗎？',[['超常推','牠很愛把桌上的東西推下去',{naughty:3}],['偶爾',null,{}],['很乖不會','牠不太會推東西，也不太跳上桌',{naughty:-3}]]],
-  [/^parkour$/,'真正的牠半夜會跑酷嗎？',[['每天晚上都跑','牠半夜常常在家裡跑酷',{naughty:2,energy:1}],['偶爾',null,{}],['晚上都在睡','牠晚上很安靜，都在睡覺',{naughty:-2}]]],
-  [/^(pillow|pillowGlare|hbed)$/,'真正的牠會跟你搶床或枕頭嗎？',[['每天霸佔枕頭','牠很愛霸佔主人的枕頭',{naughty:1}],['會睡在床尾','牠會跳上床睡在床尾',{}],['不上床','牠不太會上主人的床',{naughty:-1}]]]);
+  [/^call(Come|Meow|Ear|Ignore)$/,'真正的〚貓代詞〛聽到你叫名字會怎樣？',[['會跑過來','〚貓代詞〛聽到主人叫名字會跑過來',{call:3}],['只會喵一聲','〚貓代詞〛聽到名字會喵一聲回應，但不一定過來',{call:0}],['耳朵動一下','〚貓代詞〛聽到名字只會動動耳朵',{call:-2}],['完全不理','〚貓代詞〛聽到名字通常不理人',{call:-4}]]],
+  [/^(pushCup|pushStop|counter)$/,'真正的〚貓代詞〛會把東西推下桌嗎？',[['超常推','〚貓代詞〛很愛把桌上的東西推下去',{naughty:3}],['偶爾',null,{}],['很乖不會','〚貓代詞〛不太會推東西，也不太跳上桌',{naughty:-3}]]],
+  [/^parkour$/,'真正的〚貓代詞〛半夜會跑酷嗎？',[['每天晚上都跑','〚貓代詞〛半夜常常在家裡跑酷',{naughty:2,energy:1}],['偶爾',null,{}],['晚上都在睡','〚貓代詞〛晚上很安靜，都在睡覺',{naughty:-2}]]],
+  [/^(pillow|pillowGlare|hbed)$/,'真正的〚貓代詞〛會跟你搶床或枕頭嗎？',[['每天霸佔枕頭','〚貓代詞〛很愛霸佔主人的枕頭',{naughty:1}],['會睡在床尾','〚貓代詞〛會跳上床睡在床尾',{}],['不上床','〚貓代詞〛不太會上主人的床',{naughty:-1}]]]);
 Object.assign(TRAIT_FIX,{
-  callCome:[['牠其實不太會過來',T=>{T.call-=3},'牠聽到名字不太會跑過來']],callMeow:[['牠其實會跑過來',T=>{T.call+=3},'牠聽到名字會跑過來']],callEar:[['牠其實會跑過來',T=>{T.call+=3},'牠聽到名字會跑過來']],callIgnore:[['牠其實會跑過來',T=>{T.call+=3},'牠聽到名字會跑過來']],
-  pushCup:[['牠不會推東西',T=>{T.naughty-=3},'牠不太會把東西推下桌']],parkour:[['牠晚上很安靜',T=>{T.naughty-=2},'牠晚上很安靜，不會跑酷']],
-  groomLike:[['牠其實不愛梳毛',T=>{T.groom-=2},'牠不太喜歡被梳毛']],
-  groomHate:[['牠其實愛梳毛',T=>{T.groom+=2},'牠很喜歡被梳毛']],
-  nipHigh:[['牠對貓草沒反應',T=>{T.nip=-4},'牠對貓草沒什麼反應']],
-  nipNone:[['牠聞貓草會很嗨',T=>{T.nip=3},'牠聞到貓草會很嗨']],
-  litterZoom:[['牠不會暴衝',T=>{T.zoom-=3},'牠上完廁所不會暴衝']],
-  litter:[['牠上完會暴衝',T=>{T.zoom+=3},'牠上完大號會暴衝跑一圈']],
-  gift:[['牠不會叼東西',T=>{T.gift-=3},'牠不會叼東西送主人']],
-  treatMeh:[['牠超愛零食',T=>{T.appetite+=2;T.demand+=1},'牠超愛吃零食']],
-  treatRun:[['牠沒那麼愛零食',T=>{T.appetite-=2},'牠沒有很愛零食']]});
+  callCome:[['〚貓代詞〛其實不太會過來',T=>{T.call-=3},'〚貓代詞〛聽到名字不太會跑過來']],callMeow:[['〚貓代詞〛其實會跑過來',T=>{T.call+=3},'〚貓代詞〛聽到名字會跑過來']],callEar:[['〚貓代詞〛其實會跑過來',T=>{T.call+=3},'〚貓代詞〛聽到名字會跑過來']],callIgnore:[['〚貓代詞〛其實會跑過來',T=>{T.call+=3},'〚貓代詞〛聽到名字會跑過來']],
+  pushCup:[['〚貓代詞〛不會推東西',T=>{T.naughty-=3},'〚貓代詞〛不太會把東西推下桌']],parkour:[['〚貓代詞〛晚上很安靜',T=>{T.naughty-=2},'〚貓代詞〛晚上很安靜，不會跑酷']],
+  groomLike:[['〚貓代詞〛其實不愛梳毛',T=>{T.groom-=2},'〚貓代詞〛不太喜歡被梳毛']],
+  groomHate:[['〚貓代詞〛其實愛梳毛',T=>{T.groom+=2},'〚貓代詞〛很喜歡被梳毛']],
+  nipHigh:[['〚貓代詞〛對貓草沒反應',T=>{T.nip=-4},'〚貓代詞〛對貓草沒什麼反應']],
+  nipNone:[['〚貓代詞〛聞貓草會很嗨',T=>{T.nip=3},'〚貓代詞〛聞到貓草會很嗨']],
+  litterZoom:[['〚貓代詞〛不會暴衝',T=>{T.zoom-=3},'〚貓代詞〛上完廁所不會暴衝']],
+  litter:[['〚貓代詞〛上完會暴衝',T=>{T.zoom+=3},'〚貓代詞〛上完大號會暴衝跑一圈']],
+  gift:[['〚貓代詞〛不會叼東西',T=>{T.gift-=3},'〚貓代詞〛不會叼東西送主人']],
+  treatMeh:[['〚貓代詞〛超愛零食',T=>{T.appetite+=2;T.demand+=1},'〚貓代詞〛超愛吃零食']],
+  treatRun:[['〚貓代詞〛沒那麼愛零食',T=>{T.appetite-=2},'〚貓代詞〛沒有很愛零食']]});
 function funTraitText(){const T=traits(),o=[];if(T.groom>=2)o.push('喜歡被梳毛');if(T.groom<=-2)o.push('討厭被梳毛');if(T.nip>=2)o.push('聞到貓草會很嗨');if(T.nip<=-3)o.push('對貓草沒反應');
   if(T.zoom>=2)o.push('上完大號會暴衝');if(T.gift>=2)o.push('常叼小東西送主人');
   const b=S.birthday&&/^\d{4}-(\d\d)-(\d\d)$/.exec(S.birthday);if(b)o.push(`生日是 ${+b[1]} 月 ${+b[2]} 日${isBday()?'（今天就是生日！）':''}`);
   return o.length?'其他：'+o.join('、'):''}
 drawBday();
-function funHomeOpen(){bdayHello();if(typeof moreHomeOpen==='function')moreHomeOpen();if(S.giftAway&&S.giftOn){S.giftAway=0;save();setTimeout(()=>note(`${S.name||'牠'}趁你不在的時候，留了${S.giftOn?S.giftOn.t:'小禮物'}給你`,5),1200)}}
+function funHomeOpen(){bdayHello();if(typeof moreHomeOpen==='function')moreHomeOpen();if(S.giftAway&&S.giftOn){S.giftAway=0;save();setTimeout(()=>note(`${S.name||'〚貓代詞〛'}趁你不在的時候，留了${S.giftOn?S.giftOn.t:'小禮物'}給你`,5),1200)}}
 
 
 /* ===== 手機：房間比螢幕寬，可以左右滑，鏡頭會跟著貓 ===== */
@@ -3046,7 +3084,7 @@ function ageOf(d){const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(d||'');if(!m)return'';c
 function drawInfo(){const I=info();
   document.querySelectorAll('#infoPanel [data-k]').forEach(el=>{const k=el.dataset.k;
     if(el.classList.contains('chips')){if(!el.children.length)el.dataset.opts.split(',').forEach(o=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=o;
-        b.onclick=()=>{I[k]=I[k]===o?'':o;save();drawInfo();$('infoMsg').textContent='已儲存'};el.appendChild(b)});
+        b.onclick=()=>{I[k]=I[k]===o?'':o;save();drawInfo();refreshCatPronouns();$('infoMsg').textContent='已儲存'};el.appendChild(b)});
       [...el.children].forEach(b=>b.setAttribute('aria-pressed',String(I[k]===b.textContent)))}
     else if(document.activeElement!==el)el.value=I[k]??''});
   $('bday').value=S.birthday||'';const a=ageOf(S.birthday);$('ageText').textContent=a?`現在 ${a}`:''}
@@ -3083,14 +3121,14 @@ function houseOpts(opts){const t=todNow(),en=P01('energy'),E=needs().energy,T=tr
   if(holidayNow()==='xmas'&&!S.ornDown)opts.push(['xmasTree',.05*Math.max(.3,1+T.naughty*.1)]);
   if(t==='night'&&en>.3)opts.push(['parkour',.03*Math.max(.3,1+T.naughty*.1)]);
   opts.push(['counter',.025*Math.max(.3,1+T.demand*.12)*E])}
-function houseAct(k){const n=S.name||'牠';
+function houseAct(k){const n=S.name||'〚貓代詞〛';
   if(k==='birdwatch')startWalk(hxOf(.885),false,()=>{setHView('back');H.state='birdwatch';H.timer=8+Math.random()*6;showBird(true);logAct('birdwatch','趴在陽台看小鳥，嘴巴咔咔咔地叫',true)});
   if(k==='sunbathe'){logAct('sunbathe','跑去陽台曬太陽，睡得好舒服',true);startWalk(hxOf(.81),true)}
   if(k==='hbed'){const pil=Math.random()<.4;startWalk(hxOf(pil?.693:.655),false,()=>{setHView('front');jumpTo(surfY(pil?.275:.255),()=>{H.onPillow=pil;H.state='sleep';H.timer=20+Math.random()*15;setFace('closed');say('Zzz…',1500);logAct(pil?'pillow':'hbed',pil?'霸佔你的枕頭，睡得超熟':'跳上你的床，窩在被子上睡覺',true)})})}
   if(k==='xmasTree')treeKnock();if(k==='parkour')parkour();
   if(k==='counter')startWalk(hxOf(.113),false,()=>{setHView('front');jumpTo(surfY(.41),()=>{H.onCounter=true;sitDown('front');H.timer=6+Math.random()*6;say('（偷看）',1000);logAct('counter','偷偷跳上廚房流理台',true);setTimeout(maybePush,1800)})})}
 function showBird(on){const b=$('bird');if(on){b.removeAttribute('hidden');b.classList.remove('fly');void b.getBoundingClientRect();b.classList.add('land')}else if(!b.hasAttribute('hidden')){b.classList.remove('land');b.classList.add('fly');setTimeout(()=>{b.setAttribute('hidden','');b.classList.remove('fly')},900)}}
-$('fridge').addEventListener('click',e=>{e.stopPropagation();if(roomEdit)return;const f=$('fridge'),n=S.name||'牠';lastInteract=Date.now();idleFired=false;
+$('fridge').addEventListener('click',e=>{e.stopPropagation();if(roomEdit)return;const f=$('fridge'),n=S.name||'〚貓代詞〛';lastInteract=Date.now();idleFired=false;
   f.classList.add('open');setTimeout(()=>f.classList.remove('open'),2600);note('你打開冰箱',2);
   if(H.hug||wandOn||['litter','roll','eat'].includes(H.state))return;
   const T=traits(),p=.35+T.appetite*.08+(1-needs().full)*.4;
@@ -3151,23 +3189,23 @@ function drawHoliday(){if(!LNY||!HOL_HAT)return;const h=holidayNow();if((room.da
   if(hat.dataset.k!==(bd?'bday':h||'')){hat.dataset.k=bd?'bday':h||'';hat.innerHTML=want||PARTY_HAT}hat.hidden=!want;
   $('orn').classList.toggle('down',!!S.ornDown)}
 $('orn').addEventListener('click',e=>{e.stopPropagation();if(!S.ornDown)return;S.ornDown=false;save();drawHoliday();note('你把吊飾掛回聖誕樹上',2)});
-function treeKnock(){const n=S.name||'牠';startWalk(hxOf(.365),false,()=>{setHView('front');H.state='beg2';H.timer=1.8;say('（撥撥）',1000);
+function treeKnock(){const n=S.name||'〚貓代詞〛';startWalk(hxOf(.365),false,()=>{setHView('front');H.state='beg2';H.timer=1.8;say('（撥撥）',1000);
   setTimeout(()=>{S.ornDown=true;save();drawHoliday();const r=$('orn').getBoundingClientRect(),rr=room.getBoundingClientRect();popText(r.left-rr.left,r.top-rr.top,'叮！');logAct('xmasTree','把聖誕樹上的吊飾撥下來了，一臉得意',true)},1300)})}
 
 /* ===== 壞壞行為：推杯子、半夜跑酷、霸佔枕頭 ===== */
 function drawCup(){const c=$('cup');c.classList.toggle('down',!!S.cupDown)}
 $('cup').addEventListener('click',e=>{e.stopPropagation();if(!S.cupDown)return;S.cupDown=false;save();drawCup();note('你把杯子撿起來放回流理台',2)});
-function maybePush(){const T=traits(),n=S.name||'牠';if(S.cupDown||!H.onCounter||H.state!=='sit')return;
+function maybePush(){const T=traits(),n=S.name||'〚貓代詞〛';if(S.cupDown||!H.onCounter||H.state!=='sit')return;
   if(Math.random()>.45+T.naughty*.08)return;H.state='pushprep';H.timer=2.2;setHView('front');H.look=.8;say('（盯著你）',1500);note(`${n}盯著你…爪子慢慢伸向杯子`,2.5)}
-function doPush(){const n=S.name||'牠';H.swat=.4;S.cupDown=true;save();drawCup();const r=$('cup').getBoundingClientRect(),rr=room.getBoundingClientRect();
+function doPush(){const n=S.name||'〚貓代詞〛';H.swat=.4;S.cupDown=true;save();drawCup();const r=$('cup').getBoundingClientRect(),rr=room.getBoundingClientRect();
   setTimeout(()=>popText(r.left-rr.left,r.top-rr.top+r.height*2,'鏘！'),500);setFace('happy',1.5);sitDown('front');H.timer=3;logAct('pushCup','盯著你，把杯子從流理台推下去了',true)}
-function parkour(){const n=S.name||'牠';logAct('parkour','半夜突然在家裡跑酷，衝來衝去',true);note(`${n}開始半夜跑酷！`,3);
+function parkour(){const n=S.name||'〚貓代詞〛';logAct('parkour','半夜突然在家裡跑酷，衝來衝去',true);note(`${n}開始半夜跑酷！`,3);
   const pts=[.03,.97,.3,.7].sort(()=>Math.random()-.5);let i=0;
   const next=()=>{if(i>=pts.length){sitDown('front');say('呼…呼…',1500);const N=needs();N.energy=Math.max(.05,N.energy-.2);return}H.hop=.55;startWalk(pts[i++],false,next,true)};next()}
 
-/* ===== 叫牠的名字 ===== */
+/* ===== 叫〚貓代詞〛的名字 ===== */
 var callTimes=[];
-function callCat(){const n=S.name||'牠',T=traits(),now=Date.now(),sc=$('roomScroll'),rr=room.getBoundingClientRect(),sr=sc.getBoundingClientRect();lastInteract=now;idleFired=false;
+function callCat(){const n=S.name||'〚貓代詞〛',T=traits(),now=Date.now(),sc=$('roomScroll'),rr=room.getBoundingClientRect(),sr=sc.getBoundingClientRect();lastInteract=now;idleFired=false;
   popText(sr.left-rr.left+sr.width/2,sr.top-rr.top+sr.height*.18,`${n}～`);
   callTimes=callTimes.filter(t=>now-t<30000);callTimes.push(now);
   if(H.hug){say('喵？',900);return}
@@ -3175,12 +3213,12 @@ function callCat(){const n=S.name||'牠',T=traits(),now=Date.now(),sc=$('roomScr
   if(['litter','eat','roll','treat'].includes(H.state)){say('（等一下）',1000);return}
   let pc=.15+.55*P01('affection')+T.call*.08+(H.mood-.5)*.2;if(H.state==='sleep')pc*=.5;pc=Math.max(.03,Math.min(.95,pc));
   const r=Math.random();
-  if(r<pc){if(H.state==='sleep')wake();logAct('callCome','聽到你叫牠，喵一聲跑過來了',true);say('喵～！',1000);
+  if(r<pc){if(H.state==='sleep')wake();logAct('callCome','聽到你叫〚貓代詞〛，喵一聲跑過來了',true);say('喵～！',1000);
     if(H.y>.05||H.inBox){comeOver(()=>{setFace('happy',1.5);heart()});return}
     startWalk(viewX(),false,()=>{sitDown('front');setFace('happy',1.5);heart();H.tilt=8},true)}
-  else if(r<pc+.3){if(H.state==='sleep'){say('喵…？',1000);logAct('callMeow','睡夢中聽到你叫牠，應了一聲',true);return}setHView('front');H.tilt=10;say('喵？',1000);logAct('callMeow','聽到你叫牠，只喵了一聲，沒有過來',true)}
-  else if(r<pc+.55){H.wag=.8;note(`${n}耳朵動了一下，假裝沒聽到`,2.5);logAct('callEar','聽到你叫牠，只有耳朵動了一下',true)}
-  else{note(`${n}完全不理你`,2.5);logAct('callIgnore','聽到你叫牠，完全不理',true)}}
+  else if(r<pc+.3){if(H.state==='sleep'){say('喵…？',1000);logAct('callMeow','睡夢中聽到你叫〚貓代詞〛，應了一聲',true);return}setHView('front');H.tilt=10;say('喵？',1000);logAct('callMeow','聽到你叫〚貓代詞〛，只喵了一聲，沒有過來',true)}
+  else if(r<pc+.55){H.wag=.8;note(`${n}耳朵動了一下，假裝沒聽到`,2.5);logAct('callEar','聽到你叫〚貓代詞〛，只有耳朵動了一下',true)}
+  else{note(`${n}完全不理你`,2.5);logAct('callIgnore','聽到你叫〚貓代詞〛，完全不理',true)}}
 $('callBtn').onclick=callCat;
 
 /* ===== 每週回顧 ===== */
@@ -3190,7 +3228,7 @@ var WEEK_CNT={eatAll:'meal',leftover:'meal',treatEat:'treat',petLike:'pet',hugOk
   pushCup:'naughty',counter:'naughty',parkour:'naughty',callCome:'come',groomLike:'groom',birdwatch:'bird'};
 var WEEK_HL=['petLike','hugOk','treatEat','nipHigh','gift','giftTaken','bday','bdayCake','callCome','birdwatch','caught','pushCup','parkour','litterZoom','groomLike','xmasTree','hbed'];
 function weekLog(key,text){const W=week(),c=WEEK_CNT[key];if(c)W.c[c]=(W.c[c]||0)+1;
-  if(WEEK_HL.includes(key)){const t=`${S.name||'牠'}${text}`.replace(/（心情[上下]升）|（心情下降）/g,'');if(!W.hl.includes(t)){W.hl.push(t);if(W.hl.length>30)W.hl.shift()}}}
+  if(WEEK_HL.includes(key)){const t=`${S.name||'〚貓代詞〛'}${text}`.replace(/（心情[上下]升）|（心情下降）/g,'');if(!W.hl.includes(t)){W.hl.push(t);if(W.hl.length>30)W.hl.shift()}}}
 function weekTick(dt){if(view!=='home'||document.hidden)return;const W=week();W.z[zoneOf(H.x)]=(W.z[zoneOf(H.x)]||0)+dt}
 function weekRoll(){if(!WEEK_CNT)return;const W=week(),k=weekKey();if(W.k===k)return;
   const total=Object.values(W.c).reduce((a,b)=>a+b,0);
@@ -3209,16 +3247,16 @@ async function weekText(W){if(W.text)return W.text;if(!aiKey())return weekTempla
   catch(e){return weekTemplate(W)}}
 var wkSel=0;
 function weekList(){const L=(Array.isArray(S.weeks)?S.weeks:[]).slice().reverse();return[{...week(),now:true},...L]}
-async function drawWeek(){const L=weekList(),W=L[Math.min(wkSel,L.length-1)],n=S.name||'牠';
+async function drawWeek(){const L=weekList(),W=L[Math.min(wkSel,L.length-1)],n=S.name||'〚貓代詞〛';
   $('wkTitle').textContent=`${n}的${W.now?'這一週（到目前為止）':'一週回顧'}`;$('wkRange').textContent=weekRange(W.k);
   $('wkPrev').disabled=wkSel>=L.length-1;$('wkNext').disabled=wkSel<=0;
   const g=$('wkStats');g.innerHTML='';const items=WK_ITEMS.filter(([k])=>W.c&&W.c[k]);
-  if(!items.length)g.innerHTML='<p class="gsub">這週還沒有紀錄，多陪牠玩一下吧</p>';
+  if(!items.length)g.innerHTML='<p class="gsub">這週還沒有紀錄，多陪〚貓代詞〛玩一下吧</p>';
   items.forEach(([k,e,l])=>{const d=document.createElement('div');d.className='wkstat';d.innerHTML=`<span>${e}</span><b>${W.c[k]}</b><small>${l}</small>`;g.appendChild(d)});
   const f=favZone(W);$('wkFav').textContent=f?`最常待在：${f}`:'';
   const hl=(W.hl||[]).slice(-3);$('wkHl').innerHTML='';hl.forEach(t=>{const li=document.createElement('li');li.textContent=t;$('wkHl').appendChild(li)});
   $('wkText').textContent=W.text||'';
-  if(!W.text&&!W.now){$('wkText').textContent='（牠正在寫…）';const t=await weekText(W);const arr=S.weeks;const o=arr&&arr.find(x=>x.k===W.k);if(o){o.text=t;save()}$('wkText').textContent=t}
+  if(!W.text&&!W.now){$('wkText').textContent='（〚貓代詞〛正在寫…）';const t=await weekText(W);const arr=S.weeks;const o=arr&&arr.find(x=>x.k===W.k);if(o){o.text=t;save()}$('wkText').textContent=t}
   else if(W.now&&!W.text){$('wkText').textContent=weekTemplate(W)}}
 function openWeek(sel=0){wkSel=sel;$('weekPanel').hidden=false;drawWeek()}
 $('openWeek').onclick=()=>openWeek(0);$('wkClose').onclick=()=>{$('weekPanel').hidden=true};
@@ -3227,7 +3265,7 @@ async function catImage(){try{const src=hCat.cloneNode(true);src.setAttribute('x
     src.querySelectorAll('[id^="hv-"]').forEach(g=>g.setAttribute('display',g.id==='hv-front'?'inline':'none'));
     const url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(src)],{type:'image/svg+xml'}));
     const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});return img}catch(e){return null}}
-$('wkSave').onclick=async()=>{const L=weekList(),W=L[Math.min(wkSel,L.length-1)],n=S.name||'牠',c=document.createElement('canvas');c.width=1080;c.height=1350;const x=c.getContext('2d');
+$('wkSave').onclick=async()=>{const L=weekList(),W=L[Math.min(wkSel,L.length-1)],n=S.name||'〚貓代詞〛',c=document.createElement('canvas');c.width=1080;c.height=1350;const x=c.getContext('2d');
   x.fillStyle='#fbf6ee';x.fillRect(0,0,1080,1350);x.fillStyle='#86c4b8';x.fillRect(0,0,1080,420);
   const img=await catImage();if(img)x.drawImage(img,340,40,400,400);
   x.fillStyle='#2e3936';x.textAlign='center';x.font='bold 64px sans-serif';x.fillText(`${n}的一週`,540,520);x.font='36px sans-serif';x.fillStyle='#6b7a77';x.fillText(weekRange(W.k),540,575);
@@ -3241,7 +3279,7 @@ $('wkSave').onclick=async()=>{const L=weekList(),W=L[Math.min(wkSel,L.length-1)]
     const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)},'image/png')};
 function moreHomeOpen(){weekRoll();drawHoliday();drawCup();
   if(S.offlineSummary){const msg=S.offlineSummary;delete S.offlineSummary;save();setTimeout(()=>note(msg,7),500)}
-  if(S.parkourAway){S.parkourAway=0;save();setTimeout(()=>note(`${S.name||'牠'}昨晚好像在家裡跑酷，杯子掉在地上了`,5),1500)}
+  if(S.parkourAway){S.parkourAway=0;save();setTimeout(()=>note(`${S.name||'〚貓代詞〛'}昨晚好像在家裡跑酷，杯子掉在地上了`,5),1500)}
   if(S.weekNew){S.weekNew=0;save();setTimeout(()=>openWeek(1),2500)}
   const h=holidayNow();if(h&&S.holSaid!==today()){S.holSaid=today();save();const g={xmas:'聖誕快樂！喵～',lny:'新年快樂！喵～',moon:'中秋快樂！一起賞月吧',halloween:'不給糖就搗蛋！喵～'}[h];setTimeout(()=>{setFace('happy',2);say(g,2400)},2600)}}
 drawHoliday();drawCup();
