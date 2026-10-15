@@ -1,4 +1,116 @@
-{min-width:96px}.pannav span{font-size:14px;color:var(--muted)}
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>貓的工作室</title>
+<link rel="icon" type="image/png" href="LOGO.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#7fc1b5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="貓的工作室">
+<meta property="og:image" content="LOGO.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: the cat sits on a teal stage (left / top on phone); a tabbed workbench of chips and swatches beside it */
+:root{
+  --bg:#eef2f0;--panel:#ffffff;--line:#d8e1dd;--fg:#2e3936;--muted:#687873;
+  --accent:#d6606a;--accent-soft:#fbe4e5;--chip:#f2f6f4;--stage:#7fc1b5;--stage-ink:#2f5f57;
+  --font-display:"Huninn","Noto Sans TC",system-ui,sans-serif;
+  --font-body:"Noto Sans TC",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#18201e;--panel:#222c29;--line:#33413c;--fg:#e5ede9;--muted:#9aaca5;
+  --accent:#f08c94;--accent-soft:#3d2a2d;--chip:#2a3632;--stage:#5f9f94;--stage-ink:#e3f3ef;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#18201e;--panel:#222c29;--line:#33413c;--fg:#e5ede9;--muted:#9aaca5;
+  --accent:#f08c94;--accent-soft:#3d2a2d;--chip:#2a3632;--stage:#5f9f94;--stage-ink:#e3f3ef;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.6;padding-block:20px 40px;padding-inline:16px}
+.auth{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;color:var(--muted)}
+.auth img{width:28px;height:28px;border-radius:50%}
+.app{max-width:1060px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:28px;align-items:start}
+@media (max-width:820px){.app{grid-template-columns:minmax(0,1fr)}}
+header h1{font-family:var(--font-display);font-weight:400;font-size:28px;margin:0;letter-spacing:.02em;text-wrap:balance}
+header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
+.stage-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px}.brand img{width:44px;height:44px;border-radius:12px;flex:none}
+.top{max-width:1060px;margin:0 auto 18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.views{display:flex;gap:4px;background:var(--chip);padding:4px;border-radius:999px;border:1px solid var(--line)}
+.view-btn{font:inherit;font-size:15px;border:0;background:transparent;color:var(--muted);padding:7px 18px;border-radius:999px;cursor:pointer}
+.view-btn[aria-pressed="true"]{background:var(--panel);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.home{max-width:1060px;margin:0 auto}
+.room{position:relative;width:400%;height:100%;border-radius:0;overflow:hidden;background:#86c4b8}
+.roomwrap{position:relative;isolation:isolate}
+.roomscroll{border-radius:28px;overflow-x:auto;overflow-y:hidden;aspect-ratio:16/9;scrollbar-width:none;overscroll-behavior-x:contain}.roomscroll::-webkit-scrollbar{display:none}
+@media (max-width:600px){
+  .roomwrap{margin-inline:-16px}
+  .roomscroll{border-radius:0;aspect-ratio:auto;height:min(64vh,430px);-webkit-overflow-scrolling:touch}
+  .room{width:660%}
+  .room.editing .item,.room.editing .bed,.room.tooling{touch-action:none}
+}
+.swipehint{display:block;position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:85;font-size:12px;background:rgba(255,255,255,.85);color:#2e3936;border-radius:999px;padding:3px 10px;pointer-events:none;transition:opacity .6s;white-space:nowrap}
+.swipehint.off{opacity:0}
+.window{position:absolute;left:8%;top:10%;width:22%;aspect-ratio:4/5;background:#d5eef6;border:8px solid #fbf6ee;border-radius:14px}
+.window span{position:absolute;inset:0}.window span::before,.window span::after{content:"";position:absolute;background:#fbf6ee}
+.window span::before{left:50%;top:0;bottom:0;width:6px;transform:translateX(-50%)}.window span::after{top:50%;left:0;right:0;height:6px;transform:translateY(-50%)}
+.window{transition:background 2s}.window i{position:absolute;opacity:0;transition:opacity 2s}
+.window .moon{right:16%;top:12%;width:24%;aspect-ratio:1;border-radius:50%;box-shadow:inset -7px 4px 0 0 #f5e6ad}
+.window .stars{inset:0;background:radial-gradient(circle at 20% 25%,#fff 0 1.5px,transparent 2px),radial-gradient(circle at 70% 60%,#fff 0 1.2px,transparent 2px),radial-gradient(circle at 35% 75%,#fff 0 1px,transparent 1.6px),radial-gradient(circle at 80% 85%,#fff 0 1.4px,transparent 2px),radial-gradient(circle at 15% 55%,#fff 0 1px,transparent 1.6px)}
+.room[data-tod=dawn] .window{background:linear-gradient(#f6c4a4,#fde6c8)}
+.room[data-tod=dusk] .window{background:linear-gradient(#ef9d6a,#f7c992)}
+.room[data-tod=night] .window{background:linear-gradient(#1b2850,#34497d)}.room[data-tod=night] .window i{opacity:1}
+#it-litterback,#it-litterfront{pointer-events:auto;cursor:pointer}
+.fur{position:absolute;width:6px;height:6px;border-radius:50%;pointer-events:none;z-index:65;opacity:.9;box-shadow:0 0 0 1px rgba(0,0,0,.06);animation:furfall 1.4s ease-out forwards}
+@keyframes furfall{to{transform:translate(var(--dx),46px);opacity:0}}
+.crumb.sand{background:#e3d3b0}
+.toolcur{position:absolute;z-index:90;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.2))}
+.niptoy{position:absolute;pointer-events:none;transition:opacity .5s}.niptoy.gone{opacity:0}
+.gift{position:absolute;line-height:1;cursor:pointer;user-select:none;-webkit-user-select:none;animation:giftpop .4s ease-out;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}
+@keyframes giftpop{from{transform:scale(.3)}to{transform:scale(1)}}
+.giftcarry{position:absolute;transform:translate(-50%,-50%);pointer-events:none;line-height:1}
+.hat{position:absolute;width:20%;aspect-ratio:30/36;transform:translate(-50%,-92%) rotate(-10deg);pointer-events:none}
+.cake{position:absolute;z-index:30;cursor:pointer}
+.bunting{position:absolute;left:0;right:0;top:0;width:100%;height:13%;z-index:3;pointer-events:none}
+.toolbar{display:flex;gap:8px;justify-content:center;margin:10px 0 0;flex-wrap:wrap}
+.tbtn{display:flex;align-items:center;gap:6px;font:inherit;font-size:15px;background:var(--chip);color:var(--fg);border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.tbtn svg{width:22px;height:22px}.tbtn[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.zones{position:absolute;inset:0;z-index:0;pointer-events:none}
+.zone{position:absolute;top:0;bottom:0;width:25%}.zk{left:0}.zl{left:25%}.zb{left:50%}.zc{left:75%}
+.zwall,.zsky{position:absolute;left:0;right:0;top:0;height:70%}.zfloor{position:absolute;left:0;right:0;bottom:0;height:30%}
+.zk .zwall{background:#f1dcb8}.zk .zfloor{background:repeating-conic-gradient(#f4efe6 0 25%,#e2dacb 0 50%) 0 0/34px 34px}
+.zl .zwall{background:#86c4b8}.zl .zfloor{background:#efdcc2}
+.zb .zwall{background:#aebde0}.zb .zfloor{background:#e8d4cd}
+.zc .zsky{background:linear-gradient(#8fd0ef,#dff3f8);transition:background 2s}.zc .zfloor{background:repeating-linear-gradient(90deg,#cfa978 0 30px,#c29a68 30px 32px)}
+.room[data-tod=dawn] .zsky{background:linear-gradient(#f6c4a4,#fde6c8)}.room[data-tod=dusk] .zsky{background:linear-gradient(#ef9d6a,#f7c992)}.room[data-tod=night] .zsky{background:linear-gradient(#1b2850,#34497d)}
+.zsky i{position:absolute;opacity:0;transition:opacity 2s}.room[data-tod=night] .zsky .moon,.room[data-tod=night] .zsky .stars{opacity:1}
+.zsky .moon{right:18%;top:10%;width:9%;aspect-ratio:1;border-radius:50%;box-shadow:inset -7px 4px 0 0 #f5e6ad}
+.zsky .stars{inset:0;background:radial-gradient(circle at 10% 20%,#fff 0 1.5px,transparent 2px),radial-gradient(circle at 40% 12%,#fff 0 1.2px,transparent 2px),radial-gradient(circle at 60% 35%,#fff 0 1px,transparent 1.6px),radial-gradient(circle at 85% 50%,#fff 0 1.4px,transparent 2px),radial-gradient(circle at 25% 45%,#fff 0 1px,transparent 1.6px)}
+.zsky .sunball{left:12%;top:12%;width:10%;aspect-ratio:1;border-radius:50%;background:#ffe08a;box-shadow:0 0 30px #ffe08a}.room[data-tod=day] .zsky .sunball{opacity:1}
+.zsky .cloud{left:45%;top:18%;width:22%;height:9%;border-radius:999px;background:#fff;box-shadow:18px -10px 0 4px #fff}.room[data-tod=day] .zsky .cloud,.room[data-tod=dawn] .zsky .cloud{opacity:.9}
+.pillar{position:absolute;top:0;height:70%;width:.7%;transform:translateX(-50%);background:#f6efe4;box-shadow:inset -4px 0 0 rgba(0,0,0,.06)}
+.cabinets{position:absolute;left:27%;top:7%;width:38%;height:20%}
+.zone .kwin{left:70%;width:18%}.zone .bwin{left:10%;width:18%}
+.counter{position:absolute;left:26%;bottom:9%;width:38%;height:32%;overflow:visible}
+.fridge{position:absolute;left:3%;bottom:9%;width:20%;height:62%;padding:0;border:0;background:none;pointer-events:auto;cursor:pointer}
+.fridge .fdoor{transform-box:fill-box;transform-origin:0 50%;transition:transform .4s}.fridge.open .fdoor{transform:scaleX(.18)}
+.hbed{position:absolute;left:40%;bottom:9%;width:48%;height:24%}
+.lamp{position:absolute;left:90%;bottom:9%;width:6%;height:34%}
+.lampglow{position:absolute;left:72.9%;top:28%;width:16%;height:50%;transform:translateX(-50%);z-index:41;pointer-events:none;opacity:0;transition:opacity 2s;background:radial-gradient(closest-side,rgba(255,214,150,.35),transparent)}
+.room[data-tod=night] .lampglow,.room[data-tod=dusk] .lampglow{opacity:1}
+.rail{position:absolute;left:0;width:100%;bottom:30%;height:24%}
+.plant{position:absolute;bottom:9%;width:9%;height:16%}.plant.p1{left:3%}.plant.p2{left:30%}
+.sunpatch{position:absolute;left:12%;bottom:5%;width:48%;height:12%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,236,160,.75),transparent);opacity:0;transition:opacity 2s}.room[data-tod=day] .sunpatch{opacity:1}
+.bird{position:absolute;left:60%;bottom:54%;width:6%;height:auto}
+.bird.land{animation:birdland .9s ease-out both,birdbob 1.6s 1s ease-in-out infinite}.bird.fly{animation:birdfly .9s ease-in both}
+@keyframes birdland{from{transform:translate(-160px,-140px) scale(.7);opacity:0}to{transform:none;opacity:1}}
+@keyframes birdbob{50%{transform:translateY(-3px) rotate(-6deg)}}
+@keyframes birdfly{to{transform:translate(200px,-220px) scale(.7);opacity:0}}
+.pannav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 0}.pannav .btn{min-width:96px}.pannav span{font-size:14px;color:var(--muted)}
 .zonetabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 0 10px}
 .zonetabs button{font:inherit;font-size:14px;background:var(--chip);color:var(--fg);border:1.5px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
 .zonetabs button.cathere::after{content:" 🐱"}.zonetabs .follow{background:transparent}
