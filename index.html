@@ -133,6 +133,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .cup{position:absolute;left:14.3%;bottom:41%;width:.85%;aspect-ratio:20/22;z-index:5;transition:left .6s ease-in,bottom .6s cubic-bezier(.6,0,1,1),transform .6s}
 .cup.down{left:16.9%;bottom:8.6%;transform:rotate(95deg);cursor:pointer}
 .ftreat{position:absolute;z-index:30;cursor:pointer;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}.ftreat.fall{transition:top .5s cubic-bezier(.5,0,1,1)}
+.devbtns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .cloudbak{display:flex;flex-direction:column;gap:6px;margin-top:8px}.cloudbak .btn{text-align:left}
 .fbtext{font:inherit;font-size:15px;width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);resize:vertical}
 .fbcheck{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
@@ -593,7 +594,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
 
     </div><!-- manualWorkspace -->
-    <div class="foot"><span id="saved">設定會自動存在這台裝置</span><button class="btn" id="cloudRetry" type="button" hidden>重新讀取雲端</button><button class="btn warn" id="resetAll">全部重來</button></div>
+    <div class="foot"><span id="saved">設定會自動存在這台裝置</span><button class="btn" id="cloudRetry" type="button" hidden>重新讀取雲端</button><button class="btn" id="useHereBtn" type="button" hidden>改用這台</button><button class="btn warn" id="resetAll">全部重來</button></div>
     <div class="backup"><button class="btn" id="backupOut" type="button">下載備份</button><button class="btn" id="backupIn" type="button">從備份還原</button><input type="file" id="backupFile" accept="application/json,.json" hidden><button class="btn" id="cloudBakBtn" type="button" hidden>雲端自動備份</button><span id="backupMsg"></span></div><div class="cloudbak" id="cloudBakList" hidden></div>
     <div class="backup"><button class="btn" id="installBtn" type="button">加到手機主畫面</button><span id="installMsg"></span></div>
   </div>
@@ -634,6 +635,15 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<div class="guide" id="devWarn" hidden role="alertdialog" aria-modal="true" aria-labelledby="devWarnTitle">
+  <div class="gcard">
+    <h2 id="devWarnTitle">⚠️ 貓咪在另一台裝置也開著</h2>
+    <p class="gsub" id="devWarnText"></p>
+    <p class="gsub">兩邊同時開著會互相覆蓋，新增的記憶、設定可能會不見。為了保護你的資料，<b>這台已經先暫停同步</b>。</p>
+    <p class="gsub">建議：只留一台開著，另一台把網頁關掉。</p>
+    <div class="devbtns"><button class="btn primary" id="devUseHere" type="button">改用這台（載入最新的貓）</button><button class="btn" id="devLater" type="button">先不用，維持暫停</button></div>
+  </div>
+</div>
 <div class="guide" id="fbPanel" hidden role="dialog" aria-modal="true" aria-labelledby="fbTitle">
   <div class="gcard">
     <div class="ghead"><span>意見回饋</span><button class="gx" id="fbClose" type="button">關閉</button></div>
@@ -879,7 +889,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import {getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,getDocs,query,where,orderBy,limit,updateDoc,deleteDoc} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,getDocs,query,where,orderBy,limit,updateDoc,deleteDoc,onSnapshot} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 /* ===== 把 Firebase 主控台給你的設定貼在這裡 ===== */
 const firebaseConfig = {
@@ -1303,6 +1313,8 @@ let saveT,user=null,db=null,auth=null,loading=false;
 /* owner：現在畫面上這隻貓屬於哪個帳號（'guest' 是沒登入時的貓）。cloudOk：這個帳號的雲端資料已經成功讀過。
    兩個都對得上才會寫回雲端，避免讀取失敗或換帳號時，把別的貓蓋到這個帳號上。 */
 var owner='guest',cloudOk=null;
+/* 同一個帳號在別的裝置（或別的分頁）也開著：跳警告，這台先暫停同步 */
+var SID=Math.random().toString(36).slice(2,10),syncPaused=false,presUnsub=null,presTimer=null,presOther='';
 const status=t=>{$('saved').textContent=t};
 function save(){clearTimeout(saveT);saveT=setTimeout(doSave,user?1200:400)}
 let sentPaint={};
@@ -1311,13 +1323,14 @@ async function doSave(){
   if(!user)guestDirty=true;
   const data={S,owner,paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintSideL:CV.sideL.toDataURL(),paintBack:CV.back.toDataURL()};
   try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
-  if(user&&db&&!loading&&owner===user.uid&&cloudOk===user.uid){
+  if(user&&db&&!loading&&!syncPaused&&owner===user.uid&&cloudOk===user.uid){
     if(data.paint.length+data.paintSide.length+data.paintSideL.length+data.paintBack.length>950000){status('花紋太複雜，超過雲端單筆上限，請清掉一些');return}
     const clean=JSON.parse(JSON.stringify(S));if(Array.isArray(clean.guideAns))clean.guideAns=clean.guideAns.map(a=>Array.isArray(a)?a.join(','):String(a??''));
     const payload={settings:clean,updatedAt:serverTimestamp()};['paint','paintSide','paintSideL','paintBack'].forEach(k=>{if(sentPaint[k]!==data[k])payload[k]=data[k]});
     try{await setDoc(doc(db,'users',user.uid,'cats','main'),payload,{mergeFields:Object.keys(payload)});['paint','paintSide','paintSideL','paintBack'].forEach(k=>{if(k in payload)sentPaint[k]=data[k]});status('已同步到雲端')}
     catch(e){status('雲端儲存失敗（'+(e.code||e.message)+'）')}
   }else if(!user)status('已自動儲存在這台裝置')
+  else if(syncPaused)status('已暫停同步（另一台裝置開著），先只存在這台')
   else if(cloudOk!==user.uid&&!loading)status('還沒讀到雲端的貓，先只存在這台裝置')
 }
 function loadImg(c,url){return new Promise(res=>{const x=c.getContext('2d');x.clearRect(0,0,600,600);if(!url)return res();
@@ -1371,13 +1384,33 @@ async function loadCloud(u){
   if(err){status('讀不到雲端的貓（'+(err.code||err.message)+'），先暫停同步，雲端資料不會被蓋掉');$('cloudRetry').hidden=false;return}
   if(snap.exists()){const d=snap.data();await applyData(d.settings,d);if(stale())return;owner=u.uid;autoBak(u.uid,d)}
   else{if(owner!=='guest'&&owner!==u.uid){booting=true;await applyData({...DEF},{});booting=false}owner=u.uid}
-  cloudOk=u.uid;loading=false;if(view==='home'){drawHomeCat();drawPhrases();memLabel()}doSave()}
+  try{const ps=await getDoc(presRef(u.uid)),pd=ps.exists()?ps.data():null;if(pd&&pd.sid!==SID&&pd.ms&&Date.now()-pd.ms<150000&&note)note(`提醒：這隻貓也在「${pd.dev||'另一台裝置'}」開著，那邊會先暫停同步，以這台為主`,6)}catch(e){}
+  if(stale())return;
+  cloudOk=u.uid;loading=false;if(view==='home'){drawHomeCat();drawPhrases();memLabel()}doSave();presClaim();if(!presUnsub)presStart(u.uid)}
 /* 每天第一次登入，把讀到的雲端資料另存一份（保留兩天份），出事可以拿回來 */
 async function autoBak(uid,d){try{if(ls.get('neko-bak-day-'+uid)===today())return;
   const b1=await getDoc(doc(db,'users',uid,'cats','bak1'));
   if(b1.exists()&&b1.data().day!==today())await setDoc(doc(db,'users',uid,'cats','bak2'),b1.data());
   await setDoc(doc(db,'users',uid,'cats','bak1'),{...d,day:today()});ls.set('neko-bak-day-'+uid,today())}catch(e){}}
 $('cloudRetry').onclick=()=>{if(user)loadCloud(user)};
+function devName(){const u=navigator.userAgent;return /iPhone/.test(u)?'iPhone':/iPad|Macintosh.*Mobile/.test(u)?'iPad':/Android/.test(u)?'Android 手機':/Mac/.test(u)?'Mac 電腦':/Windows/.test(u)?'Windows 電腦':'另一台電腦'}
+const presRef=uid=>doc(db,'users',uid,'cats','presence');
+function presClaim(){if(!user||!db||syncPaused||cloudOk!==user.uid||document.hidden)return;setDoc(presRef(user.uid),{sid:SID,ms:Date.now(),dev:devName()}).catch(()=>{})}
+function presStart(uid){presStop();let first=true;
+  try{presUnsub=onSnapshot(presRef(uid),sn=>{const d=sn.exists()?sn.data():null,wasFirst=first;first=false;
+    if(!user||user.uid!==uid||!d||d.sid===SID||!d.sid)return;
+    if(wasFirst&&Date.now()-(d.ms||0)>150000)return; // 很久沒動的舊紀錄（例如上次關掉沒清到）不算
+    if(!d.ms)return; // 對方已經關掉了
+    presOther=d.dev||'另一台裝置';pauseSync()},()=>{})}catch(e){}
+  presTimer=setInterval(presClaim,60000)}
+function presStop(){if(presUnsub){try{presUnsub()}catch(e){}presUnsub=null}clearInterval(presTimer);presTimer=null}
+function pauseSync(){syncPaused=true;clearTimeout(saveT);$('useHereBtn').hidden=false;status('已暫停同步（另一台裝置開著），先只存在這台');
+  const same=presOther===devName();$('devWarnText').textContent=same?`你在另一個分頁或另一台${presOther}也開著這隻貓。`:`你在「${presOther}」上也開著這隻貓。`;$('devWarn').hidden=false}
+async function useHere(){$('devWarn').hidden=true;$('useHereBtn').hidden=true;syncPaused=false;if(user)await loadCloud(user)}
+$('devUseHere').onclick=useHere;$('useHereBtn').onclick=useHere;
+$('devLater').onclick=()=>{$('devWarn').hidden=true};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;if(syncPaused&&user)$('devWarn').hidden=false;else presClaim()});
+window.addEventListener('pagehide',()=>{if(user&&db&&!syncPaused&&cloudOk===user.uid)setDoc(presRef(user.uid),{sid:SID,ms:0,dev:devName()}).catch(()=>{})});
 $('cloudBakBtn').onclick=async()=>{const box=$('cloudBakList');if(!user||!db)return;if(!box.hidden){box.hidden=true;return}
   box.hidden=false;box.textContent='讀取中…';const list=[];
   try{for(const k of['bak1','bak2']){const sn=await getDoc(doc(db,'users',user.uid,'cats',k));if(sn.exists())list.push([k,sn.data()])}}catch(e){box.textContent='讀不到備份（'+(e.code||e.message)+'）';return}
@@ -1403,7 +1436,7 @@ function setupFirebase(){
   $('loginBtn').onclick=async()=>{try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){$('authStatus').textContent='登入失敗（'+(e.code||e.message)+'）'}};
   $('logoutBtn').onclick=()=>signOut(auth);
   onAuthStateChanged(auth,async u=>{
-    const was=user;user=u;sentPaint={};cloudOk=null;clearTimeout(saveT);if(typeof drawAdminBtn==='function')drawAdminBtn();$('loginBtn').hidden=!!u;$('logoutBtn').hidden=!u;$('avatar').hidden=!(u&&u.photoURL);
+    const was=user;user=u;sentPaint={};cloudOk=null;clearTimeout(saveT);presStop();syncPaused=false;$('useHereBtn').hidden=true;$('devWarn').hidden=true;if(typeof drawAdminBtn==='function')drawAdminBtn();$('loginBtn').hidden=!!u;$('logoutBtn').hidden=!u;$('avatar').hidden=!(u&&u.photoURL);
     $('cloudBakBtn').hidden=!u;$('cloudBakList').hidden=true;$('cloudRetry').hidden=true;
     if(!u){loading=false;if(was||owner!=='guest')await resetLocal(!was);$('authStatus').textContent='尚未登入，設定只存在這台裝置';let shown=false;try{shown=sessionStorage.getItem('neko-guest-seen')}catch(e){}
       if(!shown){try{sessionStorage.setItem('neko-guest-seen','1')}catch(e){}$('guestPanel').hidden=false}return}
@@ -3344,13 +3377,21 @@ var camHold=-1e9,camInit=false;
 ['touchstart','wheel','pointerdown'].forEach(t=>$('roomScroll').addEventListener(t,()=>{camHold=performance.now()},{passive:true}));
 $('roomScroll').addEventListener('scroll',()=>{if(performance.now()-camHold<1500){const h=$('swipeHint');if(!h.classList.contains('off')){h.classList.add('off');try{ls.set('neko-swiped','1')}catch(e){}}}},{passive:true});
 try{if(ls.get('neko-swiped'))$('swipeHint').classList.add('off')}catch(e){}
-var lastPtrX=null;room.addEventListener('pointermove',e=>{lastPtrX=e.clientX},{passive:true});room.addEventListener('pointerdown',e=>{lastPtrX=e.clientX},{passive:true});
+var lastPtrX=null,ptrIn=false,ptrOnBtn=false;room.addEventListener('pointermove',e=>{lastPtrX=e.clientX;ptrOnBtn=!!(e.target.closest&&e.target.closest('button'));if(e.pointerType==='mouse')ptrIn=true},{passive:true});room.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')ptrIn=false},{passive:true});room.addEventListener('pointerdown',e=>{lastPtrX=e.clientX},{passive:true});
 function edgePan(sc,cx,dt){const r=sc.getBoundingClientRect(),edge=Math.min(90,r.width*.16);let v=0;
   if(cx<r.left+edge)v=-(1-Math.max(0,cx-r.left)/edge);else if(cx>r.right-edge)v=1-Math.max(0,r.right-cx)/edge;
   if(!v)return 0;const before=sc.scrollLeft;sc.scrollLeft+=v*Math.max(300,r.width*1.1)*dt;camHold=performance.now();return sc.scrollLeft-before}
 function followCam(px,w,dt){const sc=$('roomScroll');if(sc.scrollWidth<=sc.clientWidth+2)return;
   if(H.hug&&touch&&touch.mode==='hug'){const d=edgePan(sc,touch.x,dt);if(d)H.dragX=(H.dragX||0)+d;return}
-  if(wandOn&&PL.down&&lastPtrX!=null){const d=edgePan(sc,lastPtrX,dt);if(d)PL.x=Math.max(0,Math.min(room.clientWidth,PL.x+d));return}
+  if(wandOn){
+    // 拿著逗貓棒往畫面兩側移，畫面就跟著捲過去（手指按著、或滑鼠在房間裡都算）
+    if(lastPtrX!=null&&(PL.down||ptrIn)){if(ptrOnBtn&&!PL.down)return;const r=sc.getBoundingClientRect(),zone=r.width*.28;let v=0;
+      if(lastPtrX<r.left+zone)v=-(1-Math.max(0,lastPtrX-r.left)/zone);else if(lastPtrX>r.right-zone)v=1-Math.max(0,r.right-lastPtrX)/zone;
+      if(v){v=Math.sign(v)*v*v;const before=sc.scrollLeft;sc.scrollLeft+=v*Math.max(320,r.width*1.2)*dt;const d=sc.scrollLeft-before;if(d){camHold=performance.now();PL.x=Math.max(0,Math.min(room.clientWidth,PL.x+d))}}
+      return}
+    // 放著不動一下下，畫面就慢慢回到貓身上
+    if(performance.now()-PL.moveAt<2500||performance.now()-camHold<2500)return;
+    const t2=Math.max(0,Math.min(sc.scrollWidth-sc.clientWidth,px+w/2-sc.clientWidth/2)),d2=t2-sc.scrollLeft;if(Math.abs(d2)>2)sc.scrollLeft+=d2*Math.min(1,dt*1.8);return}
   const target=Math.max(0,Math.min(sc.scrollWidth-sc.clientWidth,px+w/2-sc.clientWidth/2));
   if(!camInit){camInit=true;sc.scrollLeft=target;return}
   if(performance.now()-camHold<3500||H.hug||wandOn||roomEdit)return;
