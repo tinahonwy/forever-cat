@@ -369,6 +369,34 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   .maker-choice-icon{font-size:22px}
 }
 @media(max-height:690px) and (max-width:820px){#viewMaker .stage{width:min(100%,26dvh,230px)}}
+
+.colorbar{align-items:center}
+.pickline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.colorpick{appearance:none;-webkit-appearance:none;border:2px solid var(--line);background:#fff;padding:0;width:44px;height:34px;border-radius:10px;cursor:pointer}
+.colorpick::-webkit-color-swatch-wrapper{padding:3px;border-radius:8px}.colorpick::-webkit-color-swatch{border:none;border-radius:6px}
+.colorpick::-moz-color-swatch{border:none;border-radius:6px}
+.hexpill{display:inline-flex;align-items:center;min-width:88px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:12px;color:var(--muted)}
+.refpanel{margin-top:8px;padding:10px 11px;border:1px dashed var(--line);border-radius:14px;background:rgba(255,255,255,.45)}
+.refhead{display:flex;justify-content:space-between;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px}.refhead span{font-size:12px;color:var(--muted)}
+.refthumbs{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.refthumb{border:2px solid var(--line);background:#fff;border-radius:12px;padding:5px;min-width:82px;cursor:pointer;flex:none}.refthumb img{display:block;width:70px;height:70px;object-fit:cover;border-radius:8px}.refthumb small{display:block;text-align:center;font-size:11px;color:var(--muted);margin-top:4px}
+.refthumb:active,.refthumb[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.sampler-card{max-width:min(92vw,760px)}
+.sampler-stage{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px}.sampler-stage canvas{display:block;width:100%;max-height:62vh;touch-action:none;background:#f7f7f7;border-radius:12px}
+.sampler-picked{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+#toggleRefPicker{white-space:nowrap}
+@media(max-width:480px){.refthumb{min-width:72px}.refthumb img{width:60px;height:60px}.hexpill{min-width:78px;font-size:11px}}
+
+
+/* 清楚可見的正面照拍攝指南（手機亦優先顯示） */
+.photo-tips{padding:15px 16px;border:2px solid #d29b40;border-radius:17px;background:#fff3d7;color:#523b18;box-shadow:0 3px 10px rgba(139,96,27,.12)}
+.photo-tips-title{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:12px;line-height:1.35}
+.photo-tips-title strong{font-size:17px;color:#51340d}.photo-tips-icon{font-size:23px}
+.photo-tips-tag{margin-left:auto;white-space:nowrap;background:#a85f22;color:#fff;font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px}
+.photo-tips-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.photo-tips-grid>div{background:rgba(255,255,255,.75);border-radius:11px;padding:9px 11px;display:flex;flex-direction:column;gap:2px}
+.photo-tips-grid strong{font-size:15px;color:#633e0d}.photo-tips-grid span{font-size:13px;color:#6a512c;line-height:1.55}
+.photo-tips-note{margin:10px 0 0;font-size:12px;color:#7a5428}
+@media(max-width:480px){.photo-tips{padding:12px;border-radius:14px}.photo-tips-title strong{font-size:16px}.photo-tips-tag{margin-left:0}}
 </style>
 </head>
 <body>
@@ -419,9 +447,14 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     </div>
     <section class="photo-workspace" id="photoWorkspace" hidden aria-label="AI 照片畫貓">
       <div class="photo-workspace-head"><b>📷 用照片畫出真正的〚貓代詞〛</b><span>正面必填，其他角度選填</span></div>
+      <div class="photo-tips" id="photoWarn" role="note" aria-label="正面照片拍攝重點">
+        <div class="photo-tips-title"><span class="photo-tips-icon" aria-hidden="true">📸</span><strong>正面照這樣拍，畫得更像！</strong><span class="photo-tips-tag">上傳前先看</span></div>
+        <div class="photo-tips-grid"><div><strong>① 正對鏡頭</strong><span>兩隻眼睛都清楚，頭不要歪斜。</span></div><div><strong>② 臉占畫面 60%～70%</strong><span>包含耳朵，別裁到下巴。</span></div><div><strong>③ 背景乾淨、光線均勻</strong><span>避開雜物、強烈陰影與濾鏡。</span></div></div>
+        <p class="photo-tips-note">拍得太遠、太斜或局部被遮住，都可能讓花紋辨識失準。</p>
+      </div>
       <div class="photorow"><button class="photobtn" id="photoBtn" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>從照片自動畫一隻</b><small>先選一張〚貓代詞〛的正面照（必要）</small></span></button><input type="file" id="photoInput" accept="image/*" hidden><div class="vphotos"><span class="lbl">先挑選其他角度（選填），選好後按「開始畫貓」一起分析</span><div class="chips"><button class="chip vphoto" type="button" data-v="sideL">左側照片<i></i></button><button class="chip vphoto" type="button" data-v="side">右側照片<i></i></button><button class="chip vphoto" type="button" data-v="back">背面（屁股）照片<i></i></button></div><input type="file" id="photoInput2" accept="image/*" hidden></div><div class="btns"><button class="btn primary" id="photoAnalyze" type="button" disabled>🐱 開始畫貓（綜合分析）</button><button class="btn" id="photoReset" type="button" hidden>重新選照片</button></div><p class="hint" id="photoQueueStatus" aria-live="polite">尚未選擇照片。正面照必填，其他角度可以慢慢補。</p>
         <p class="hint" id="photoMsg">先選好照片，按「開始畫貓」才會一起分析。建議使用正面且身體朝前的照片；Gemini 會幫你調好毛色、花紋、眼睛、耳朵和尾巴。再補左側、右側、背面照片，走路和轉身時的花紋也會跟真的一樣。</p>
-        <p class="hint aiwarn" id="photoWarn">📸 正面照小提醒：請盡量正對鏡頭，背景越單純越好；貓臉（含耳朵）最好占整張圖片約 60%～70%，至少一半。避免太遠、太斜、耳朵或下巴被裁掉，會更容易畫準。</p>
+        
         <p class="hint aiwarn">※ 花紋和外觀是 AI 生成的，不一定準確，可以用筆刷、換色塊、刪色塊手動微調。</p>
         <div class="phototools" id="photoTools" hidden><div class="chips"><button class="chip" id="pvProj" type="button">照片花紋</button><button class="chip" id="pvBlock" type="button">色塊花紋</button><button class="chip" id="pvTrace" type="button">描圖</button></div><div class="traceop" id="texRow"><span>質感</span><div class="chips" id="texChips"><button class="chip" type="button" data-t="none">無</button><button class="chip" type="button" data-t="fleck">斑點</button><button class="chip" type="button" data-t="stripe">條紋</button></div></div><label class="traceop" id="simpRow"><span>簡化（越低越接近照片）</span><input type="range" id="simpLv" min="0" max="100" value="30"></label><label class="traceop" id="traceRow" hidden><span>照片透明度</span><input type="range" id="traceOp" min="10" max="90" value="45"></label></div></div>
       <button type="button" class="btn primary" id="afterPhotoEdit">🎨 畫好了？進入手動微調</button>
@@ -438,8 +471,16 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
     <div class="pane" data-pane="color">
       <div class="row"><span class="lbl">底色</span><div class="swatches" id="sw-base"></div></div>
+      <div class="row colorbar"><span class="lbl">自訂底色</span><div class="pickline"><input type="color" id="baseColorPicker" class="colorpick" aria-label="自訂底色"><span class="hexpill" id="baseHex">#F6EFE3</span></div></div>
       <p class="hint">在左邊的貓身上直接畫花紋，畫到身體外面的部分會自動隱藏。</p>
       <div class="row"><span class="lbl">筆刷顏色</span><div class="swatches" id="sw-brush"></div></div>
+      <div class="row colorbar"><span class="lbl">自訂筆刷顏色</span><div class="pickline"><input type="color" id="brushColorPicker" class="colorpick" aria-label="自訂筆刷顏色"><span class="hexpill" id="brushHex">#F2B06B</span><button class="btn" id="toggleRefPicker" type="button">🎯 吸色</button></div></div>
+      <div class="refpanel" id="refPickerPanel" hidden>
+        <div class="refhead"><b>從參考照片吸色</b><span>點一下或長按照片都可以吸色</span></div>
+        <div class="refthumbs" id="refThumbs"></div>
+        <p class="hint" id="refPickerHint">先在 AI 畫貓上傳照片，或另外加入一張參考圖片。</p>
+        <div class="btns"><button class="btn" id="addRefPhoto" type="button">上傳參考圖片</button><input type="file" id="addRefPhotoInput" accept="image/*" hidden></div>
+      </div>
       <div class="row"><span class="lbl">筆刷大小 <span id="bsVal"></span></span><input type="range" id="brushSize" min="6" max="60" step="1"></div>
       <div class="split">
         <div class="row"><span class="lbl">工具（換色塊／刪色塊：點一下整塊改）</span><div class="chips" id="c-tool"></div></div>
@@ -506,6 +547,15 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="foot"><span id="saved">設定會自動存在這台裝置</span><button class="btn warn" id="resetAll">全部重來</button></div>
     <div class="backup"><button class="btn" id="backupOut" type="button">下載備份</button><button class="btn" id="backupIn" type="button">從備份還原</button><input type="file" id="backupFile" accept="application/json,.json" hidden><span id="backupMsg"></span></div>
     <div class="backup"><button class="btn" id="installBtn" type="button">加到手機主畫面</button><span id="installMsg"></span></div>
+  </div>
+</div>
+
+<div class="guide" id="colorSampler" hidden role="dialog" aria-modal="true" aria-labelledby="samplerTitle">
+  <div class="gcard sampler-card">
+    <div class="ghead"><span id="samplerTitle">從參考照片吸色</span><button class="gx" id="samplerClose" aria-label="關閉">關閉</button></div>
+    <p class="gsub">點一下照片，或在手機上長按想要的顏色，再按「用這個顏色當筆刷」。</p>
+    <div class="sampler-stage"><canvas id="samplerCanvas" width="900" height="900"></canvas></div>
+    <div class="sampler-picked"><span>目前顏色</span><span class="hexpill" id="samplerHex">#F2B06B</span><button class="btn primary" id="samplerUse" type="button">用這個顏色當筆刷</button></div>
   </div>
 </div>
 
@@ -960,6 +1010,37 @@ function refreshControls(){controls.forEach(f=>f())}
 
 swatches('sw-base',BASES,'base');
 swatches('sw-brush',BRUSH,'brush',()=>{S.eraser=false;if(S.ptool==='eraser'||S.ptool==='del')S.ptool='brush'});
+$('baseColorPicker').oninput=e=>set('base',e.target.value);
+$('brushColorPicker').oninput=e=>set('brush',e.target.value,()=>{S.eraser=false;if(S.ptool==='eraser'||S.ptool==='del')S.ptool='brush'});
+controls.push(()=>{$('baseColorPicker').value=S.base;$('baseHex').textContent=(S.base||'').toUpperCase()});
+controls.push(()=>{$('brushColorPicker').value=S.brush;$('brushHex').textContent=(S.brush||'').toUpperCase()});
+const photoRefs={front:null,sideL:null,side:null,back:null},extraRefPhotos=[];
+function readRefFile(file,done){const fr=new FileReader();fr.onerror=()=>{};fr.onload=()=>done(fr.result);fr.readAsDataURL(file)}
+function setPhotoRef(file,v){if(!file)return;readRefFile(file,src=>{if(v&&v.startsWith('extra:')){const name=file.name||'參考圖片';extraRefPhotos.unshift({id:v,label:name.replace(/\.[^.]+$/,''),src});if(extraRefPhotos.length>6)extraRefPhotos.length=6}else if(v in photoRefs){photoRefs[v]=src}drawRefThumbs()})}
+function refEntries(){const arr=[];PHOTO_ORDER.forEach(v=>{if(photoRefs[v])arr.push({id:v,label:PHOTO_LABEL[v],src:photoRefs[v]})});extraRefPhotos.forEach(o=>arr.push({id:o.id,label:o.label||'參考圖片',src:o.src}));return arr}
+function openRefPanel(force=true){$('refPickerPanel').hidden=force===false?true:!$('refPickerPanel').hidden;drawRefThumbs()}
+$('toggleRefPicker').onclick=()=>openRefPanel();
+$('addRefPhoto').onclick=()=>{$('addRefPhotoInput').click()};
+$('addRefPhotoInput').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f){setPhotoRef(f,'extra:'+Date.now());$('refPickerPanel').hidden=false}e.target.value=''};
+let samplerImg=null,samplerColor=S.brush,samplerRect=null;
+function drawSamplerImage(){const cv=$('samplerCanvas'),x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);if(!samplerImg)return;
+  const pad=18,sw=cv.width-pad*2,sh=cv.height-pad*2,sc=Math.min(sw/samplerImg.width,sh/samplerImg.height),dw=samplerImg.width*sc,dh=samplerImg.height*sc,dx=(cv.width-dw)/2,dy=(cv.height-dh)/2;
+  x.fillStyle='#ffffff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(samplerImg,dx,dy,dw,dh);samplerRect={dx,dy,dw,dh};}
+function setSamplerColor(hex){samplerColor=hex;$('samplerHex').textContent=hex.toUpperCase();$('samplerHex').style.background=hex;$('samplerHex').style.color=lum(hex)<.55?'#fff':'#222'}
+function closeSampler(){$('colorSampler').hidden=true;samplerImg=null;samplerRect=null}
+function openSampler(src,label){const img=new Image();img.onload=()=>{samplerImg=img;$('samplerTitle').textContent='從「'+label+'」吸色';$('colorSampler').hidden=false;drawSamplerImage();setSamplerColor(S.brush)};img.src=src}
+function pickSampler(clientX,clientY){const cv=$('samplerCanvas'),r=cv.getBoundingClientRect();if(!samplerImg||!samplerRect)return;const x=(clientX-r.left)/r.width*cv.width,y=(clientY-r.top)/r.height*cv.height;const b=samplerRect;if(x<b.dx||x>b.dx+b.dw||y<b.dy||y>b.dy+b.dh)return null;const cx=cv.getContext('2d'),d=cx.getImageData(Math.round(x),Math.round(y),1,1).data;const hex='#'+[d[0],d[1],d[2]].map(n=>n.toString(16).padStart(2,'0')).join('');setSamplerColor(hex);return hex}
+$('samplerClose').onclick=closeSampler;$('samplerUse').onclick=()=>{set('brush',samplerColor,()=>{S.eraser=false;if(S.ptool==='eraser'||S.ptool==='del')S.ptool='brush'});closeSampler();setMakerMode('manual');showTab('color')};
+(function(){const cv=$('samplerCanvas');let hold=0,down=null;
+  cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};hold=setTimeout(()=>{pickSampler(down.x,down.y)},360)});
+  cv.addEventListener('pointermove',e=>{if(!down)return; if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>10){clearTimeout(hold)}});
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,e=>{clearTimeout(hold); if(t==='pointerup')pickSampler(e.clientX,e.clientY); down=null;}));
+})();
+function drawRefThumbs(){const box=$('refThumbs'),list=refEntries();box.innerHTML='';$('refPickerHint').textContent=list.length?'點一下想吸色的照片；手機上也可以長按。':'先在 AI 畫貓上傳照片，或另外加入一張參考圖片。';list.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='refthumb';b.innerHTML='<img alt="" src="'+it.src+'"><small>'+it.label+'</small>';let tm=0;
+    b.onclick=()=>openSampler(it.src,it.label);
+    b.addEventListener('pointerdown',()=>{tm=setTimeout(()=>openSampler(it.src,it.label),360)});
+    ['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,()=>clearTimeout(tm)));
+    box.appendChild(b)});}
 S.ptool=S.eraser?'eraser':'brush';chips('c-tool',[['brush','筆刷'],['eraser','橡皮擦'],['fill','換色塊'],['del','刪色塊']],'ptool',v=>{S.eraser=v==='eraser'});
 $('eraseQuick').onclick=()=>{S.ptool=S.eraser?'brush':'eraser';set('eraser',!S.eraser)};controls.push(()=>$('eraseQuick').setAttribute('aria-pressed',!!S.eraser));
 chips('c-soft',[[true,'柔和'],[false,'銳利']],'soft');
@@ -1093,7 +1174,7 @@ function tapRegion(p,mode){const W=600,img=ctx.getImageData(0,0,W,W),d=img.data,
 function dab(p){dab1(p.x,p.y);if(S.sym&&GV(mview)!=='side')dab1(600-p.x,p.y)}
 let painting=false,last=null;
 PAINTS.forEach(k=>{const c=CV[k];
-  c.addEventListener('pointerdown',e=>{if(tab!=='color')return;e.preventDefault();
+  c.addEventListener('pointerdown',e=>{if(tab!=='color'||makerMode!=='manual')return;e.preventDefault();
     if(S.ptool==='fill'||S.ptool==='del'){if(mview!=='front'&&!S[mview+'Edited']){S[mview+'Edited']=true;vhint()}pushUndo();tapRegion(pt(e),S.ptool);afterChange();return}
     pushUndo();painting=true;
     if(mview!=='front'&&!S[mview+'Edited']){S[mview+'Edited']=true;vhint()}
@@ -2569,7 +2650,7 @@ function photoQueueUI(){
   document.querySelectorAll('.vphoto').forEach(b=>{const picked=!!pendingCatPhotos[b.dataset.v];b.querySelector('i').textContent=picked?' ✓':(S[b.dataset.v+'Photo']?'（已畫）':'')});
   const b=$('photoBtn');b.querySelector('small').textContent=pendingCatPhotos.front?'✓ 已選正面照（點此可換照片）':'先選一張〚貓代詞〛的正面照（必要）';
 }
-function queueCatPhoto(file,v){if(!file)return;pendingCatPhotos[v]=file;photoQueueUI();$('photoMsg').textContent='照片已選好，按「開始畫貓」才會送給 Gemini 分析。';}
+function queueCatPhoto(file,v){if(!file)return;pendingCatPhotos[v]=file;setPhotoRef(file,v);photoQueueUI();$('photoMsg').textContent='照片已選好，按「開始畫貓」才會送給 Gemini 分析。';}
 $('photoBtn').onclick=()=>{$('photoInput').click()};
 $('stageCam').onclick=()=>setMakerMode('photo');
 $('photoInput').onchange=e=>{queueCatPhoto(e.target.files&&e.target.files[0],'front');e.target.value=''};
