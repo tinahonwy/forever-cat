@@ -147,7 +147,9 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .voicerow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}.voicerow .vstat{color:var(--muted);font-size:13px}.voicerow .vbtns{display:flex;gap:6px;flex-wrap:wrap;width:100%}
 .voicerow .btn.rec{background:#e5707b;color:#fff;border-color:#e5707b}
 .vtoggle{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px}
-.wxsearch{display:flex;gap:8px;margin:10px 0}.wxsearch input{flex:1;font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px}
+.wxsel{display:flex;align-items:center;gap:8px;margin:12px 0 8px;font-size:14px}.wxsel select{font:inherit;padding:6px 8px;border:1.5px solid var(--line);border-radius:10px;background:var(--chip);color:var(--fg)}
+#wxGeo{margin-top:4px}
+.wxsearch{display:flex;gap:8px;margin:10px 0}.wxsearch .btn{white-space:nowrap;flex:none}.wxsearch input{min-width:0}.wxsearch input{flex:1;font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px}
 #it-boxfront{pointer-events:auto;cursor:pointer}.item.rustle{animation:rustle .45s ease-in-out}
 @keyframes rustle{0%,100%{transform:var(--itx,none)}25%{rotate:-2deg}75%{rotate:2deg}}
 .wx{position:absolute;inset:0;opacity:0;transition:opacity 1.5s;pointer-events:none}
@@ -687,15 +689,18 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   <div class="gcard">
     <div class="ghead"><span id="wxTitle">天氣</span><button class="gx" id="wxClose" type="button">關閉</button></div>
     <h2>窗外的天氣</h2>
-    <div class="chips" id="wxMode"><button class="chip" type="button" data-m="auto">跟著我的城市</button><button class="chip" type="button" data-m="manual">自己選</button><button class="chip" type="button" data-m="off">關掉</button></div>
+    <div class="chips" id="wxMode"><button class="chip" type="button" data-m="auto">跟著真實天氣</button><button class="chip" type="button" data-m="manual">自己選</button><button class="chip" type="button" data-m="off">關掉</button></div>
     <div id="wxAuto" hidden>
-      <p class="gsub">選你住的城市，會抓那裡現在的天氣（免費的天氣服務，不需要金鑰，只會用到城市位置）。</p>
+      <p class="gsub">選一個地點，會從網路上抓那裡現在的天氣（免費的天氣服務，不需要金鑰）。</p>
+      <button class="btn" id="wxGeo" type="button">📍 用我現在的位置</button>
+      <div class="wxsel"><label for="wxCountry">國家／地區</label><select id="wxCountry"></select></div>
       <div class="chips" id="wxCities"></div>
-      <div class="wxsearch"><input id="wxQ" placeholder="其他城市，例如：東京" maxlength="40" aria-label="搜尋城市"><button class="btn" id="wxFind" type="button">搜尋</button></div>
+      <div class="wxsearch"><input id="wxQ" placeholder="找其他城市，例如 Kyoto" maxlength="40" aria-label="搜尋城市"><button class="btn" id="wxFind" type="button">搜尋</button></div>
       <div class="chips" id="wxResults"></div>
     </div>
     <div id="wxManual" hidden><div class="chips" id="wxPick"><button class="chip" type="button" data-w="sun">☀️ 晴天</button><button class="chip" type="button" data-w="cloudy">☁️ 陰天</button><button class="chip" type="button" data-w="rain">🌧️ 下雨</button><button class="chip" type="button" data-w="snow">❄️ 下雪</button></div></div>
     <p class="gsub" id="wxMsg"></p>
+    <div class="devbtns"><button class="btn primary" id="wxSave" type="button">儲存</button><button class="btn" id="wxCancel" type="button">取消</button></div>
   </div>
 </div>
 <div class="guide" id="devWarn" hidden role="alertdialog" aria-modal="true" aria-labelledby="devWarnTitle">
@@ -3923,7 +3928,26 @@ $('albumDel').onclick=async()=>{const b=$('albumDel'),it=albCur;if(!it)return;if
   albItems=albItems.filter(x=>x!==it);albCur=null;$('albumView').hidden=true;$('albumGrid').hidden=false;drawAlbum()};
 
 /* ===== 天氣：跟著你選的城市（Open-Meteo，免費、不用金鑰），或自己選 ===== */
-const WX_CITIES=[['台北',25.03,121.56],['新北',25.01,121.46],['基隆',25.13,121.74],['桃園',24.99,121.30],['新竹',24.80,120.97],['台中',24.15,120.67],['彰化',24.08,120.54],['嘉義',23.48,120.45],['台南',22.99,120.21],['高雄',22.62,120.30],['屏東',22.67,120.49],['宜蘭',24.75,121.75],['花蓮',23.98,121.60],['台東',22.76,121.14]];
+const WX_COUNTRIES=[
+ ['TW','台灣',[['台北',25.03,121.56],['新北',25.01,121.46],['基隆',25.13,121.74],['桃園',24.99,121.30],['新竹',24.80,120.97],['台中',24.15,120.67],['彰化',24.08,120.54],['嘉義',23.48,120.45],['台南',22.99,120.21],['高雄',22.62,120.30],['屏東',22.67,120.49],['宜蘭',24.75,121.75],['花蓮',23.98,121.60],['台東',22.76,121.14],['澎湖',23.57,119.58],['金門',24.43,118.32]]],
+ ['JP','日本',[['東京',35.68,139.69],['橫濱',35.44,139.64],['大阪',34.69,135.50],['京都',35.01,135.77],['神戶',34.69,135.20],['名古屋',35.18,136.91],['札幌',43.06,141.35],['仙台',38.27,140.87],['福岡',33.59,130.40],['沖繩（那霸）',26.21,127.68]]],
+ ['KR','韓國',[['首爾',37.57,126.98],['仁川',37.46,126.71],['釜山',35.18,129.08],['大邱',35.87,128.60],['濟州',33.50,126.53]]],
+ ['HK','香港',[['香港',22.32,114.17]]],['MO','澳門',[['澳門',22.20,113.54]]],
+ ['CN','中國',[['北京',39.90,116.41],['上海',31.23,121.47],['廣州',23.13,113.26],['深圳',22.54,114.06],['廈門',24.48,118.09],['杭州',30.27,120.16],['成都',30.57,104.07]]],
+ ['SG','新加坡',[['新加坡',1.35,103.82]]],
+ ['MY','馬來西亞',[['吉隆坡',3.14,101.69],['檳城',5.41,100.33],['新山',1.49,103.74],['亞庇',5.98,116.07]]],
+ ['TH','泰國',[['曼谷',13.76,100.50],['清邁',18.79,98.98],['普吉',7.88,98.39]]],
+ ['VN','越南',[['河內',21.03,105.85],['胡志明市',10.82,106.63],['峴港',16.05,108.20]]],
+ ['PH','菲律賓',[['馬尼拉',14.60,120.98],['宿霧',10.32,123.89]]],
+ ['ID','印尼',[['雅加達',-6.21,106.85],['峇里島',-8.65,115.22]]],
+ ['US','美國',[['紐約',40.71,-74.01],['洛杉磯',34.05,-118.24],['舊金山',37.77,-122.42],['西雅圖',47.61,-122.33],['芝加哥',41.88,-87.63],['波士頓',42.36,-71.06],['休士頓',29.76,-95.37],['夏威夷（檀香山）',21.31,-157.86]]],
+ ['CA','加拿大',[['多倫多',43.65,-79.38],['溫哥華',49.28,-123.12],['蒙特婁',45.50,-73.57],['卡加利',51.05,-114.07]]],
+ ['GB','英國',[['倫敦',51.51,-0.13],['曼徹斯特',53.48,-2.24],['愛丁堡',55.95,-3.19]]],
+ ['FR','法國',[['巴黎',48.86,2.35],['里昂',45.76,4.84],['尼斯',43.70,7.27]]],
+ ['DE','德國',[['柏林',52.52,13.40],['慕尼黑',48.14,11.58],['法蘭克福',50.11,8.68]]],
+ ['AU','澳洲',[['雪梨',-33.87,151.21],['墨爾本',-37.81,144.96],['布里斯本',-27.47,153.03],['伯斯',-31.95,115.86]]],
+ ['NZ','紐西蘭',[['奧克蘭',-36.85,174.76],['威靈頓',-41.29,174.78],['基督城',-43.53,172.64]]]];
+const WX_CITIES=WX_COUNTRIES[0][2];
 const WX_ICON={sun:'☀️',cloudy:'☁️',rain:'🌧️',snow:'❄️'},WX_NAME={sun:'晴天',cloudy:'陰天',rain:'下雨',snow:'下雪'};
 var wxLive={code:null,at:0,key:''};
 function wxCfg(){if(!S.wx||typeof S.wx!=='object')S.wx={mode:'off'};return S.wx}
@@ -3937,23 +3961,43 @@ async function wxFetch(force){const C=wxCfg();if(C.mode!=='auto'||C.lat==null)re
   try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${C.lat}&longitude=${C.lon}&current=weather_code&timezone=auto`);const j=await r.json();
     const code=wxCodeMap(j&&j.current?j.current.weather_code:0);wxLive={code,at:Date.now(),key};try{localStorage.setItem('neko-wx-cache',JSON.stringify(wxLive))}catch(e){}wxApply();drawWx()}
   catch(e){const m=$('wxMsg');if(m&&!$('wxPanel').hidden)m.textContent='暫時抓不到天氣，等一下會再試'}}
-function drawWx(){const C=wxCfg();document.querySelectorAll('#wxMode .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===C.mode)));
+var wxDraft=null,wxPeekRes={key:'',code:null};
+function drawWx(){const C=wxDraft||wxCfg();document.querySelectorAll('#wxMode .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===C.mode)));
   $('wxAuto').hidden=C.mode!=='auto';$('wxManual').hidden=C.mode!=='manual';
   document.querySelectorAll('#wxPick .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.w===(C.manual||'sun'))));
-  const box=$('wxCities');if(!box.children.length)WX_CITIES.forEach(([nm,la,lo])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=nm;b.dataset.c=nm;b.onclick=()=>wxSetCity(nm,la,lo);box.appendChild(b)});
+  const sel=$('wxCountry'),cc=C.country||'TW';if(!sel.options.length){WX_COUNTRIES.forEach(([c,nm])=>{const o=document.createElement('option');o.value=c;o.textContent=nm;sel.appendChild(o)});const o=document.createElement('option');o.value='';o.textContent='其他（用搜尋）';sel.appendChild(o)}
+  sel.value=WX_COUNTRIES.some(x=>x[0]===cc)?cc:'';
+  const box=$('wxCities'),list=(WX_COUNTRIES.find(x=>x[0]===sel.value)||[0,0,[]])[2];if(box.dataset.cc!==sel.value){box.dataset.cc=sel.value;box.innerHTML='';
+    list.forEach(([nm,la,lo])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=nm;b.dataset.c=nm;b.onclick=()=>wxSetCity(nm,la,lo,sel.value);box.appendChild(b)});
+    if(!list.length)box.textContent='用下面的搜尋找你的城市'}
   box.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.c===C.city)));
-  const m=$('wxMsg');if(C.mode==='auto')m.textContent=C.city?(wxLive.code?`${C.city}現在：${WX_ICON[wxLive.code]} ${WX_NAME[wxLive.code]}`:`${C.city}：讀取天氣中…`):'先選一個城市';
+  const m=$('wxMsg'),cn=C.city==='我現在的位置'?'你所在的地方（只用到大概的城市範圍）':C.city;const dk=C.lat+','+C.lon,code=wxPeekRes.key===dk?wxPeekRes.code:(wxLive.key===dk?wxLive.code:null);if(C.mode==='auto')m.textContent=C.city?(code?`${cn}現在：${WX_ICON[code]} ${WX_NAME[code]}`:`${cn}：讀取天氣中…`):'先選一個地點';
   else if(C.mode==='manual')m.textContent=`窗外現在是${WX_NAME[C.manual||'sun']}`;else m.textContent='天氣關掉了，窗外會一直是晴天'}
-function wxSetCity(nm,la,lo){const C=wxCfg();C.city=nm;C.lat=Math.round(la*100)/100;C.lon=Math.round(lo*100)/100;wxLive={code:null,at:0,key:''};save();drawWx();wxFetch(true)}
-document.querySelectorAll('#wxMode .chip').forEach(b=>b.onclick=()=>{const C=wxCfg();C.mode=b.dataset.m;save();drawWx();wxApply();if(C.mode==='auto')wxFetch()});
-document.querySelectorAll('#wxPick .chip').forEach(b=>b.onclick=()=>{wxCfg().manual=b.dataset.w;save();drawWx();wxApply()});
+function wxSetCity(nm,la,lo,cc){const C=wxDraft||wxCfg();C.city=nm;if(cc!==undefined)C.country=cc;C.lat=Math.round(la*100)/100;C.lon=Math.round(lo*100)/100;drawWx();wxPeek()}
+/* 設定畫面裡先「看一下」那個地點的天氣，按儲存才真的套用 */
+async function wxPeek(){const C=wxDraft;if(!C||C.mode!=='auto'||C.lat==null)return;const key=C.lat+','+C.lon;if(wxPeekRes.key===key&&wxPeekRes.code)return;if(wxLive.key===key&&wxLive.code){wxPeekRes={key,code:wxLive.code};drawWx();return}
+  try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${C.lat}&longitude=${C.lon}&current=weather_code&timezone=auto`),j=await r.json();wxPeekRes={key,code:wxCodeMap(j&&j.current?j.current.weather_code:0),at:Date.now()};if(wxDraft)drawWx()}
+  catch(e){if(wxDraft)$('wxMsg').textContent='暫時抓不到這裡的天氣，還是可以先儲存'}}
+document.querySelectorAll('#wxMode .chip').forEach(b=>b.onclick=()=>{if(!wxDraft)return;wxDraft.mode=b.dataset.m;drawWx();wxPeek()});
+document.querySelectorAll('#wxPick .chip').forEach(b=>b.onclick=()=>{if(!wxDraft)return;wxDraft.manual=b.dataset.w;drawWx()});
 $('wxFind').onclick=async()=>{const q=$('wxQ').value.trim(),box=$('wxResults');if(!q)return;box.textContent='搜尋中…';
   try{const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=zh&format=json`),j=await r.json();box.innerHTML='';
     if(!j.results||!j.results.length){box.textContent='找不到這個城市，換個寫法試試（例如英文名稱）';return}
-    j.results.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=[it.name,it.admin1,it.country].filter(Boolean).join('・');b.onclick=()=>{wxSetCity(it.name,it.latitude,it.longitude);box.innerHTML=''};box.appendChild(b)})}
+    const cc=$('wxCountry').value,res=j.results.slice().sort((a,b)=>(b.country_code===cc)-(a.country_code===cc));
+    res.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=[it.name,it.admin1,it.country].filter(Boolean).join('・');b.onclick=()=>{wxSetCity(it.name,it.latitude,it.longitude,WX_COUNTRIES.some(x=>x[0]===it.country_code)?it.country_code:'');box.innerHTML=''};box.appendChild(b)})}
   catch(e){box.textContent='搜尋失敗，等一下再試'}};
 $('wxQ').addEventListener('keydown',e=>{if(e.key==='Enter')$('wxFind').click()});
-$('wxBtn').onclick=()=>{drawWx();$('wxPanel').hidden=false;wxFetch()};$('wxClose').onclick=()=>{$('wxPanel').hidden=true};
+$('wxCountry').onchange=()=>{if(!wxDraft)return;wxDraft.country=$('wxCountry').value;drawWx();$('wxResults').innerHTML=''};
+$('wxGeo').onclick=()=>{const m=$('wxMsg');if(!navigator.geolocation){m.textContent='這個瀏覽器拿不到位置，請改選城市';return}m.textContent='正在取得位置…';
+  navigator.geolocation.getCurrentPosition(pos=>{const la=Math.round(pos.coords.latitude*10)/10,lo=Math.round(pos.coords.longitude*10)/10;wxSetCity('我現在的位置',la,lo,'')},
+    err=>{m.textContent=err&&err.code===1?'沒有給位置權限，可以改選國家和城市':'暫時拿不到位置，請改選城市'},{enableHighAccuracy:false,timeout:10000,maximumAge:3600000})};
+$('wxBtn').onclick=()=>{wxDraft=JSON.parse(JSON.stringify(wxCfg()));$('wxResults').innerHTML='';$('wxQ').value='';drawWx();$('wxPanel').hidden=false;wxPeek()};
+function wxCloseP(){wxDraft=null;$('wxPanel').hidden=true}
+$('wxClose').onclick=wxCloseP;$('wxCancel').onclick=wxCloseP;
+$('wxSave').onclick=()=>{const D=wxDraft;if(!D)return;if(D.mode==='auto'&&D.lat==null){$('wxMsg').textContent='先選一個地點，或改成「自己選」';return}
+  const key=D.lat+','+D.lon;S.wx=D;wxDraft=null;if(wxLive.key!==key)wxLive=wxPeekRes.key===key&&wxPeekRes.code?{code:wxPeekRes.code,at:wxPeekRes.at||Date.now(),key}:{code:null,at:0,key:''};
+  save();wxApply();if(D.mode==='auto')wxFetch();$('wxPanel').hidden=true;
+  const t=D.mode==='auto'?`天氣設定好了：跟著${D.city==='我現在的位置'?'你所在的地方':D.city}的真實天氣`:D.mode==='manual'?`天氣設定好了：${WX_NAME[D.manual||'sun']}`:'天氣關掉了';if(typeof note==='function')note(t,3)};
 document.querySelectorAll('.window,.zsky').forEach(el=>{const i=document.createElement('i');i.className='wx';el.appendChild(i)});
 setTimeout(()=>{wxApply();wxFetch()},1500);setInterval(()=>wxFetch(),10*60*1000);
 
