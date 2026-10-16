@@ -559,6 +559,12 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
 @media (hover:hover) and (pointer:fine){#viewHome .room:not(.wand):not(.tooling):not(.editing){cursor:grab;-webkit-user-select:none;user-select:none}}
 #viewHome .room.dragpan,#viewHome .room.dragpan *{cursor:grabbing!important}
+
+/* 對話框：內容太長時可以在框裡上下滑（之前內容被壓扁、滑不動），也蓋在底部工具列上面 */
+.guide{z-index:200}
+.gcard{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.gcard>*{flex-shrink:0}
+body:has(.guide:not([hidden])) #viewHome .toolbar{display:none}
 </style>
 </head>
 <body>
@@ -4042,22 +4048,31 @@ async function saveVoice(k,url){VOICE[k]=url;delete voiceEl[k];try{if(url)localS
   drawVoice()}
 function audioLen(url){return new Promise(res=>{const a=new Audio();a.preload='metadata';a.onloadedmetadata=()=>res(isFinite(a.duration)?a.duration:0);a.onerror=()=>res(0);a.src=url;setTimeout(()=>res(0),3000)})}
 function blobURL(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(b)})}
-async function takeVoice(k,blob){const m=$('voiceMsg');if(blob.size>450000){m.textContent='檔案太大了，請剪短到 10 秒以內再試';return}
+async function takeVoice(k,blob){const m={set textContent(t){vMsg(k,t,/太|請|失敗|不/.test(t))}};if(blob.size>450000){m.textContent='檔案太大了，請剪短到 10 秒以內再試';return}
   const url=await blobURL(blob),len=await audioLen(url);if(len>10.5){m.textContent=`這段有 ${Math.round(len)} 秒，請剪短到 10 秒以內`;return}
   await saveVoice(k,url);m.textContent=`${VC_NAME[k]}存好了${len?`（${len.toFixed(1)} 秒）`:''}`;voicePlay(k,6000,true)}
-function drawVoice(){document.querySelectorAll('.voicerow').forEach(r=>{const k=r.dataset.k,has=!!VOICE[k];r.querySelector('.vstat').textContent=has?'✓ 用你上傳的聲音':(voiceDefOn()?'目前用預設的貓叫聲':'還沒有');
+function drawVoice(){document.querySelectorAll('.voicerow').forEach(r=>{const k=r.dataset.k,has=!!VOICE[k];r.querySelector('.vstat').style.color='';r.querySelector('.vstat').textContent=has?'✓ 用你上傳的聲音':(voiceDefOn()?'目前用預設的貓叫聲':'還沒有');
   r.querySelector('[data-a=play]').disabled=!has&&!voiceDefOn();r.querySelector('[data-a=del]').disabled=!has});$('voiceOn').checked=voiceOn();$('voiceDef').checked=voiceDefOn()}
 let voiceFileK='meow';
-async function recVoice(k,btn){const m=$('voiceMsg');
+// 錄音：狀態直接顯示在那一列（不用捲到最下面看）；錄音時先暫停配樂，並把 iPhone 的音訊切成「可以錄音」
+function vMsg(k,t,err){const r=document.querySelector(`.voicerow[data-k="${k}"] .vstat`);if(r){r.textContent=t;r.style.color=err?'#d6606a':''}$('voiceMsg').textContent=t}
+async function recVoice(k,btn){
   if(voiceRec){try{voiceRec.stop()}catch(e){}return}
-  if(!navigator.mediaDevices||!window.MediaRecorder){m.textContent='這個瀏覽器不能直接錄音，請用「選檔案」上傳錄好的聲音';return}
-  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){m.textContent='沒有拿到麥克風權限，可以改用「選檔案」';return}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){vMsg(k,'這個瀏覽器不能直接錄音，請用「選檔案」上傳錄好的聲音',true);return}
+  vMsg(k,'請在跳出的視窗按「允許」使用麥克風…');btn.disabled=true;
+  const musWas=MUS.on;try{if(MUS.ctx)await MUS.ctx.suspend()}catch(e){}try{if(musSilent)musSilent.pause()}catch(e){}
+  try{if(navigator.audioSession)navigator.audioSession.type='play-and-record'}catch(e){}
+  const restore=()=>{try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}if(musWas&&MUS.ctx){try{musUnlockIOS();MUS.ctx.resume()}catch(e){}}btn.disabled=false};
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}})}
+  catch(e){restore();vMsg(k,e&&e.name==='NotAllowedError'?'麥克風被拒絕了：到手機「設定」裡允許這個網站使用麥克風，或改用「選檔案」':'拿不到麥克風（'+(e&&e.name||'錯誤')+'），可以改用「選檔案」',true);return}
   const type=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||'';
-  const rec=new MediaRecorder(stream,type?{mimeType:type,audioBitsPerSecond:48000}:undefined),chunks=[];voiceRec=rec;
+  let rec;try{rec=new MediaRecorder(stream,type?{mimeType:type}:undefined)}catch(e){try{rec=new MediaRecorder(stream)}catch(e2){stream.getTracks().forEach(t=>t.stop());restore();vMsg(k,'這台裝置不支援錄音，請用「選檔案」',true);return}}
+  const chunks=[];voiceRec=rec;btn.disabled=false;
   rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
-  rec.onstop=async()=>{clearTimeout(rec._t);stream.getTracks().forEach(t=>t.stop());voiceRec=null;btn.classList.remove('rec');btn.textContent='🎙 錄音';
-    const b=new Blob(chunks,{type:rec.mimeType||type||'audio/webm'});if(b.size<800){m.textContent='好像沒錄到聲音，再試一次';return}await takeVoice(k,b)};
-  rec.start();btn.classList.add('rec');btn.textContent='⏹ 停止';m.textContent=`錄${VC_NAME[k]}中…（最多 8 秒，好了按停止）`;rec._t=setTimeout(()=>{try{rec.stop()}catch(e){}},8000)}
+  rec.onstop=async()=>{clearTimeout(rec._t);clearInterval(rec._c);stream.getTracks().forEach(t=>t.stop());voiceRec=null;btn.classList.remove('rec');btn.textContent='🎙 錄音';restore();
+    const b=new Blob(chunks,{type:rec.mimeType||type||'audio/mp4'});if(b.size<800){vMsg(k,'好像沒錄到聲音，再試一次',true);return}vMsg(k,'處理中…');await takeVoice(k,b);drawVoice()};
+  rec.start(250);btn.classList.add('rec');let left=8;btn.textContent=`⏹ 停止（${left}）`;vMsg(k,`🔴 錄音中…讓貓叫一聲，好了按「停止」`);
+  rec._c=setInterval(()=>{left--;if(left>0)btn.textContent=`⏹ 停止（${left}）`},1000);rec._t=setTimeout(()=>{try{rec.stop()}catch(e){}},8000)}
 document.querySelectorAll('.voicerow').forEach(r=>r.querySelectorAll('button').forEach(b=>b.onclick=async()=>{const k=r.dataset.k,a=b.dataset.a,m=$('voiceMsg');
   if(a==='rec')recVoice(k,b);
   if(a==='file'){voiceFileK=k;$('voiceFile').click()}
