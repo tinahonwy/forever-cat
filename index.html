@@ -4027,16 +4027,28 @@ async function snapPhoto(cap){const sc=$('roomScroll');
   try{const h2c=await loadH2C();
     if(!catInView()){const rw=room.clientWidth,w=hc.offsetWidth;sc.scrollLeft=H.x*(rw-w)+w/2-sc.clientWidth/2;camHold=performance.now();await new Promise(r=>setTimeout(r,120))}
     const w=sc.clientWidth,h=sc.clientHeight,skip=['toolcur','swipehint','flash','tshade'];
-    // html2canvas 畫不好貓的 SVG（遮罩、圖樣），先把貓換成同樣大小的圖片再拍，拍完換回來
-    const sv=hCat.cloneNode(true);sv.setAttribute('xmlns','http://www.w3.org/2000/svg');sv.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');sv.setAttribute('viewBox','-30 -30 360 360');sv.setAttribute('width','720');sv.setAttribute('height','720');sv.removeAttribute('style');sv.removeAttribute('class');sv.removeAttribute('id');
-    const im=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(sv));try{await im.decode()}catch(e){}
-    im.style.cssText=`position:absolute;left:-10%;top:-10%;width:120%;height:120%;display:block;pointer-events:none;transform-origin:37.5% 83.33%;transform:${hCat.style.transform||'none'}`;
-    hCat.parentNode.insertBefore(im,hCat);hCat.style.display='none';let shot;
-    const sr=sc.getBoundingClientRect();
+    // 房間背景用 html2canvas 拍；貓（SVG）在 iPhone 上它畫不出來，所以先把貓藏起來拍背景，再自己把貓、影子、帽子、泡泡畫上去
+    const sr=sc.getBoundingClientRect(),m=new DOMMatrix(getComputedStyle(hc).transform),ang=Math.atan2(m.b,m.a),ksx=Math.hypot(m.a,m.b),ksy=Math.hypot(m.c,m.d);
+    const geo={cat:hCat.getBoundingClientRect(),cw:hCat.clientWidth*ksx,ch:hCat.clientHeight*ksy,flip:hCat.dataset.flip==='1'};
+    const shEl=hc.querySelector('.shadow'),hat=$('hat'),gc=$('giftCarry');
+    if(shEl)geo.sh=shEl.getBoundingClientRect();if(hat&&!hat.hidden){geo.hat=hat.getBoundingClientRect();geo.hw=hat.offsetWidth*ksx;geo.hh=hat.offsetHeight*ksy}
+    if(gc&&!gc.hidden&&gc.textContent.trim()){geo.gc=gc.getBoundingClientRect();geo.gct=gc.textContent.trim();geo.gcf=getComputedStyle(gc).fontSize}
+    if(!bubble.hidden&&bubble.textContent){geo.bb=bubble.getBoundingClientRect();geo.bbt=bubble.textContent;geo.bbf=parseFloat(getComputedStyle(bubble).fontSize)||18}
+    const svgImg=async(node,vb,size)=>{const v=node.cloneNode(true);v.setAttribute('xmlns','http://www.w3.org/2000/svg');v.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');if(vb)v.setAttribute('viewBox',vb);v.setAttribute('width',String(size));v.setAttribute('height',String(size));v.removeAttribute('style');v.removeAttribute('class');v.removeAttribute('id');
+      return loadImgP('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(v)))};
+    let catImg=null,hatImg=null;try{catImg=await svgImg(hCat,'-30 -30 360 360',720)}catch(e){}try{if(geo.hat)hatImg=await svgImg(hat.querySelector('svg'),null,120)}catch(e){}
+    const prevVis=hc.style.visibility;hc.style.visibility='hidden';let shot;
     try{shot=await h2c(sc,{backgroundColor:null,scale:Math.min(2,1100/w),logging:false,useCORS:true,
       ignoreElements:el=>{if(el.classList&&skip.some(k=>el.classList.contains(k)))return true;if(el.nodeType!==1||el===sc||el===room)return false;
         try{if(getComputedStyle(el).opacity==='0')return true;if(el.closest&&el.closest('#homecat'))return false;const r=el.getBoundingClientRect();if(r.width||r.height)return r.right<sr.left-2||r.left>sr.right+2||r.bottom<sr.top-2||r.top>sr.bottom+2}catch(e){}return false}})}
-    finally{im.remove();hCat.style.display=''}
+    finally{hc.style.visibility=prevVis}
+    {const k=shot.width/w,X=shot.getContext('2d');X.setTransform(1,0,0,1,0,0);X.globalAlpha=1;const cx=r=>(r.left+r.width/2-sr.left)*k,cy=r=>(r.top+r.height/2-sr.top)*k;
+      if(geo.sh){X.fillStyle='rgba(40,60,50,.16)';X.beginPath();X.ellipse(cx(geo.sh),cy(geo.sh),geo.sh.width*k/2,geo.sh.height*k/2,0,0,Math.PI*2);X.fill()}
+      if(catImg){X.save();X.translate(cx(geo.cat),cy(geo.cat));X.rotate(ang);if(geo.flip)X.scale(-1,1);const dw=geo.cw*1.2*k,dh=geo.ch*1.2*k;X.drawImage(catImg,-dw/2,-dh/2,dw,dh);X.restore()}
+      if(hatImg){X.save();X.translate(cx(geo.hat),cy(geo.hat));X.rotate(ang-10*Math.PI/180);const dw=geo.hw*k,dh=geo.hh*k;X.drawImage(hatImg,-dw/2,-dh/2,dw,dh);X.restore()}
+      if(geo.gc){X.save();X.font=`${parseFloat(geo.gcf)*k}px sans-serif`;X.textAlign='center';X.textBaseline='middle';X.fillText(geo.gct,cx(geo.gc),cy(geo.gc));X.restore()}
+      if(geo.bb){const b=geo.bb,x0=(b.left-sr.left)*k,y0=(b.top-sr.top)*k,bw=b.width*k,bh=b.height*k;X.save();X.shadowColor='rgba(0,0,0,.12)';X.shadowBlur=6*k;X.shadowOffsetY=2*k;X.fillStyle='#fff';X.beginPath();if(X.roundRect)X.roundRect(x0,y0,bw,bh,Math.min(bh/2,18*k));else X.rect(x0,y0,bw,bh);X.fill();X.restore();
+        X.fillStyle='#3b3434';X.font=`${geo.bbf*k}px "Huninn","Noto Sans TC",sans-serif`;X.textAlign='center';X.textBaseline='middle';X.fillText(geo.bbt,x0+bw/2,y0+bh/2+1,bw-10*k)}}
     const W=720,P=26,iw=W-P*2;let ih=Math.round(iw*h/w),sy=0,sh=shot.height;if(ih>860){sh=Math.round(shot.height*860/ih);sy=Math.round((shot.height-sh)/2);ih=860}if(ih<300)ih=300;
     const c=document.createElement('canvas');c.width=W;c.height=ih+P+118;const x=c.getContext('2d');
     x.fillStyle='#fffdf8';x.fillRect(0,0,c.width,c.height);
@@ -4182,16 +4194,30 @@ function musTick(){const c=MUS.ctx;if(!c||!MUS.on)return;const M=musMood(),bpm=M
       let n=oct+pc;if(MUS.lastN&&Math.abs(n-MUS.lastN)>7)n+=n>MUS.lastN?-12:12;if(n<oct-5)n+=12;MUS.lastN=n;musBell(n,t+(Math.random()-.5)*.012,M.night?.07:.09)}
     MUS.next+=eighth;MUS.step++;if(MUS.step%16===0)MUS.bar++}}
 function musSetVol(v){MUS.vol=v;if(MUS.master&&MUS.on)MUS.master.gain.setTargetAtTime(v*1.6,MUS.ctx.currentTime,.3)}
-async function musStart(){if(!musInit()){$('musicMsg')&&($('musicMsg').textContent='這個瀏覽器不能播放配樂');return false}
+/* iPhone：網頁音效（Web Audio）會被側邊的靜音鍵靜音，而且一定要在「點擊」當下才能開始出聲。
+   同時播一段無聲的音檔，讓 iPhone 把它當成「播放音樂」，就不會被靜音鍵擋住 */
+var musSilent=null;
+function musSilentURL(){const n=4000,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i)};
+  w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);b.fill(128,44);
+  let s='';b.forEach(c=>s+=String.fromCharCode(c));return'data:audio/wav;base64,'+btoa(s)}
+function musUnlockIOS(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+  try{if(!musSilent){musSilent=new Audio(musSilentURL());musSilent.loop=true;musSilent.setAttribute('playsinline','');musSilent.preload='auto'}if(musSilent.paused){const p=musSilent.play();if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
+async function musStart(){musUnlockIOS();if(!musInit()){$('musicMsg')&&($('musicMsg').textContent='這個瀏覽器不能播放配樂');return false}
   try{await MUS.ctx.resume()}catch(e){}MUS.on=true;MUS.next=MUS.ctx.currentTime+.15;MUS.step=0;MUS.bar=0;musSetVol(MUS.vol);clearInterval(MUS.timer);MUS.timer=setInterval(musTick,100);musTick();return true}
-function musStop(){MUS.on=false;clearInterval(MUS.timer);MUS.timer=null;if(MUS.ctx){MUS.master.gain.setTargetAtTime(0,MUS.ctx.currentTime,.25);musRain(false)}}
+function musStop(){MUS.on=false;clearInterval(MUS.timer);MUS.timer=null;try{if(musSilent)musSilent.pause()}catch(e){}if(MUS.ctx){MUS.master.gain.setTargetAtTime(0,MUS.ctx.currentTime,.25);musRain(false)}}
 function drawMusic(){const b=$('musicBtn'),on=MUS.on||!!MUS.pending;$('musicLbl').textContent=on?'配樂 開':'配樂 關';b.setAttribute('aria-pressed',String(on));$('musicVolWrap').hidden=!MUS.on;$('musicVol').value=Math.round(MUS.vol*100)}
 $('musicBtn').onclick=async()=>{if(MUS.pending){MUS.pending=false;MUS.on=false;musSave();drawMusic();return}if(MUS.on)musStop();else await musStart();musSave();drawMusic()};
 $('musicVol').oninput=e=>{musSetVol(+e.target.value/100);musSave()};
 document.addEventListener('visibilitychange',()=>{if(!MUS.ctx)return;if(document.hidden)MUS.ctx.suspend().catch(()=>{});else if(MUS.on)MUS.ctx.resume().catch(()=>{})});
 {const P=musPrefs();MUS.vol=P.vol;drawMusic();
   // 瀏覽器規定要使用者先點一下才能出聲：上次有開配樂的話，第一次點畫面就自動接著播
-  if(P.on){MUS.pending=true;drawMusic();const go=async e=>{document.removeEventListener('pointerdown',go,true);if(e&&e.target&&e.target.closest&&e.target.closest('#musicBtn'))return;if(MUS.pending&&!MUS.on){MUS.pending=false;await musStart();musSave();drawMusic()}};document.addEventListener('pointerdown',go,true)}}
+  // 瀏覽器規定要使用者先「點一下」才能出聲（iPhone 只認點擊、放開手指這類動作）
+  const EV=['pointerup','touchend','click','keydown'];
+  const go=e=>{if(e&&e.target&&e.target.closest&&e.target.closest('#musicBtn'))return;
+    if(MUS.pending&&!MUS.on){MUS.pending=false;musStart().then(()=>{musSave();drawMusic()});return}
+    if(MUS.on&&MUS.ctx){musUnlockIOS();if(MUS.ctx.state!=='running')MUS.ctx.resume().catch(()=>{})}};
+  EV.forEach(t=>document.addEventListener(t,go,{capture:true,passive:true}));
+  if(P.on){MUS.pending=true;drawMusic()}}
 
 
 $('howBtn').onclick=()=>{const h=document.querySelector('#viewHome .homehint.small'),on=!h.classList.contains('show');h.classList.toggle('show',on);$('howBtn').setAttribute('aria-expanded',String(on))};
