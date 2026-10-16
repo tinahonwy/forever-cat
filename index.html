@@ -163,14 +163,19 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .wx{position:absolute;inset:0;opacity:0;transition:opacity 1.5s;pointer-events:none}
 .room[data-wx=cloudy] .wx,.room[data-wx=rain] .wx,.room[data-wx=snow] .wx{opacity:1}
 .room[data-wx=cloudy] .wx{background:rgba(120,130,145,.35)}
-.room[data-wx=rain] .wx{background:repeating-linear-gradient(105deg,transparent 0 9px,rgba(225,238,255,.8) 9px 10.5px,transparent 10.5px 19px),rgba(90,105,125,.45);background-size:38px 38px,auto;animation:wxrain .45s linear infinite}
-@keyframes wxrain{to{background-position:-10px 38px,0 0}}
-.room[data-wx=snow] .wx{background:radial-gradient(circle,#fff 0 1.8px,transparent 2.4px),radial-gradient(circle,#fff 0 1.3px,transparent 1.9px),rgba(150,160,175,.3);background-size:22px 22px,15px 15px,auto;background-position:0 0,7px 7px,0 0;animation:wxsnow 3.5s linear infinite}
-@keyframes wxsnow{to{background-position:8px 22px,0 15px,0 0}}
+.wx{overflow:hidden}.wx::before,.wx::after{content:'';position:absolute;left:-50%;top:-100%;width:200%;height:300%;pointer-events:none;will-change:transform;opacity:0}
+.room[data-wx=rain] .wx{background:rgba(90,105,125,.45)}
+.room[data-wx=rain] .wx::before{opacity:1;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2240%22%20height%3D%2280%22%3E%3Cg%20stroke%3D%22rgba%28225%2C238%2C255%2C0.85%29%22%20stroke-width%3D%221.4%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M8%202v14M28%2030v16M18%2058v14M36%208v10%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") repeat;background-size:40px 80px;animation:wxrain .5s linear infinite}
+@keyframes wxrain{from{transform:rotate(15deg) translate3d(0,0,0)}to{transform:rotate(15deg) translate3d(0,80px,0)}}
+.room[data-wx=snow] .wx{background:rgba(150,160,175,.3)}
+.room[data-wx=snow] .wx::before{opacity:1;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2260%22%20height%3D%2260%22%3E%3Cg%20fill%3D%22%23fff%22%20fill-opacity%3D%220.9%22%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%228%22%20r%3D%221.9%22%2F%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2222%22%20r%3D%222.1%22%2F%3E%3Ccircle%20cx%3D%2225%22%20cy%3D%2245%22%20r%3D%221.7%22%2F%3E%3Ccircle%20cx%3D%2252%22%20cy%3D%2252%22%20r%3D%221.9%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") repeat;background-size:60px 60px;animation:wxsnow 4s linear infinite}
+.room[data-wx=snow] .wx::after{opacity:1;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2236%22%20height%3D%2236%22%3E%3Cg%20fill%3D%22%23fff%22%20fill-opacity%3D%220.75%22%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2210%22%20r%3D%221.2%22%2F%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2228%22%20r%3D%221.3%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") repeat;background-size:36px 36px;animation:wxsnow2 6s linear infinite}
+@keyframes wxsnow{from{transform:rotate(-6deg) translate3d(0,0,0)}to{transform:rotate(-6deg) translate3d(0,60px,0)}}
+@keyframes wxsnow2{from{transform:rotate(4deg) translate3d(0,0,0)}to{transform:rotate(4deg) translate3d(0,36px,0)}}
 .room[data-wx=rain] .zsky .sunball,.room[data-wx=cloudy] .zsky .sunball,.room[data-wx=snow] .zsky .sunball{opacity:0!important}
 .room[data-wx=rain] .sunpatch,.room[data-wx=cloudy] .sunpatch,.room[data-wx=snow] .sunpatch{opacity:0!important}
 .room[data-wx=rain] .zsky .cloud,.room[data-wx=cloudy] .zsky .cloud,.room[data-wx=snow] .zsky .cloud{opacity:1!important;background:#cfd5dc;box-shadow:18px -10px 0 4px #cfd5dc}
-@media (prefers-reduced-motion: reduce){.wx{animation:none!important}.item.rustle{animation:none}}
+@media (prefers-reduced-motion: reduce){.wx,.wx::before,.wx::after{animation:none!important}.item.rustle{animation:none}}
 .devbtns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .cloudbak{display:flex;flex-direction:column;gap:6px;margin-top:8px}.cloudbak .btn{text-align:left}
 .fbtext{font:inherit;font-size:15px;width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);resize:vertical}
