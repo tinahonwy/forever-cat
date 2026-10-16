@@ -82,7 +82,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .zones{position:absolute;inset:0;z-index:0;pointer-events:none}
 .zone{position:absolute;top:0;bottom:0;width:25%}.zk{left:0}.zl{left:25%}.zb{left:50%}.zc{left:75%}
 .zwall,.zsky{position:absolute;left:0;right:0;top:0;height:70%}.zfloor{position:absolute;left:0;right:0;bottom:0;height:30%}
-.zk .zwall{background:#f1dcb8}.zk .zfloor{background:repeating-conic-gradient(#f4efe6 0 25%,#e2dacb 0 50%) 0 0/34px 34px}
+.zk .zwall{background:#f1dcb8}.zk .zfloor{background-color:#f4efe6;background-image:linear-gradient(45deg,#e2dacb 25%,transparent 25%,transparent 75%,#e2dacb 75%),linear-gradient(45deg,#e2dacb 25%,transparent 25%,transparent 75%,#e2dacb 75%);background-size:34px 34px;background-position:0 0,17px 17px}
 .zl .zwall{background:#86c4b8}.zl .zfloor{background:#efdcc2}
 .zb .zwall{background:#aebde0}.zb .zfloor{background:#e8d4cd}
 .zc .zsky{background:linear-gradient(#8fd0ef,#dff3f8);transition:background 2s}.zc .zfloor{background:repeating-linear-gradient(90deg,#cfa978 0 30px,#c29a68 30px 32px)}
@@ -534,6 +534,28 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   .homeside .ptools .linkbtn{text-decoration:none;background:var(--chip);border:1.5px solid var(--line);border-radius:999px;padding:4px 11px;color:var(--fg);font-size:13px}
   .homeside .tlog{max-height:220px;overflow-y:auto}
 }
+
+/* ===== 房間畫面大小（大／中／小），記在這台裝置 ===== */
+@media (min-width:601px) and (max-width:999px){
+  :root{--rht:calc((100vw - 32px) * .5625)}:root[data-roomsize=m]{--rht:calc((100vw - 32px) * .45)}:root[data-roomsize=s]{--rht:calc((100vw - 32px) * .36)}
+  #viewHome .roomscroll{aspect-ratio:auto;height:var(--rht)}#viewHome .room{width:calc(var(--rht) * 7.1)}
+}
+@media (max-width:600px){
+  :root{--rhm:min(64vh,430px)}:root[data-roomsize=m]{--rhm:min(50vh,350px)}:root[data-roomsize=s]{--rhm:min(38vh,270px)}
+  #viewHome .roomscroll{height:var(--rhm)}#viewHome .room{width:calc(var(--rhm) * 6)}
+}
+@media (min-width:1000px){
+  :root{--rhd:clamp(320px,calc(100vh - 345px),560px)}:root[data-roomsize=m]{--rhd:clamp(280px,calc(100vh - 430px),450px)}:root[data-roomsize=s]{--rhd:clamp(230px,calc(100vh - 500px),360px)}
+  #viewHome .roomscroll{height:var(--rhd)!important}#viewHome .room{width:calc(var(--rhd) * 7.1)}
+}
+
+/* 房間調小時，右側按鈕只留圖示、時間標籤移到左上，避免擠在一起 */
+:root[data-roomsize=s] #viewHome .wandbtn{padding:5px;font-size:0;gap:0;border-radius:12px}
+:root[data-roomsize=s] #viewHome .wandbtn svg{width:22px;height:22px}
+:root[data-roomsize=s] #viewHome .wandbtn *:not(svg):not(svg *){display:none}
+:root[data-roomsize=s] #viewHome .todchip,:root[data-roomsize=m] #viewHome .todchip{left:12px;right:auto;font-size:12px;padding:4px 10px}
+:root[data-roomsize=m] #viewHome .wandbtn{font-size:10px;padding:4px 5px 3px}
+:root[data-roomsize=m] #viewHome .wandbtn svg{width:22px;height:22px}
 </style>
 </head>
 <body>
@@ -1017,7 +1039,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
   <p class="homehint"><span id="homeStatus">〚貓代詞〛在家裡</span></p>
   <p class="homehint small">點一下打招呼・在〚貓代詞〛身上來回滑動是摸摸・按住不放是抱抱・點家具叫〚貓代詞〛去玩・右邊的逗貓棒可以陪〚貓代詞〛玩・下面有梳子、零食、貓草・點貓砂盆可以鏟屎</p>
-  <div class="roomtools"><button class="btn howbtn" id="howBtn" type="button" aria-expanded="false">❔ 怎麼玩</button><button class="btn" id="roomEdit" type="button">佈置房間</button></div>
+  <div class="roomtools"><button class="btn howbtn" id="howBtn" type="button" aria-expanded="false">❔ 怎麼玩</button><button class="btn" id="roomSizeBtn" type="button" aria-label="調整房間畫面大小">📐 房間：大</button><button class="btn" id="roomEdit" type="button">佈置房間</button></div>
   <div class="furnwrap" id="furnWrap" hidden><p class="homehint small">點家具加入或收起來，在房間裡拖曳家具可以移動位置</p><div class="furn" id="furn"></div><button class="btn" id="furnDefault" type="button">把家具分到各房間（建議擺法）</button>
     <div class="layerbar" id="layerBar" hidden><span>選取：<b id="layerName"></b>（<span id="layerWhere"></span>）</span><button class="btn" id="layerBack" type="button">往後一層</button><button class="btn" id="layerFront" type="button">往前一層</button><span class="zmove" id="zoneMove">搬到：<button class="btn" type="button" data-z="0">廚房</button><button class="btn" type="button" data-z="1">客廳</button><button class="btn" type="button" data-z="2">臥室</button><button class="btn" type="button" data-z="3">陽台</button></span></div>
     <p class="homehint small" id="layerTip">點一下房間裡的家具就能選取，再調整前後順序</p></div>
@@ -3970,7 +3992,7 @@ function albLocal(){try{const a=JSON.parse(localStorage.getItem(ALB_LOCAL)||'[]'
 function albLocalSet(a){try{localStorage.setItem(ALB_LOCAL,JSON.stringify(a));return true}catch(e){return false}}
 const SNAP_BG={kitchen:['#f6ead6','#e7cfa6'],living:['#e8f1ec','#d9c3a2'],bedroom:['#eee6f3','#d8c0a6'],balcony:['#d9eef7','#cdb796']};
 function loadImgP(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
-async function snapPhoto(cap){const W=600,Hh=750,c=document.createElement('canvas');c.width=W;c.height=Hh;const x=c.getContext('2d');
+async function snapPhotoSimple(cap){const W=600,Hh=750,c=document.createElement('canvas');c.width=W;c.height=Hh;const x=c.getContext('2d');
   const zn=['kitchen','living','bedroom','balcony'][typeof zoneOf==='function'?zoneOf(H.x):1],tod=room.dataset.tod||'day',wx=room.dataset.wx||'';
   let [wall,floor]=SNAP_BG[zn];if(tod==='night'){wall='#3a4466';floor='#6d5a4a'}else if(tod==='dusk'||tod==='dawn'){wall='#f7dcc4'}
   x.fillStyle='#fffdf8';x.fillRect(0,0,W,Hh);
@@ -3991,6 +4013,37 @@ async function snapPhoto(cap){const W=600,Hh=750,c=document.createElement('canva
   x.fillStyle='#8a817b';x.font='20px "Noto Sans TC",sans-serif';x.fillText(ds,P+4,P+ph+86);
   const st=($('homeStatus').textContent||'').slice(0,24);if(st&&!cap){x.textAlign='right';x.fillText(st,W-P-4,P+ph+86)}
   return c.toDataURL('image/jpeg',.82)}
+/* 拍下整個房間畫面（背景、家具、配件、裝飾都在）：第一次拍照時才載入 html2canvas */
+let h2cP=null;
+function loadH2C(){if(window.html2canvas)return Promise.resolve(window.html2canvas);
+  if(!h2cP)h2cP=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';sc.async=true;
+    sc.onload=()=>window.html2canvas?res(window.html2canvas):rej(new Error('no h2c'));sc.onerror=()=>{h2cP=null;rej(new Error('load fail'))};document.head.appendChild(sc)});return h2cP}
+function catInView(){const sc=$('roomScroll'),a=sc.getBoundingClientRect(),b=hc.getBoundingClientRect();return b.left+b.width*.5>a.left&&b.left+b.width*.5<a.right}
+async function snapPhoto(cap){const sc=$('roomScroll');
+  if(view!=='home'||sc.clientWidth<10)return snapPhotoSimple(cap);
+  try{const h2c=await loadH2C();
+    if(!catInView()){const rw=room.clientWidth,w=hc.offsetWidth;sc.scrollLeft=H.x*(rw-w)+w/2-sc.clientWidth/2;camHold=performance.now();await new Promise(r=>setTimeout(r,120))}
+    const w=sc.clientWidth,h=sc.clientHeight,skip=['toolcur','swipehint','flash','tshade'];
+    // html2canvas 畫不好貓的 SVG（遮罩、圖樣），先把貓換成同樣大小的圖片再拍，拍完換回來
+    const sv=hCat.cloneNode(true);sv.setAttribute('xmlns','http://www.w3.org/2000/svg');sv.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');sv.setAttribute('viewBox','-30 -30 360 360');sv.setAttribute('width','720');sv.setAttribute('height','720');sv.removeAttribute('style');sv.removeAttribute('class');sv.removeAttribute('id');
+    const im=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(sv));try{await im.decode()}catch(e){}
+    im.style.cssText=`position:absolute;left:-10%;top:-10%;width:120%;height:120%;display:block;pointer-events:none;transform-origin:37.5% 83.33%;transform:${hCat.style.transform||'none'}`;
+    hCat.parentNode.insertBefore(im,hCat);hCat.style.display='none';let shot;
+    const sr=sc.getBoundingClientRect();
+    try{shot=await h2c(sc,{backgroundColor:null,scale:Math.min(2,1100/w),logging:false,useCORS:true,
+      ignoreElements:el=>{if(el.classList&&skip.some(k=>el.classList.contains(k)))return true;if(el.nodeType!==1||el===sc||el===room)return false;
+        try{if(getComputedStyle(el).opacity==='0')return true;if(el.closest&&el.closest('#homecat'))return false;const r=el.getBoundingClientRect();if(r.width||r.height)return r.right<sr.left-2||r.left>sr.right+2||r.bottom<sr.top-2||r.top>sr.bottom+2}catch(e){}return false}})}
+    finally{im.remove();hCat.style.display=''}
+    const W=720,P=26,iw=W-P*2;let ih=Math.round(iw*h/w),sy=0,sh=shot.height;if(ih>860){sh=Math.round(shot.height*860/ih);sy=Math.round((shot.height-sh)/2);ih=860}if(ih<300)ih=300;
+    const c=document.createElement('canvas');c.width=W;c.height=ih+P+118;const x=c.getContext('2d');
+    x.fillStyle='#fffdf8';x.fillRect(0,0,c.width,c.height);
+    x.save();x.beginPath();if(x.roundRect)x.roundRect(P,P,iw,ih,10);else x.rect(P,P,iw,ih);x.clip();x.drawImage(shot,0,sy,shot.width,sh,P,P,iw,ih);x.restore();
+    const n=S.name||'貓',d=new Date(),ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${todLabel()}`;
+    x.fillStyle='#3b3434';x.font='bold 32px "Noto Sans TC",sans-serif';x.textAlign='left';x.fillText(cap||n,P+4,P+ih+54);
+    x.fillStyle='#8a817b';x.font='21px "Noto Sans TC",sans-serif';x.fillText(ds,P+4,P+ih+90);
+    const st=($('homeStatus').textContent||'').slice(0,22);if(st&&!cap){x.textAlign='right';x.fillText(st,W-P-4,P+ih+90)}
+    return c.toDataURL('image/jpeg',.85)}
+  catch(e){return snapPhotoSimple(cap)}}
 async function addPhoto(img,cap,kind){const item={img,cap:cap||'',kind:kind||'snap',at:Date.now()};
   if(user&&db&&cloudOk===user.uid){try{const r=await addDoc(collection(db,'users',user.uid,'album'),item);item.id=r.id;return item}catch(e){note('照片存到雲端失敗（'+(e.code||e.message)+'）',3);return null}}
   const a=albLocal();a.unshift({...item,id:'l'+item.at});while(a.length>12)a.pop();if(!albLocalSet(a)){a.length=Math.max(1,a.length-4);albLocalSet(a)}return item}
@@ -4139,6 +4192,13 @@ document.addEventListener('visibilitychange',()=>{if(!MUS.ctx)return;if(document
 
 
 $('howBtn').onclick=()=>{const h=document.querySelector('#viewHome .homehint.small'),on=!h.classList.contains('show');h.classList.toggle('show',on);$('howBtn').setAttribute('aria-expanded',String(on))};
+
+/* 房間畫面大小 */
+const RSZ=['l','m','s'],RSZN={l:'大',m:'中',s:'小'};
+function roomSizeSet(z,quiet){if(!RSZ.includes(z))z='l';document.documentElement.dataset.roomsize=z;$('roomSizeBtn').textContent=`📐 房間：${RSZN[z]}`;try{localStorage.setItem('neko-roomsize',z)}catch(e){}
+  if(!quiet){camHold=-1e9;setTimeout(()=>{const sc=$('roomScroll'),rw=room.clientWidth,w=hc.offsetWidth;sc.scrollLeft=H.x*(rw-w)+w/2-sc.clientWidth/2},60);note(`房間畫面調成「${RSZN[z]}」`,2)}}
+$('roomSizeBtn').onclick=()=>{const cur=document.documentElement.dataset.roomsize||'l';roomSizeSet(RSZ[(RSZ.indexOf(cur)+1)%3])};
+{let z='l';try{z=localStorage.getItem('neko-roomsize')||'l'}catch(e){}roomSizeSet(z,true)}
 </script>
 </body>
 </html>
