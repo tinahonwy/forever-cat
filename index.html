@@ -134,6 +134,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .cup.down{left:16.9%;bottom:8.6%;transform:rotate(95deg);cursor:pointer}
 .ftreat{position:absolute;z-index:30;cursor:pointer;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}.ftreat.fall{transition:top .5s cubic-bezier(.5,0,1,1)}
 .trickpaw{position:absolute;left:60%;top:52%;width:22%;aspect-ratio:40/52;pointer-events:none;z-index:3;transform-origin:50% 100%}
+.dedit{display:block;margin-top:4px;font-size:12px}.dta{width:100%;min-height:90px;font:inherit;font-size:14px;padding:8px;border:1.5px solid var(--line);border-radius:10px;box-sizing:border-box}.dedrow{display:flex;gap:8px;margin-top:6px}
 .morebar{display:flex;gap:16px;justify-content:center;margin:8px 0 0}
 .trickmenu{display:flex;flex-direction:column;gap:6px;max-width:360px;margin:8px auto 0;background:var(--card,#fff);border:1.5px solid var(--line);border-radius:16px;padding:10px}
 .trickmenu button{display:flex;justify-content:space-between;align-items:center;gap:10px;font:inherit;font-size:15px;background:var(--chip);color:var(--fg);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;cursor:pointer}
@@ -1935,7 +1936,7 @@ const aiKey=()=>ls.get(AIKEY).trim(),aiModel=()=>ls.get('neko-gemini-model-custo
 let chatHist=[];try{chatHist=JSON.parse(ls.get(CHATKEY)||'[]')}catch(e){chatHist=[]}
 function pushHist(role,text){chatHist.push({role,text,t:Date.now()});if(chatHist.length>24)chatHist=chatHist.slice(-24);ls.set(CHATKEY,JSON.stringify(chatHist))}
 function aiOn(){return S.talkMode==='ai'&&!!aiKey()}
-function catProfile(){
+function catProfile(day){
   const w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>(l||[]).map(z=>(ZONES.find(x=>x[0]===z)||[,z])[1]).join('、')||'沒有特別';
   const notes=Object.values(S.persNotes||{}).filter(Boolean);
   const h=new Date().getHours(),tod=h<5?'深夜':h<11?'早上':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';
@@ -1945,9 +1946,9 @@ function catProfile(){
     `喜歡被摸：${zn(S.likes)}；討厭被摸：${zn(S.dislikes)}；抱抱：${{love:'很愛抱抱',mood:'看心情',hate:'不喜歡被抱'}[S.hugPref]||'看心情'}`,
     notes.length?`主人寫下的真實習慣：\n- ${notes.join('\n- ')}`:'',
     traitText(),
-    typeof funTraitText==='function'?funTraitText():'',
-    typeof infoText==='function'?infoText():'',
-    `現在：${tod}，你${st}，心情${H.mood>.7?'很好':H.mood>.4?'普通':'有點差'}，${needText()}。`].filter(Boolean).join('\n')}
+    typeof funTraitText==='function'?funTraitText(day):'',
+    typeof infoText==='function'?infoText(day):'',
+    day?'':`現在：${tod}，你${st}，心情${H.mood>.7?'很好':H.mood>.4?'普通':'有點差'}，${needText()}。`].filter(Boolean).join('\n')}
 function needText(){const N=needs();return `肚子${N.full<.3?'很餓':N.full<.6?'有點餓':'飽飽的'}${N.water<.35?'、有點口渴':''}、精神${N.energy<.3?'很累':N.energy<.6?'普通':'很好'}`}
 function traitText(){const T=traits(),o=[];{const lk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)>=2),dk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)<=-2);if(lk.length)o.push(`愛吃${lk.join('、')}罐頭`);if(dk.length)o.push(`不愛${dk.join('、')}罐頭`)}if(T.appetite>=2)o.push('很貪吃');if(T.appetite<=-2)o.push('食量小');if(T.canLove>=2)o.push('超愛罐頭');if(T.picky>=2)o.push('挑食');if(T.drink>=2)o.push('很愛喝水');if(T.drink<=-2)o.push('很少喝水');if(T.demand>=2)o.push('肚子餓會一直討飯');if(T.demand<=-2)o.push('不太討飯');return o.length?`飲食習慣：${o.join('、')}`:''}
 function systemPrompt(){return `你是一隻名叫「${S.name||'貓咪'}」的貓，住在主人為你做的小小網頁房間裡。主人很愛你，這裡是讓主人可以繼續陪伴你的地方。
@@ -2997,8 +2998,9 @@ async function makeDiary(d,ev){const n=S.name||'貓咪';
 - 不要提到死亡、生病、離開、天堂，不要用「以前」
 - 不要條列，寫成一小段話
 
-${catProfile()}${learnedPrompt()}`;
-  const o=await gemJSON(sys,`日期：${d}\n今天發生的事：\n${ev.map(e=>'- '+e).join('\n')}`,DIARY_SCHEMA);
+${catProfile(d)}${learnedPrompt()}`;
+  const bd=S.birthday&&/^\d{4}-\d\d-\d\d$/.test(S.birthday)?(isBday(d)?'這天是我的生日。':'這天不是我的生日，不要寫成生日或提到生日。'):'';
+  const o=await gemJSON(sys,`這篇日記寫的是 ${d} 這一天。${bd}\n這天發生的事：\n${ev.map(e=>'- '+e).join('\n')}`,DIARY_SCHEMA);
   return String(o&&o.text||'').trim().slice(0,400)||diaryTemplate(ev)}
 let diaryBusy=false;
 async function writeDiaryTodo(){if(diaryBusy||!Array.isArray(S.diaryTodo)||!S.diaryTodo.length)return;diaryBusy=true;
@@ -3010,8 +3012,14 @@ async function loadDiaryCloud(){if(!user||!db)return;const y=new Date().getFullY
 const WD='日一二三四五六';
 function drawDiary(msg){const D=diaryLocal(),keys=Object.keys(D).sort().reverse(),box=$('diaryList');box.innerHTML='';
   if(!keys.length){const p=document.createElement('p');p.className='gsub';p.textContent=`還沒有日記。每天跟${S.name||'〚貓代詞〛'}互動，隔天打開就會看到〚貓代詞〛寫的日記，也可以按下面的按鈕先寫今天的。`;box.appendChild(p)}
-  keys.forEach(k=>{const[y,m,d]=k.split('-').map(Number),dt=new Date(y,m-1,d),el=document.createElement('div');el.className='dentry';
-    const h=document.createElement('b');h.textContent=`${m} 月 ${d} 日（${WD[dt.getDay()]}）${k===localDay()?'・今天':''}`;const p=document.createElement('p');p.textContent=D[k];el.append(h,p);box.appendChild(el)});
+  keys.filter(k=>D[k]).forEach(k=>{const[y,m,d]=k.split('-').map(Number),dt=new Date(y,m-1,d),el=document.createElement('div');el.className='dentry';
+    const h=document.createElement('b');h.textContent=`${m} 月 ${d} 日（${WD[dt.getDay()]}）${k===localDay()?'・今天':''}`;const p=document.createElement('p');p.textContent=D[k];
+    const ed=document.createElement('button');ed.type='button';ed.className='linkbtn dedit';ed.textContent='修改';
+    ed.onclick=()=>{const ta=document.createElement('textarea');ta.className='dta';ta.maxLength=400;ta.value=D[k];const sv=document.createElement('button');sv.type='button';sv.className='btn primary';sv.textContent='儲存';
+      const cc=document.createElement('button');cc.type='button';cc.className='btn';cc.textContent='取消';const row=document.createElement('div');row.className='dedrow';row.append(sv,cc);
+      p.replaceWith(ta);ed.replaceWith(row);ta.focus();cc.onclick=()=>drawDiary();
+      sv.onclick=()=>{const t=ta.value.trim();diaryPut(k,t);drawDiary(t?'日記改好了':'這天的日記刪掉了')}};
+    el.append(h,p,ed);box.appendChild(el)});
   $('diaryMsg').textContent=msg||''}
 $('openDiary').onclick=async()=>{$('diaryPanel').hidden=false;$('diaryTitle').textContent=`${S.name||'〚貓代詞〛'}的日記`;drawDiary();await loadDiaryCloud();drawDiary();writeDiaryTodo()};
 $('diaryClose').onclick=()=>{$('diaryPanel').hidden=true};
@@ -3401,7 +3409,7 @@ function funApply(rw,rh,w,v,flip){if(typeof trickApply==='function')trickApply(v
   const hat=$('hat');if(!hat.hidden){const side=v==='side';hat.style.left=(side?(flip?-3:73):50)+'%';hat.style.top=(side?(H.state==='sleep'?30:27):(H.state==='sleep'?22:18))+'%'}}
 
 /* 生日 */
-function isBday(){const b=S.birthday;return !!(b&&/^\d{4}-\d\d-\d\d$/.test(b)&&b.slice(5)===today().slice(5))}
+function isBday(d){const b=S.birthday;return !!(b&&/^\d{4}-\d\d-\d\d$/.test(b)&&b.slice(5)===String(d||today()).slice(5))}
 function drawBday(){const on=isBday();$('bunting').toggleAttribute('hidden',!on);$('cake').hidden=!on;$('hat').hidden=!on;
   if(on&&(S.cakeX==null||S.cakeD!==today()||S.cakeX>.5)){S.cakeX=.33;S.cakeD=today()}}
 function placeCake(rw,rh,w){const el=$('cake');if(el.hidden)return;const s=w*.42;el.style.width=s+'px';el.style.height=s+'px';el.style.left=((S.cakeX??.5)*(rw-w)+w/2-s/2)+'px';el.style.bottom=(rh*.11-w*.03)+'px'}
@@ -3439,9 +3447,9 @@ Object.assign(TRAIT_FIX,{
   gift:[['〚貓代詞〛不會叼東西',T=>{T.gift-=3},'〚貓代詞〛不會叼東西送主人']],
   treatMeh:[['〚貓代詞〛超愛零食',T=>{T.appetite+=2;T.demand+=1},'〚貓代詞〛超愛吃零食']],
   treatRun:[['〚貓代詞〛沒那麼愛零食',T=>{T.appetite-=2},'〚貓代詞〛沒有很愛零食']]});
-function funTraitText(){const T=traits(),o=[];if(T.groom>=2)o.push('喜歡被梳毛');if(T.groom<=-2)o.push('討厭被梳毛');if(T.nip>=2)o.push('聞到貓草會很嗨');if(T.nip<=-3)o.push('對貓草沒反應');
+function funTraitText(day){const T=traits(),o=[];if(T.groom>=2)o.push('喜歡被梳毛');if(T.groom<=-2)o.push('討厭被梳毛');if(T.nip>=2)o.push('聞到貓草會很嗨');if(T.nip<=-3)o.push('對貓草沒反應');
   if(T.zoom>=2)o.push('上完大號會暴衝');if(T.gift>=2)o.push('常叼小東西送主人');
-  const b=S.birthday&&/^\d{4}-(\d\d)-(\d\d)$/.exec(S.birthday);if(b)o.push(`生日是 ${+b[1]} 月 ${+b[2]} 日${isBday()?'（今天就是生日！）':''}`);
+  const b=S.birthday&&/^\d{4}-(\d\d)-(\d\d)$/.exec(S.birthday);if(b)o.push(`生日是 ${+b[1]} 月 ${+b[2]} 日${isBday(day)?(day?'（這天就是生日！）':'（今天就是生日！）'):''}`);
   return o.length?'其他：'+o.join('、'):''}
 drawBday();
 function funHomeOpen(){bdayHello();if(typeof moreHomeOpen==='function')moreHomeOpen();if(S.giftAway&&S.giftOn){S.giftAway=0;save();setTimeout(()=>note(`${S.name||'〚貓代詞〛'}趁你不在的時候，留了${S.giftOn?S.giftOn.t:'小禮物'}給你`,5),1200)}}
@@ -3490,7 +3498,7 @@ $('bday').addEventListener('change',()=>{drawInfo();$('infoMsg').textContent='�
 const openInfo=()=>{drawInfo();$('infoMsg').textContent='';$('infoPanel').hidden=false};
 $('openInfo').onclick=openInfo;$('openInfo2').onclick=openInfo;$('infoClose').onclick=()=>{$('infoPanel').hidden=true};
 controls.push(()=>{if(!$('infoPanel').hidden)drawInfo()});
-function infoText(){const I=info(),o=[];if(I.sex&&I.sex!=='不確定')o.push(I.sex==='公'?'男生（公貓）':'女生（母貓）');if(I.neutered==='有')o.push('已結紮');
+function infoText(day){const I=info(),o=[];if(I.sex&&I.sex!=='不確定')o.push(I.sex==='公'?'男生（公貓）':'女生（母貓）');if(I.neutered==='有')o.push('已結紮');
   if(I.breed)o.push(`品種：${I.breed}`);const a=ageOf(S.birthday);if(a)o.push(a);
   if(/^\d{4}-\d\d-\d\d$/.test(I.homeDay||'')){const y=ageOf(I.homeDay);if(y)o.push(`來到主人家 ${y.replace('大','')}`)}
   if(I.weight)o.push(`體重 ${I.weight} 公斤`);if(I.health)o.push(`健康和飲食注意：${I.health}`);if(I.vaccineDate)o.push(`最近一次打疫苗是 ${I.vaccineDate}`);
