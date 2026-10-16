@@ -133,6 +133,34 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .cup{position:absolute;left:14.3%;bottom:41%;width:.85%;aspect-ratio:20/22;z-index:5;transition:left .6s ease-in,bottom .6s cubic-bezier(.6,0,1,1),transform .6s}
 .cup.down{left:16.9%;bottom:8.6%;transform:rotate(95deg);cursor:pointer}
 .ftreat{position:absolute;z-index:30;cursor:pointer;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}.ftreat.fall{transition:top .5s cubic-bezier(.5,0,1,1)}
+.trickpaw{position:absolute;left:60%;top:52%;width:22%;aspect-ratio:40/52;pointer-events:none;z-index:3;transform-origin:50% 100%}
+.morebar{display:flex;gap:16px;justify-content:center;margin:8px 0 0}
+.trickmenu{display:flex;flex-direction:column;gap:6px;max-width:360px;margin:8px auto 0;background:var(--card,#fff);border:1.5px solid var(--line);border-radius:16px;padding:10px}
+.trickmenu button{display:flex;justify-content:space-between;align-items:center;gap:10px;font:inherit;font-size:15px;background:var(--chip);color:var(--fg);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;cursor:pointer}
+.trickmenu .bar{flex:1;height:8px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden;max-width:120px}.trickmenu .bar b{display:block;height:100%;background:#9a8abe;border-radius:99px}
+.trickmenu small{color:var(--muted);font-size:12px;text-align:center}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:120}.flash.on{animation:flash .45s ease-out}
+@keyframes flash{0%{opacity:.9}100%{opacity:0}}
+.albumcard{max-width:640px}.albumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px}
+.albumgrid button{padding:0;border:0;background:none;cursor:pointer;border-radius:10px;overflow:hidden;aspect-ratio:4/5}.albumgrid img{width:100%;height:100%;object-fit:cover;display:block}
+.albumview img{width:100%;max-height:60vh;object-fit:contain;border-radius:12px;background:#f4efe6}.albumview p{margin:8px 0;color:var(--muted);font-size:14px}.albumbtns{display:flex;gap:8px;flex-wrap:wrap}
+.voicerow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}.voicerow .vstat{color:var(--muted);font-size:13px}.voicerow .vbtns{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.voicerow .btn.rec{background:#e5707b;color:#fff;border-color:#e5707b}
+.vtoggle{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px}
+.wxsearch{display:flex;gap:8px;margin:10px 0}.wxsearch input{flex:1;font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px}
+#it-boxfront{pointer-events:auto;cursor:pointer}.item.rustle{animation:rustle .45s ease-in-out}
+@keyframes rustle{0%,100%{transform:var(--itx,none)}25%{rotate:-2deg}75%{rotate:2deg}}
+.wx{position:absolute;inset:0;opacity:0;transition:opacity 1.5s;pointer-events:none}
+.room[data-wx=cloudy] .wx,.room[data-wx=rain] .wx,.room[data-wx=snow] .wx{opacity:1}
+.room[data-wx=cloudy] .wx{background:rgba(120,130,145,.35)}
+.room[data-wx=rain] .wx{background:repeating-linear-gradient(105deg,transparent 0 9px,rgba(225,238,255,.8) 9px 10.5px,transparent 10.5px 19px),rgba(90,105,125,.45);background-size:38px 38px,auto;animation:wxrain .45s linear infinite}
+@keyframes wxrain{to{background-position:-10px 38px,0 0}}
+.room[data-wx=snow] .wx{background:radial-gradient(circle,#fff 0 1.8px,transparent 2.4px),radial-gradient(circle,#fff 0 1.3px,transparent 1.9px),rgba(150,160,175,.3);background-size:22px 22px,15px 15px,auto;background-position:0 0,7px 7px,0 0;animation:wxsnow 3.5s linear infinite}
+@keyframes wxsnow{to{background-position:8px 22px,0 15px,0 0}}
+.room[data-wx=rain] .zsky .sunball,.room[data-wx=cloudy] .zsky .sunball,.room[data-wx=snow] .zsky .sunball{opacity:0!important}
+.room[data-wx=rain] .sunpatch,.room[data-wx=cloudy] .sunpatch,.room[data-wx=snow] .sunpatch{opacity:0!important}
+.room[data-wx=rain] .zsky .cloud,.room[data-wx=cloudy] .zsky .cloud,.room[data-wx=snow] .zsky .cloud{opacity:1!important;background:#cfd5dc;box-shadow:18px -10px 0 4px #cfd5dc}
+@media (prefers-reduced-motion: reduce){.wx{animation:none!important}.item.rustle{animation:none}}
 .devbtns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .cloudbak{display:flex;flex-direction:column;gap:6px;margin-top:8px}.cloudbak .btn{text-align:left}
 .fbtext{font:inherit;font-size:15px;width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);resize:vertical}
@@ -635,6 +663,41 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
   </div>
 </div>
 
+<div class="guide" id="albumPanel" hidden role="dialog" aria-modal="true" aria-labelledby="albumTitle">
+  <div class="gcard albumcard">
+    <div class="ghead"><span id="albumTitle">相簿</span><button class="gx" id="albumClose" type="button">關閉</button></div>
+    <p class="gsub" id="albumMsg">按「拍照」把現在的樣子存下來；學會把戲、收到禮物這些特別時刻也會自動收進來。</p>
+    <div class="albumview" id="albumView" hidden><img id="albumBig" alt=""><p id="albumCap"></p><div class="albumbtns"><a class="btn primary" id="albumDl" download>下載</a><button class="btn" id="albumDel" type="button">刪除</button><button class="btn" id="albumBack" type="button">回到相簿</button></div></div>
+    <div class="albumgrid" id="albumGrid"></div>
+  </div>
+</div>
+<div class="guide" id="voicePanel" hidden role="dialog" aria-modal="true" aria-labelledby="voiceTitle">
+  <div class="gcard">
+    <div class="ghead"><span id="voiceTitle">牠的叫聲</span><button class="gx" id="voiceClose" type="button">關閉</button></div>
+    <h2>放上你家貓真正的聲音</h2>
+    <p class="gsub">錄一段或選一個檔案（10 秒以內）。貓喵喵叫、呼嚕的時候，就會播你家貓的聲音。只存在你的帳號，別人聽不到。</p>
+    <div class="voicerow" data-k="meow"><b>喵聲</b><span class="vstat"></span><div class="vbtns"><button class="btn" data-a="rec" type="button">🎙 錄音</button><button class="btn" data-a="file" type="button">選檔案</button><button class="btn" data-a="play" type="button">▶ 試聽</button><button class="btn" data-a="del" type="button">刪除</button></div></div>
+    <div class="voicerow" data-k="purr"><b>呼嚕聲</b><span class="vstat"></span><div class="vbtns"><button class="btn" data-a="rec" type="button">🎙 錄音</button><button class="btn" data-a="file" type="button">選檔案</button><button class="btn" data-a="play" type="button">▶ 試聽</button><button class="btn" data-a="del" type="button">刪除</button></div></div>
+    <label class="vtoggle"><input type="checkbox" id="voiceOn"> 在家裡播放牠的聲音</label>
+    <p class="gsub" id="voiceMsg"></p>
+    <input type="file" id="voiceFile" accept="audio/*" hidden>
+  </div>
+</div>
+<div class="guide" id="wxPanel" hidden role="dialog" aria-modal="true" aria-labelledby="wxTitle">
+  <div class="gcard">
+    <div class="ghead"><span id="wxTitle">天氣</span><button class="gx" id="wxClose" type="button">關閉</button></div>
+    <h2>窗外的天氣</h2>
+    <div class="chips" id="wxMode"><button class="chip" type="button" data-m="auto">跟著我的城市</button><button class="chip" type="button" data-m="manual">自己選</button><button class="chip" type="button" data-m="off">關掉</button></div>
+    <div id="wxAuto" hidden>
+      <p class="gsub">選你住的城市，會抓那裡現在的天氣（免費的天氣服務，不需要金鑰，只會用到城市位置）。</p>
+      <div class="chips" id="wxCities"></div>
+      <div class="wxsearch"><input id="wxQ" placeholder="其他城市，例如：東京" maxlength="40" aria-label="搜尋城市"><button class="btn" id="wxFind" type="button">搜尋</button></div>
+      <div class="chips" id="wxResults"></div>
+    </div>
+    <div id="wxManual" hidden><div class="chips" id="wxPick"><button class="chip" type="button" data-w="sun">☀️ 晴天</button><button class="chip" type="button" data-w="cloudy">☁️ 陰天</button><button class="chip" type="button" data-w="rain">🌧️ 下雨</button><button class="chip" type="button" data-w="snow">❄️ 下雪</button></div></div>
+    <p class="gsub" id="wxMsg"></p>
+  </div>
+</div>
 <div class="guide" id="devWarn" hidden role="alertdialog" aria-modal="true" aria-labelledby="devWarnTitle">
   <div class="gcard">
     <h2 id="devWarnTitle">⚠️ 貓咪在另一台裝置也開著</h2>
@@ -842,14 +905,17 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <button class="wandbtn scoopbtn" id="scoopBtn" type="button" aria-label="鏟貓砂"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M6,8 h18 l-2,16 h-14z" fill="#9fc6dc"/><path d="M9,12 h12 M9,16 h12 M10,20 h10" stroke="#7fa9c0" stroke-width="1.4"/><rect x="22" y="12" width="14" height="4" rx="2" transform="rotate(25 22 12)" fill="#e5707b"/><circle cx="17" cy="32" r="3" fill="#cdb48a"/><ellipse cx="27" cy="33" rx="3.4" ry="2.2" fill="#7a5a3e"/></svg><span>鏟屎</span><small id="scoopCnt"></small></button>
     <button class="wandbtn takebtn" id="takeBtn" type="button" hidden aria-label="收罐頭"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><ellipse cx="20" cy="27" rx="15" ry="5" fill="#dcd6cc"/><ellipse cx="20" cy="25" rx="9" ry="3.5" fill="#c98b6b"/><path d="M27,8 L13,20" stroke="#e5707b" stroke-width="3" stroke-linecap="round"/><path d="M13,20 l-3,-1 l2,4z" fill="#e5707b"/></svg><span>收罐頭</span></button>
     <button class="wandbtn" id="wandBtn" type="button" aria-pressed="false" aria-label="逗貓棒"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M8,34 L26,10" stroke="#a8775a" stroke-width="3" stroke-linecap="round"/><path d="M26,10 C30,14 31,20 30,26" stroke="#6b5b4c" stroke-width="1.4" fill="none"/><path d="M30,26 C25,29 25,35 28,38 C30,34 31,31 30,27Z" fill="#e5707b"/><path d="M30,26 C35,29 36,34 33,38 C32,34 31,31 30,27Z" fill="#5fb3a3"/></svg><span>逗貓棒</span></button>
+  <div class="flash" id="flash" aria-hidden="true"></div>
   <span class="swipehint" id="swipeHint">← 左右滑動，家裡還有廚房、臥室、陽台 →</span>
   </div>
   <div class="pannav"><button class="btn" id="panL" type="button" aria-label="畫面往左">◀ 往左</button><span id="panWhere">客廳</span><button class="btn" id="panR" type="button" aria-label="畫面往右">往右 ▶</button></div>
   <div class="toolbar" role="toolbar" aria-label="照顧工具">
     <button class="tbtn" type="button" data-t="brush" aria-pressed="false"><svg viewBox="0 0 40 40"><rect x="17" y="18" width="6" height="20" rx="3" fill="#b98a63"/><rect x="7" y="6" width="26" height="14" rx="5" fill="#e5707b"/><g stroke="#8a6448" stroke-width="2" stroke-linecap="round"><path d="M10,6 v-4"/><path d="M15,6 v-4"/><path d="M20,6 v-4"/><path d="M25,6 v-4"/><path d="M30,6 v-4"/></g></svg>梳子</button>
     <button class="tbtn" type="button" data-t="treat" aria-pressed="false"><svg viewBox="0 0 40 40"><path d="M6,20 C12,10 24,10 30,20 C24,30 12,30 6,20Z" fill="#e9a35b"/><path d="M30,20 L38,13 L37,27Z" fill="#e9a35b"/><circle cx="12" cy="18" r="1.8" fill="#5a3b2a"/></svg>零食</button>
-    <button class="tbtn" type="button" id="callBtn"><svg viewBox="0 0 40 40"><path d="M6,16 h8 l12,-9 v26 l-12,-9 h-8z" fill="#7fb3d5"/><path d="M30,13 q5,7 0,14 M34,9 q9,11 0,22" stroke="#7fb3d5" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>叫〚貓代詞〛</button><button class="tbtn" type="button" id="nipBtn"><svg viewBox="0 0 40 32"><path d="M8,12 C8,6 32,6 32,12 L34,28 C34,31 6,31 6,28 Z" fill="#8cc06a"/><path d="M20,8 C17,2 12,2 11,4 C14,4 17,6 20,8 C23,6 26,4 29,4 C28,2 23,2 20,8Z" fill="#5f9e46"/></svg>貓草</button>
+    <button class="tbtn" type="button" id="callBtn"><svg viewBox="0 0 40 40"><path d="M6,16 h8 l12,-9 v26 l-12,-9 h-8z" fill="#7fb3d5"/><path d="M30,13 q5,7 0,14 M34,9 q9,11 0,22" stroke="#7fb3d5" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>叫〚貓代詞〛</button><button class="tbtn" type="button" id="nipBtn"><svg viewBox="0 0 40 32"><path d="M8,12 C8,6 32,6 32,12 L34,28 C34,31 6,31 6,28 Z" fill="#8cc06a"/><path d="M20,8 C17,2 12,2 11,4 C14,4 17,6 20,8 C23,6 26,4 29,4 C28,2 23,2 20,8Z" fill="#5f9e46"/></svg>貓草</button><button class="tbtn" type="button" id="blinkBtn"><svg viewBox="0 0 40 40"><path d="M5,20 Q12,27 19,20" stroke="#5a4a42" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M21,20 Q28,27 35,20" stroke="#5a4a42" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M9,25 l-2,3 M15,26 l0,3 M25,26 l0,3 M31,25 l2,3" stroke="#5a4a42" stroke-width="1.6" stroke-linecap="round"/></svg>慢眨眼</button><button class="tbtn" type="button" id="trickBtn" aria-expanded="false"><svg viewBox="0 0 40 40"><path d="M20,6 L36,13 L20,20 L4,13Z" fill="#7a6a9e"/><path d="M11,17 v8 q9,6 18,0 v-8 l-9,4z" fill="#9a8abe"/><path d="M33,14 v10" stroke="#e9a35b" stroke-width="2"/><circle cx="33" cy="25" r="2" fill="#e9a35b"/></svg>教把戲</button><button class="tbtn" type="button" id="camBtn"><svg viewBox="0 0 40 40"><rect x="4" y="12" width="32" height="22" rx="5" fill="#6f8fa8"/><path d="M14,12 l3,-5 h6 l3,5z" fill="#6f8fa8"/><circle cx="20" cy="23" r="7" fill="#dfeaf2"/><circle cx="20" cy="23" r="4" fill="#4b6a82"/></svg>拍照</button>
   </div>
+  <div class="trickmenu" id="trickMenu" hidden role="menu" aria-label="教把戲"></div>
+  <div class="morebar"><button class="linkbtn" id="albumBtn" type="button">📒 相簿</button><button class="linkbtn" id="voiceBtn" type="button">🎙 牠的叫聲</button><button class="linkbtn" id="wxBtn" type="button">🌦 天氣</button></div>
   <div class="askcard" id="askCard" hidden role="region" aria-label="關於〚貓代詞〛的小問題">
     <div class="askhead"><span>小問題</span><span id="askLeft"></span></div>
     <p class="askq" id="askQ"></p>
@@ -1369,7 +1435,7 @@ $('backupFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.t
   catch(err){$('backupMsg').textContent='讀不到備份：'+err.message}};
 
 /* 登出時清掉這台裝置上的貓（雲端那份還在） */
-async function resetLocal(quiet){clearTimeout(saveT);try{['neko-maker-v1','neko-chat-v1','neko-pending','neko-last-seen','neko-diary'].forEach(k=>localStorage.removeItem(k))}catch(e){}
+async function resetLocal(quiet){clearTimeout(saveT);try{['neko-maker-v1','neko-chat-v1','neko-pending','neko-last-seen','neko-diary','neko-voice-meow','neko-voice-purr','neko-album'].forEach(k=>localStorage.removeItem(k))}catch(e){}
   chatHist=[];pending=[];talkLog.length=0;drawLog();if(wandOn)setWand(false);
   booting=true;await applyData({...DEF},{});booting=false;guestDirty=false;owner='guest';
   if(view==='home'){drawHomeCat();drawPhrases();memLabel()}if(!quiet&&note)note('已登出，這台裝置上的貓已清除，登入後會從雲端回來',4)}
@@ -1383,6 +1449,7 @@ async function loadCloud(u){
   if(stale())return;
   if(err){status('讀不到雲端的貓（'+(err.code||err.message)+'），先暫停同步，雲端資料不會被蓋掉');$('cloudRetry').hidden=false;return}
   if(snap.exists()){const d=snap.data();await applyData(d.settings,d);if(stale())return;owner=u.uid;autoBak(u.uid,d)}
+  if(typeof loadVoice==='function')loadVoice(u.uid);
   else{if(owner!=='guest'&&owner!==u.uid){booting=true;await applyData({...DEF},{});booting=false}owner=u.uid}
   try{const ps=await getDoc(presRef(u.uid)),pd=ps.exists()?ps.data():null;if(pd&&pd.sid!==SID&&pd.ms&&Date.now()-pd.ms<150000&&note)note(`提醒：這隻貓也在「${pd.dev||'另一台裝置'}」開著，那邊會先暫停同步，以這台為主`,6)}catch(e){}
   if(stale())return;
@@ -1532,7 +1599,7 @@ function drawHomeCat(){
 const setT=(k,val)=>{const e=HP[H.view]&&HP[H.view][k];if(e)e.setAttribute('transform',val)};
 function setHView(v){if(H.view===v)return;H.view=v;VIEWS.forEach(k=>{const g=document.getElementById('hv-'+k);if(g)g.setAttribute('display',k===v?'inline':'none')})}
 function setFace(f,secs=0){H.faceT=secs;if(H.face!==f){H.face=f;VIEWS.forEach(v=>{if(HP[v]&&HP[v].face)HP[v].face.innerHTML=featureParts(v,{face:f}).face})}}
-function say(t,ms){bubble.textContent=t;bubble.hidden=false;clearTimeout(say.t);if(ms)say.t=setTimeout(()=>{bubble.hidden=true},ms)}
+function say(t,ms){bubble.textContent=t;bubble.hidden=false;if(typeof voiceSay==='function')voiceSay(t);clearTimeout(say.t);if(ms)say.t=setTimeout(()=>{bubble.hidden=true},ms)}
 function note(t,secs=2.5){H.statusTxt=t;H.statusT=secs}
 function heart(){const r=hCat.getBoundingClientRect(),rr=room.getBoundingClientRect(),el=document.createElement('span');
   el.className='heart';el.textContent='♥';el.style.left=(r.left-rr.left+r.width*(.3+Math.random()*.4))+'px';el.style.top=(r.top-rr.top+r.height*.15)+'px';
@@ -1578,7 +1645,7 @@ function step(dt){
     else H.x+=Math.sign(d)*sp;
   }else if(H.state==='sit'&&H.timer<=0){
     if(tryActivity())return;
-    const r=Math.random(),sleepy=.15+.25*(1-P01('energy'))+(1-needs().energy)*.4+(typeof todNow==='function'&&todNow()==='night'?.3:0);
+    const r=Math.random(),sleepy=.15+.25*(1-P01('energy'))+(1-needs().energy)*.4+(typeof todNow==='function'&&todNow()==='night'?.3:0)+(typeof wxNow==='function'&&wxNow()==='rain'?.15:0);
     if(r<1-sleepy-.15){startWalk(typeof wanderTarget==='function'?wanderTarget():.04+Math.random()*.92)}
     else if(r<1-.15&&(!roomCfg().bed.on||Math.abs(H.x-BED)>.02))goSleep();
     else{H.timer=2+Math.random()*3;if(Math.random()<.5)setHView(H.view==='back'?'front':'back')}
@@ -1640,7 +1707,7 @@ function apply(dt){
   if(walking)bob=Math.abs(Math.sin(ph))*w*.02*m;
   if(sleeping){sx=1.04;sy=.94}
   if(H.hop>0){const p=1-H.hop/.55;y=Math.sin(p*Math.PI)*w*.22}
-  y+=H.y*w;if(H.inBox)y-=w*.03;
+  y+=H.y*w;if(H.inBox)y-=w*(.03+.21*(H.boxSinkV||0));
   if(st==='jump'&&H.jumpPhase&&m){const ph2=H.jumpPhase;if(ph2==='crouch'){sy*=.84;sx*=1.1}else if(ph2==='air'){const q=Math.sin(H.jumpP*Math.PI);sy*=1+.12*q;sx*=1-.08*q}else{sy*=.9;sx*=1.06}}
   const wig=st==='ready'?Math.sin(t*22)*w*.012*m:0;if(st==='ready'){sy*=.88;sx*=1.04}
   if(st==='stalk'){sy*=.86;sx*=1.05}
@@ -2186,6 +2253,7 @@ function sideSpot(k,off){const rw=room.clientWidth,w=hc.offsetWidth,R=roomCfg(),
   let t=R[k].x-f,face=1;if(t<.02){t=R[k].x+f;face=-1}return[Math.min(.98,Math.max(.02,t)),face]}
 function doAct(k,src,o={}){const R=roomCfg();
   if(k==='floorTreat'){floorTreatReact(false);return}
+  if(k==='blinkInvite'){blinkInvite();return}if(k==='rainwatch'){rainWatch();return}
   if(k==='litter'){goLitter();return}if(k==='gift'){bringGift();return}if(k==='nip'){nipReact();return}
   if(['birdwatch','sunbathe','hbed','counter','xmasTree','parkour'].includes(k)){houseAct(k);return}
   if(k==='tree')startWalk(R.tree.x,false,()=>{setHView('front');jumpTo(.56,()=>jumpTo(1.1,()=>{sitDown(Math.random()<.3?'back':'front');H.timer=8+Math.random()*10;note(`${S.name||'〚貓代詞〛'}跳上貓跳台了`,3)}),{pause:.35})});
@@ -2899,7 +2967,7 @@ function todLabel(){const h=new Date().getHours();return h<5?'半夜':h<7?'清�
 const TOD_ICON={dawn:'🌅',day:'☀️',dusk:'🌇',night:'🌙'},TODN={dawn:'清晨',day:'白天',dusk:'傍晚',night:'晚上'};let todPreview=null,todPrevT=0;
 function applyTod(){const real=todNow(),t=todPreview||real;if(room.dataset.tod!==t)room.dataset.tod=t;
   if(typeof drawBday==='function')drawBday();if(typeof drawHoliday==='function')drawHoliday();if(typeof weekRoll==='function'&&typeof S!=='undefined')weekRoll();const d=new Date(),hm=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  $('todChip').textContent=todPreview?`${TOD_ICON[t]} 預覽：${TODN[t]}`:`${TOD_ICON[t]} ${todLabel()} ${hm}`;rollDay()}
+  const wxi=typeof wxIcon==='function'?wxIcon():'';$('todChip').textContent=(todPreview?`${TOD_ICON[t]} 預覽：${TODN[t]}`:`${TOD_ICON[t]} ${todLabel()} ${hm}`)+(wxi?' · '+wxi:'');rollDay()}
 $('todChip').onclick=()=>{const order=['dawn','day','dusk','night'],cur=todPreview||todNow(),nx=order[(order.indexOf(cur)+1)%4];
   todPreview=nx===todNow()&&todPreview?null:nx;clearTimeout(todPrevT);if(todPreview)todPrevT=setTimeout(()=>{todPreview=null;applyTod()},8000);applyTod()};
 applyTod();setInterval(applyTod,30000);
@@ -3262,7 +3330,7 @@ function dropGift(g,x){S.giftOn={e:g[0],t:g[1],x:Math.min(.99,x+.015)};save()}
 function placeGift(rw,rh,w){const el=$('giftEl'),G=S.giftOn;el.hidden=!G;if(!G)return;if(el.textContent!==G.e)el.textContent=G.e;
   el.style.fontSize=(w*.17)+'px';el.style.left=(G.x*(rw-w)+w/2-w*.1)+'px';el.style.bottom=(rh*.11-w*.03)+'px';el.style.zIndex='30'}
 $('giftEl').onclick=e=>{e.stopPropagation();const G=S.giftOn,n=S.name||'〚貓代詞〛';if(!G||roomEdit)return;S.giftOn=null;
-  S.gifts=S.gifts&&typeof S.gifts==='object'?S.gifts:{};S.gifts[G.t]=(S.gifts[G.t]||0)+1;
+  S.gifts=S.gifts&&typeof S.gifts==='object'?S.gifts:{};S.gifts[G.t]=(S.gifts[G.t]||0)+1;setTimeout(()=>{if(typeof autoSnap==='function')autoSnap('gift',`${n}送你禮物的那天`)},900);
   const r=e.currentTarget.getBoundingClientRect(),rr=room.getBoundingClientRect();popText(r.left-rr.left+r.width/2,r.top-rr.top,'謝謝！');
   note(`你收下了${G.t}，${n}很得意`,3);if(H.state!=='sleep'&&!H.hug){setFace('happy',2);heart();say('喵～',1000)}
   logAct('giftTaken',`看你收下${G.t}，很得意（心情上升）`,true);H.mood=Math.min(1,H.mood+.08);save()};
@@ -3303,6 +3371,8 @@ IT.litter.forEach(el=>el.addEventListener('click',()=>{if(roomEdit)return;scoop(
 
 /* 狀態推進與畫面 */
 function funStep(dt){const st=H.state,n=S.name||'〚貓代詞〛';
+  if(H.inBox){H.boxSinkV=(H.boxSinkV||0)+((H.boxSink||0)-(H.boxSinkV||0))*Math.min(1,dt*7);if(H.peekT>0){H.peekT-=dt;if(H.peekT<=0){H.boxSink=0;say(pick(['喵！','（探頭）','（盯）']),900)}}else if(st==='box'&&Math.random()<dt*.05){H.boxSink=1;H.peekT=2+Math.random()*3}}else{H.boxSink=0;H.boxSinkV=0}
+  if(st==='trick'&&typeof trickStep==='function')return trickStep(dt);
   if(st==='treat'){if(H.timer<=0){if(tool==='treat'){H.state='beg';H.timer=6}else sitDown('front')}return true}
   if(st==='beg2'){if(H.timer<=0){if(tool==='treat'){H.state='beg';H.timer=5}else sitDown('front')}return true}
   if(st==='litter'){if(H.timer<=0)finishLitter();return true}
@@ -3320,7 +3390,7 @@ function funStep(dt){const st=H.state,n=S.name||'〚貓代詞〛';
         startWalk(zoneEdge(true),false,()=>startWalk(zoneEdge(true),false,()=>{const N=needs();N.energy=Math.max(.05,N.energy-.25);note(`${n}玩累了`,3);goSleep()},true),true)}}
     return true}
   return false}
-function funApply(rw,rh,w,v,flip){placeNip(rw,rh,w);if(typeof houseApply==='function'){houseApply();drawScoopBtn()}if(H.state!=='roll')H.rollPh=null;placeCake(rw,rh,w);placeGift(rw,rh,w);drawLitter();
+function funApply(rw,rh,w,v,flip){if(typeof trickApply==='function')trickApply(v);{let cp='';if(H.inBox&&IT.box[1]&&!IT.box[1].hidden){const hr=hc.getBoundingClientRect(),br=IT.box[1].getBoundingClientRect(),sc=hr.height/Math.max(1,hc.offsetHeight),cut=(hr.bottom-br.bottom+br.height*.04)/(sc||1);if(cut>0)cp=`inset(-60% -60% ${Math.round(cut)}px -60%)`}if(hc.style.clipPath!==cp)hc.style.clipPath=cp}placeNip(rw,rh,w);if(typeof houseApply==='function'){houseApply();drawScoopBtn()}if(H.state!=='roll')H.rollPh=null;placeCake(rw,rh,w);placeGift(rw,rh,w);drawLitter();
   const c=$('giftCarry');if(H.carryGift){c.hidden=false;c.textContent=H.carryGift[0];c.style.fontSize=(w*.13)+'px';
     const side=v==='side';c.style.left=(side?(flip?-20:90):46)+'%';c.style.top=(side?54:62)+'%'}else c.hidden=true;
   const hat=$('hat');if(!hat.hidden){const side=v==='side';hat.style.left=(side?(flip?-3:73):50)+'%';hat.style.top=(side?(H.state==='sleep'?30:27):(H.state==='sleep'?22:18))+'%'}}
@@ -3334,7 +3404,7 @@ function bdayHello(){if(!isBday()||S.bdaySaid===today())return;S.bdaySaid=today(
   setTimeout(()=>{if(H.state==='sleep')wake();setFace('happy',3);heart();say('今天是我的生日！喵～',2600);note(`今天是${S.name||'〚貓代詞〛'}的生日 🎂`,5);logAct('bday','過生日，收到你的祝福（心情上升）',true);H.mood=Math.min(1,H.mood+.1)},1600)}
 $('cake').onclick=e=>{e.stopPropagation();if(roomEdit||H.hug)return;const n=S.name||'〚貓代詞〛',f=$('cakeFlame');lastInteract=Date.now();
   startWalk(clamp01((S.cakeX??.33)+(H.x<(S.cakeX??.33)?-.02:.02)),false,()=>{setHView('front');setFace('happy',3);say('（吹蠟燭）呼～',1500);
-    f.style.opacity='0';setTimeout(()=>{f.style.opacity='1'},6000);for(let i=0;i<3;i++)setTimeout(heart,i*300);note(`生日快樂，${n}！`,3);logAct('bdayCake','跟你一起吹了生日蛋糕的蠟燭',true)})};
+    f.style.opacity='0';setTimeout(()=>{f.style.opacity='1'},6000);for(let i=0;i<3;i++)setTimeout(heart,i*300);note(`生日快樂，${n}！`,3);logAct('bdayCake','跟你一起吹了生日蛋糕的蠟燭',true);setTimeout(()=>{if(typeof autoSnap==='function')autoSnap('bday',`${n}的生日`)},700)})};
 function syncBday(){$('bday').value=S.birthday||''}
 $('bday').onchange=()=>{S.birthday=$('bday').value||'';save();drawBday();bdayHello()};
 controls.push(syncBday);syncBday();
@@ -3436,7 +3506,10 @@ function wanderTarget(){const z=zoneOf(H.x);let t;
 function surfY(fracOfRoomH){const rh=room.clientHeight,w=hc.offsetWidth||1;return Math.max(.1,(rh*fracOfRoomH-rh*.11)/w)}
 function houseOpts(opts){const t=todNow(),en=P01('energy'),E=needs().energy,T=traits();
   if(t!=='night')opts.push(['birdwatch',(.05+.07*en)*E]);
-  if(t==='day'&&E<.85)opts.push(['sunbathe',.05]);
+  const wxc=typeof wxNow==='function'?wxNow():'sun';
+  if(t==='day'&&E<.85&&(wxc==='sun'||wxc==='off'))opts.push(['sunbathe',.05]);
+  if(wxc==='rain'||wxc==='snow')opts.push(['rainwatch',.06]);
+  if(typeof blinkInvite==='function')opts.push(['blinkInvite',.02+.04*P01('affection')]);
   opts.push(['hbed',t==='night'?.16:.03]);
   if(S.nipOn&&Date.now()-(S.nipLast||0)>10*60*1000)opts.push(['nip',.05]);
   if(holidayNow()==='xmas'&&!S.ornDown)opts.push(['xmasTree',.05*Math.max(.3,1+T.naughty*.1)]);
@@ -3677,6 +3750,212 @@ function drawAdmin(){const box=$('admList');box.innerHTML='';
 $('admAnnPost').onclick=async()=>{const t=$('admAnnText').value.trim(),m=$('admAnnMsg');if(!t){m.textContent='先寫公告內容';return}
   try{await setDoc(doc(db,'meta','announcement'),{text:t.slice(0,500),id:String(Date.now()),at:serverTimestamp()});m.textContent='已發布，大家下次打開網頁就會看到';try{ls.set('neko-ann-seen','')}catch(e){}loadAnn()}catch(e){m.textContent='發布失敗（'+(e.code||e.message)+'）'}};
 $('admAnnDel').onclick=async()=>{const m=$('admAnnMsg');try{await setDoc(doc(db,'meta','announcement'),{text:'',id:String(Date.now()),at:serverTimestamp()});$('admAnnText').value='';m.textContent='公告已撤下';loadAnn()}catch(e){m.textContent='撤下失敗（'+(e.code||e.message)+'）'}};
+
+
+/* ===== 慢眨眼：貓說「我信任你」的方式 ===== */
+var blinkAt=0;
+function catSlowBlink(){if(H.view!=='front'&&!H.hug)setHView('front');setFace('closed',1.1);setTimeout(()=>{if(H.state!=='sleep')setFace('happy',1.8)},1150)}
+function blinkInvite(){const n=S.name||'〚貓代詞〛';if(H.hug||H.state==='sleep'||H.y>.05)return;sitDown('front');H.timer=7;catSlowBlink();H.blinkInvite=Date.now();
+  note(`${n}對你慢慢眨了眨眼，按「慢眨眼」回〚貓代詞〛吧`,6)}
+$('blinkBtn').onclick=()=>{const n=S.name||'〚貓代詞〛',now=Date.now();lastInteract=now;idleFired=false;if(now-blinkAt<2500)return;blinkAt=now;
+  const vw=$('roomScroll'),rr=room.getBoundingClientRect(),sr=vw.getBoundingClientRect();popText(sr.left-rr.left+sr.width/2,sr.top-rr.top+sr.height*.78,'😌');
+  if(H.blinkInvite&&now-H.blinkInvite<9000){H.blinkInvite=0;setTimeout(()=>{catSlowBlink();heart();setTimeout(heart,350);say('呼嚕～',1600);H.mood=Math.min(1,H.mood+.08)},500);
+    note(`你們互相慢眨眼了，${n}好放鬆`,4);logAct('blinkBack','跟你互相慢眨眼，眼睛瞇瞇的好放鬆（心情上升）',true);
+    if((S.snapDay||{}).blink!==today())setTimeout(()=>autoSnap('blink',`跟${n}互相慢眨眼`),1900);save();return}
+  if(H.state==='sleep'){note(`${n}睡得很熟，沒看到`,2.5);return}
+  if(H.hug||['litter','eat','roll','jump','trick'].includes(H.state)){note(`${n}正在忙，沒注意到`,2.5);return}
+  const p=Math.min(.92,.28+P01('affection')*.45+H.mood*.25);
+  setTimeout(()=>{if(H.state==='sleep')return;
+    if(Math.random()<p){if(H.state==='sit'||H.state==='beg')H.timer=Math.max(H.timer,4);catSlowBlink();setTimeout(heart,900);say('（慢慢眨眼）',1500);H.mood=Math.min(1,H.mood+.04);
+      logAct('blink','你對〚貓代詞〛慢眨眼，〚貓代詞〛也慢慢眨回來（貓說「我信任你」）',true);save()}
+    else{const r=Math.random();if(r<.5){if(H.state==='sit'){setHView('front');H.timer=Math.max(H.timer,2)}say('（看了你一眼）',1200)}else{if(H.state==='sit')setHView('back');say('（假裝沒看到）',1200)}}},700+Math.random()*700)};
+
+/* ===== 下雨天坐在窗邊看雨 ===== */
+function rainWatch(){const n=S.name||'〚貓代詞〛',w=typeof wxNow==='function'?wxNow():'rain';const x=typeof hxOf==='function'?hxOf(.31):.3;
+  startWalk(x,false,()=>{setHView('back');H.state='sit';H.timer=9+Math.random()*6;say(w==='snow'?'（看著外面下雪）':'（看著窗外下雨）',1600);logAct('rainwatch',w==='snow'?'坐在窗邊看雪':'坐在窗邊看雨，尾巴慢慢甩',true)})}
+
+/* ===== 紙箱：點一下沙沙作響，貓會跑來鑽；在裡面時點一下會躲起來或探頭 ===== */
+$('it-boxfront').addEventListener('click',e=>{if(roomEdit||tool||wandOn)return;e.stopPropagation();const n=S.name||'〚貓代詞〛';lastInteract=Date.now();idleFired=false;
+  IT.box.forEach(el=>{el.classList.remove('rustle');void el.offsetWidth;el.classList.add('rustle')});
+  if(H.inBox){if((H.boxSink||0)>.5){H.boxSink=0;H.peekT=0;setFace('happy',1.4);say('喵！',900);heart();logAct('boxPeek','你敲敲紙箱，〚貓代詞〛從裡面探出頭來',true)}
+    else{H.boxSink=1;H.peekT=2.5+Math.random()*3;say('（縮進去）',900);note(`${n}躲進紙箱裡了，等一下會探頭`,2.5)}if(H.state==='box')H.timer=Math.max(H.timer,6);return}
+  if(H.hug)return;const T=traits(),want=.45+P01('energy')*.25+(itemLove('box')-1)*.2+(T.zoom||0)*.03;
+  if(H.state==='sleep'&&Math.random()>.35){note(`${n}睡得很熟，只有耳朵動了一下`,2.5);return}
+  if(['litter','eat','roll','trick','jump'].includes(H.state)){note(`${n}現在在忙`,2);return}
+  if(Math.random()<want){if(H.state==='sleep')wake();logAct('boxRun','聽到紙箱沙沙聲，跑過去鑽進去',true);doAct('box')}
+  else say('（耳朵動了一下）',1000)});
+
+/* ===== 教把戲 ===== */
+const TRICKS={sit:{n:'坐下',cmd:'坐下！'},paw:{n:'握手',cmd:'握手！'},spin:{n:'轉圈',cmd:'轉圈圈！'}};
+function trickData(){if(!S.tricks||typeof S.tricks!=='object')S.tricks={};Object.keys(TRICKS).forEach(k=>{if(!S.tricks[k])S.tricks[k]={sk:0,ok:false}});
+  if(!S.trickDay||S.trickDay.d!==today())S.trickDay={d:today(),n:0};return S.tricks}
+function drawTrickMenu(){const box=$('trickMenu'),D=trickData(),n=S.name||'〚貓代詞〛';box.innerHTML='';
+  Object.entries(TRICKS).forEach(([k,t])=>{const d=D[k],b=document.createElement('button');b.type='button';b.setAttribute('role','menuitem');
+    b.innerHTML=d.ok?`<span>${t.n}</span><span>✓ 學會了</span>`:`<span>${t.n}</span><span class="bar"><b style="width:${Math.round(d.sk/.75*100)}%"></b></span>`;
+    b.onclick=()=>{box.hidden=true;$('trickBtn').setAttribute('aria-expanded','false');doTrick(k)};box.appendChild(b)});
+  const sm=document.createElement('small');sm.textContent=`每天可以練 12 次，今天練了 ${S.trickDay.n} 次。做對會自動給一點獎勵。`;box.appendChild(sm)}
+$('trickBtn').onclick=()=>{const m=$('trickMenu');m.hidden=!m.hidden;$('trickBtn').setAttribute('aria-expanded',String(!m.hidden));if(!m.hidden)drawTrickMenu()};
+function doTrick(k){const t=TRICKS[k],D=trickData(),d=D[k],n=S.name||'〚貓代詞〛';lastInteract=Date.now();idleFired=false;
+  if(H.state==='sleep'){note(`${n}在睡覺，等〚貓代詞〛醒來再練吧`,3);return}
+  if(H.hug||wandOn||['litter','eat','roll','trick','jump','treat'].includes(H.state)){note(`${n}現在在忙，等一下再練`,2.5);return}
+  if(!d.ok&&S.trickDay.n>=12){say('（打哈欠）',1200);note(`今天練夠了，${n}明天再學吧`,3);return}
+  if(tool)setTool(null);
+  comeOver(()=>{setHView('front');const vw=$('roomScroll'),rr=room.getBoundingClientRect(),sr=vw.getBoundingClientRect();popText(sr.left-rr.left+sr.width/2,sr.top-rr.top+sr.height*.3,t.cmd);
+    H.state='sit';H.timer=3;
+    setTimeout(()=>{if(H.state==='sleep'||H.hug)return;const N=needs();
+      const p=d.ok?.9:Math.max(.06,Math.min(.92,.1+d.sk*.85+(H.mood-.5)*.2+(1-N.full)*.12-P01('temper')*.08));
+      if(!d.ok)S.trickDay.n++;
+      if(Math.random()<p){H.state='trick';H.trick=k;H.trickT=0;H.timer=k==='spin'?1.5:1.7;H.trickOk=true}
+      else{const r=Math.random();say(r<.33?'（歪頭）':r<.66?'（舔舔爪子，裝沒聽到）':'（躺下來）',1400);if(r>=.66){H.state='sleep';H.timer=2.5;setFace('closed',2)}
+        if(!d.ok){d.sk=Math.min(.75,d.sk+.04*(1-d.sk));note(`${n}還不太懂，多練幾次就會了`,2.5)}save()}},900)})}
+function trickStep(dt){H.trickT=(H.trickT||0)+dt;const k=H.trick;
+  if(k==='spin'){const p=Math.min(1,H.trickT/1.4),seq=[['side',1],['back',1],['side',-1],['front',1]],c=seq[Math.min(3,Math.floor(p*4))];if(H.view!==c[0])setHView(c[0]);H.facing=c[1]}
+  if(H.timer>0)return true;
+  const t=TRICKS[k],D=trickData(),d=D[k],n=S.name||'〚貓代詞〛',N=needs();sitDown('front');H.timer=3;setFace('happy',1.6);heart();say('喵！',900);
+  N.full=Math.min(1,N.full+.01);H.mood=Math.min(1,H.mood+.05);
+  if(!d.ok){d.sk=Math.min(.75,d.sk+.14*(1-d.sk));
+    if(d.sk>=.749){d.ok=true;note(`🎉 ${n}學會「${t.n}」了！`,5);for(let i=0;i<3;i++)setTimeout(heart,i*300);logAct('trickLearn',`學會了「${t.n}」！`,true);setTimeout(()=>autoSnap('trick',`${n}學會「${t.n}」的那天`),900)}
+    else{note(`做到了！給${n}一點獎勵（${t.n}熟練度 ${Math.round(d.sk/.75*100)}%）`,3);logAct('trickTry',`練習「${t.n}」，做對了，吃到獎勵`)}}
+  else{note(`${n}${t.n}了，好棒！`,2.5);logAct('trickDo',`聽到你說「${t.cmd.replace('！','')}」就${t.n}了`)}
+  save();if(!$('trickMenu').hidden)drawTrickMenu();return true}
+var trickPawEl=null;
+function trickPaw(show,p){if(!trickPawEl){trickPawEl=document.createElement('span');trickPawEl.className='trickpaw';trickPawEl.setAttribute('aria-hidden','true');hc.appendChild(trickPawEl)}
+  if(!show){if(!trickPawEl.hidden)trickPawEl.hidden=true;return}
+  if(trickPawEl.dataset.c!==S.base){const dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#5a4a42';trickPawEl.dataset.c=S.base;
+    trickPawEl.innerHTML=`<svg viewBox="0 0 40 52" width="100%" height="100%"><rect x="7" y="18" width="20" height="34" rx="10" fill="${S.base}"/><ellipse cx="18" cy="15" rx="15" ry="13" fill="${S.base}" stroke="${ink}" stroke-width="2"/><ellipse cx="18" cy="19" rx="6" ry="4.6" fill="#f2a7b5"/><circle cx="9.5" cy="11" r="2.6" fill="#f2a7b5"/><circle cx="15" cy="7.5" r="2.6" fill="#f2a7b5"/><circle cx="21.5" cy="7.5" r="2.6" fill="#f2a7b5"/><circle cx="27" cy="11" r="2.6" fill="#f2a7b5"/></svg>`}
+  const a=Math.min(1,p/.3),wv=Math.sin(p*10)*3;trickPawEl.hidden=false;trickPawEl.style.transform=`translate(0,${(1-a)*40+wv}%) rotate(${-12+wv}deg)`;trickPawEl.style.opacity=String(a)}
+function trickApply(v){const on=H.state==='trick'&&H.trick==='paw'&&v==='front';trickPaw(on,H.trickT||0);if(H.state!=='trick')return;const p=H.trickT||0;
+  if(H.trick==='paw'&&v==='front')setT('frontR','translate(0 -6)');
+  if(H.trick==='sit'&&v==='front'){const a=Math.sin(Math.min(1,p/1.2)*Math.PI);setT('head',`translate(0 ${-8*a})`);setT('body',`translate(150 262) scale(1 ${1+.05*a}) translate(-150 -262)`)}}
+
+/* ===== 真的叫聲：你家貓的喵聲、呼嚕聲 ===== */
+var VOICE={meow:null,purr:null},voiceEl={},voiceAt={meow:0,purr:0},voiceRec=null;
+const VKEY=k=>'neko-voice-'+k,VC_NAME={meow:'喵聲',purr:'呼嚕聲'};
+function voiceInit(){['meow','purr'].forEach(k=>{try{VOICE[k]=localStorage.getItem(VKEY(k))||null}catch(e){}})}
+voiceInit();
+async function loadVoice(uid){if(!db)return;for(const k of['meow','purr']){try{const sn=await getDoc(doc(db,'users',uid,'cats','voice-'+k));if(!user||user.uid!==uid)return;
+  const v=sn.exists()?sn.data().d||null:null;VOICE[k]=v;delete voiceEl[k];try{if(v)localStorage.setItem(VKEY(k),v);else localStorage.removeItem(VKEY(k))}catch(e){}}catch(e){}}drawVoice()}
+function voiceOn(){return S.voiceOn!==false}
+function voicePlay(k,maxMs,force){const v=VOICE[k];if(!v||(!force&&!voiceOn()))return false;let a=voiceEl[k];if(!a){a=new Audio(v);voiceEl[k]=a}
+  try{a.pause();a.currentTime=0;a.volume=k==='purr'?.8:1;const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){}clearTimeout(a._t);if(maxMs)a._t=setTimeout(()=>{try{a.pause()}catch(e){}},maxMs);return true}
+function voiceSay(t){const now=Date.now();if(/喵/.test(t)&&now-voiceAt.meow>4000){if(voicePlay('meow'))voiceAt.meow=now}
+  else if(/呼嚕/.test(t)&&now-voiceAt.purr>6000){if(voicePlay('purr',3500))voiceAt.purr=now}}
+async function saveVoice(k,url){VOICE[k]=url;delete voiceEl[k];try{if(url)localStorage.setItem(VKEY(k),url);else localStorage.removeItem(VKEY(k))}catch(e){$('voiceMsg').textContent='這台裝置空間不夠，存不進去'}
+  if(user&&db&&cloudOk===user.uid){try{await setDoc(doc(db,'users',user.uid,'cats','voice-'+k),{d:url||'',at:Date.now()})}catch(e){$('voiceMsg').textContent='雲端儲存失敗（'+(e.code||e.message)+'）'}}
+  drawVoice()}
+function audioLen(url){return new Promise(res=>{const a=new Audio();a.preload='metadata';a.onloadedmetadata=()=>res(isFinite(a.duration)?a.duration:0);a.onerror=()=>res(0);a.src=url;setTimeout(()=>res(0),3000)})}
+function blobURL(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(b)})}
+async function takeVoice(k,blob){const m=$('voiceMsg');if(blob.size>450000){m.textContent='檔案太大了，請剪短到 10 秒以內再試';return}
+  const url=await blobURL(blob),len=await audioLen(url);if(len>10.5){m.textContent=`這段有 ${Math.round(len)} 秒，請剪短到 10 秒以內`;return}
+  await saveVoice(k,url);m.textContent=`${VC_NAME[k]}存好了${len?`（${len.toFixed(1)} 秒）`:''}`;voicePlay(k,6000,true)}
+function drawVoice(){document.querySelectorAll('.voicerow').forEach(r=>{const k=r.dataset.k,has=!!VOICE[k];r.querySelector('.vstat').textContent=has?'✓ 已設定':'還沒有';
+  r.querySelector('[data-a=play]').disabled=!has;r.querySelector('[data-a=del]').disabled=!has});$('voiceOn').checked=voiceOn()}
+let voiceFileK='meow';
+async function recVoice(k,btn){const m=$('voiceMsg');
+  if(voiceRec){try{voiceRec.stop()}catch(e){}return}
+  if(!navigator.mediaDevices||!window.MediaRecorder){m.textContent='這個瀏覽器不能直接錄音，請用「選檔案」上傳錄好的聲音';return}
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){m.textContent='沒有拿到麥克風權限，可以改用「選檔案」';return}
+  const type=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||'';
+  const rec=new MediaRecorder(stream,type?{mimeType:type,audioBitsPerSecond:48000}:undefined),chunks=[];voiceRec=rec;
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  rec.onstop=async()=>{clearTimeout(rec._t);stream.getTracks().forEach(t=>t.stop());voiceRec=null;btn.classList.remove('rec');btn.textContent='🎙 錄音';
+    const b=new Blob(chunks,{type:rec.mimeType||type||'audio/webm'});if(b.size<800){m.textContent='好像沒錄到聲音，再試一次';return}await takeVoice(k,b)};
+  rec.start();btn.classList.add('rec');btn.textContent='⏹ 停止';m.textContent=`錄${VC_NAME[k]}中…（最多 8 秒，好了按停止）`;rec._t=setTimeout(()=>{try{rec.stop()}catch(e){}},8000)}
+document.querySelectorAll('.voicerow').forEach(r=>r.querySelectorAll('button').forEach(b=>b.onclick=async()=>{const k=r.dataset.k,a=b.dataset.a,m=$('voiceMsg');
+  if(a==='rec')recVoice(k,b);
+  if(a==='file'){voiceFileK=k;$('voiceFile').click()}
+  if(a==='play')voicePlay(k,10000,true);
+  if(a==='del'){if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='再按一次刪除';setTimeout(()=>{b.dataset.arm='';b.textContent='刪除'},2500);return}b.dataset.arm='';b.textContent='刪除';await saveVoice(k,null);m.textContent=`${VC_NAME[k]}刪掉了`}}));
+$('voiceFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(f)await takeVoice(voiceFileK,f)};
+$('voiceOn').onchange=()=>{S.voiceOn=$('voiceOn').checked;save()};
+$('voiceBtn').onclick=()=>{drawVoice();$('voiceMsg').textContent=user?'':'沒登入的話，聲音只會存在這台裝置。';$('voicePanel').hidden=false};
+$('voiceClose').onclick=()=>{if(voiceRec)try{voiceRec.stop()}catch(e){}$('voicePanel').hidden=true};
+
+/* ===== 拍照與相簿 ===== */
+const ALB_LOCAL='neko-album';
+function albLocal(){try{const a=JSON.parse(localStorage.getItem(ALB_LOCAL)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function albLocalSet(a){try{localStorage.setItem(ALB_LOCAL,JSON.stringify(a));return true}catch(e){return false}}
+const SNAP_BG={kitchen:['#f6ead6','#e7cfa6'],living:['#e8f1ec','#d9c3a2'],bedroom:['#eee6f3','#d8c0a6'],balcony:['#d9eef7','#cdb796']};
+function loadImgP(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+async function snapPhoto(cap){const W=600,Hh=750,c=document.createElement('canvas');c.width=W;c.height=Hh;const x=c.getContext('2d');
+  const zn=['kitchen','living','bedroom','balcony'][typeof zoneOf==='function'?zoneOf(H.x):1],tod=room.dataset.tod||'day',wx=room.dataset.wx||'';
+  let [wall,floor]=SNAP_BG[zn];if(tod==='night'){wall='#3a4466';floor='#6d5a4a'}else if(tod==='dusk'||tod==='dawn'){wall='#f7dcc4'}
+  x.fillStyle='#fffdf8';x.fillRect(0,0,W,Hh);
+  const P=28,ph=W-P*2;x.save();x.beginPath();x.rect(P,P,ph,ph);x.clip();
+  const g=x.createLinearGradient(0,P,0,P+ph);g.addColorStop(0,wall);g.addColorStop(.68,wall);g.addColorStop(.68,floor);g.addColorStop(1,floor);x.fillStyle=g;x.fillRect(P,P,ph,ph);
+  if(wx==='rain'){x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=2;for(let i=0;i<60;i++){const a=P+Math.random()*ph,b=P+Math.random()*ph*.66;x.beginPath();x.moveTo(a,b);x.lineTo(a-4,b+14);x.stroke()}}
+  if(wx==='snow'){x.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<70;i++){x.beginPath();x.arc(P+Math.random()*ph,P+Math.random()*ph*.66,1.5+Math.random()*2,0,Math.PI*2);x.fill()}}
+  // 貓：把畫面上的貓原封不動畫進照片
+  const svg=hCat.cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');svg.setAttribute('width','600');svg.setAttribute('height','600');svg.removeAttribute('style');svg.removeAttribute('class');
+  const str=new XMLSerializer().serializeToString(svg);
+  try{const img=await loadImgP('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(str));const cs=ph*.78,cx=W/2,cy=P+ph*.92;
+    x.save();x.translate(cx,cy);x.fillStyle='rgba(0,0,0,.12)';x.beginPath();x.ellipse(0,-cs*.02,cs*.3,cs*.045,0,0,Math.PI*2);x.fill();
+    const rot=(H.rollRot||0)*Math.PI/180;if(Math.abs(rot)>.01){x.translate(0,-cs*.35);x.rotate(rot);x.translate(0,cs*.35)}
+    if(hCat.dataset.flip==='1')x.scale(-1,1);x.drawImage(img,-cs/2,-cs*.93,cs,cs);x.restore()}catch(e){}
+  x.restore();
+  const n=S.name||'貓',d=new Date(),ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${todLabel()}`;
+  x.fillStyle='#3b3434';x.font='bold 30px "Noto Sans TC",sans-serif';x.textAlign='left';x.fillText(cap||n,P+4,P+ph+52);
+  x.fillStyle='#8a817b';x.font='20px "Noto Sans TC",sans-serif';x.fillText(ds,P+4,P+ph+86);
+  const st=($('homeStatus').textContent||'').slice(0,24);if(st&&!cap){x.textAlign='right';x.fillText(st,W-P-4,P+ph+86)}
+  return c.toDataURL('image/jpeg',.82)}
+async function addPhoto(img,cap,kind){const item={img,cap:cap||'',kind:kind||'snap',at:Date.now()};
+  if(user&&db&&cloudOk===user.uid){try{const r=await addDoc(collection(db,'users',user.uid,'album'),item);item.id=r.id;return item}catch(e){note('照片存到雲端失敗（'+(e.code||e.message)+'）',3);return null}}
+  const a=albLocal();a.unshift({...item,id:'l'+item.at});while(a.length>12)a.pop();if(!albLocalSet(a)){a.length=Math.max(1,a.length-4);albLocalSet(a)}return item}
+let snapBusy=false;
+$('camBtn').onclick=async()=>{if(snapBusy)return;snapBusy=true;lastInteract=Date.now();const f=$('flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');
+  try{const img=await snapPhoto('');const it=await addPhoto(img,`${S.name||'貓'}`,'snap');if(it)note(user?'喀嚓！存進相簿了':'喀嚓！存進相簿了（沒登入只存在這台，最多 12 張）',2.5)}finally{snapBusy=false}};
+async function autoSnap(kind,cap){if(!S.snapDay||typeof S.snapDay!=='object')S.snapDay={};if(S.snapDay[kind]===today())return;S.snapDay[kind]=today();save();
+  try{const img=await snapPhoto(cap);if(await addPhoto(img,cap,kind))note('📸 這一刻自動存進相簿了',3)}catch(e){}}
+let albItems=[],albCur=null;
+async function openAlbum(){$('albumPanel').hidden=false;$('albumView').hidden=true;$('albumGrid').hidden=false;const g=$('albumGrid');g.innerHTML='讀取中…';
+  if(user&&db&&cloudOk===user.uid){try{const qs=await getDocs(query(collection(db,'users',user.uid,'album'),orderBy('at','desc'),limit(80)));albItems=[];qs.forEach(d=>albItems.push({id:d.id,...d.data()}))}catch(e){g.textContent='讀不到相簿（'+(e.code||e.message)+'）';return}}
+  else albItems=albLocal();
+  drawAlbum()}
+function drawAlbum(){const g=$('albumGrid');g.innerHTML='';if(!albItems.length){g.textContent='還沒有照片，按「拍照」拍第一張吧！';return}
+  albItems.forEach(it=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',it.cap||'照片');const im=document.createElement('img');im.src=it.img;im.alt=it.cap||'';b.appendChild(im);
+    b.onclick=()=>{albCur=it;$('albumBig').src=it.img;const d=new Date(it.at||Date.now());$('albumCap').textContent=`${it.cap||''}・${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+      $('albumDl').href=it.img;$('albumDl').download=`${S.name||'cat'}-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.jpg`;$('albumDel').textContent='刪除';$('albumDel').dataset.arm='';
+      $('albumView').hidden=false;$('albumGrid').hidden=true};g.appendChild(b)})}
+$('albumBtn').onclick=openAlbum;$('albumClose').onclick=()=>{$('albumPanel').hidden=true};
+$('albumBack').onclick=()=>{$('albumView').hidden=true;$('albumGrid').hidden=false};
+$('albumDel').onclick=async()=>{const b=$('albumDel'),it=albCur;if(!it)return;if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='再按一次刪除';return}
+  try{if(String(it.id).startsWith('l'))albLocalSet(albLocal().filter(x=>x.id!==it.id));else await deleteDoc(doc(db,'users',user.uid,'album',it.id))}catch(e){$('albumMsg').textContent='刪除失敗（'+(e.code||e.message)+'）';return}
+  albItems=albItems.filter(x=>x!==it);albCur=null;$('albumView').hidden=true;$('albumGrid').hidden=false;drawAlbum()};
+
+/* ===== 天氣：跟著你選的城市（Open-Meteo，免費、不用金鑰），或自己選 ===== */
+const WX_CITIES=[['台北',25.03,121.56],['新北',25.01,121.46],['基隆',25.13,121.74],['桃園',24.99,121.30],['新竹',24.80,120.97],['台中',24.15,120.67],['彰化',24.08,120.54],['嘉義',23.48,120.45],['台南',22.99,120.21],['高雄',22.62,120.30],['屏東',22.67,120.49],['宜蘭',24.75,121.75],['花蓮',23.98,121.60],['台東',22.76,121.14]];
+const WX_ICON={sun:'☀️',cloudy:'☁️',rain:'🌧️',snow:'❄️'},WX_NAME={sun:'晴天',cloudy:'陰天',rain:'下雨',snow:'下雪'};
+var wxLive={code:null,at:0,key:''};
+function wxCfg(){if(!S.wx||typeof S.wx!=='object')S.wx={mode:'off'};return S.wx}
+function wxCodeMap(c){c=+c;if(c<=1)return'sun';if(c<=3||c===45||c===48)return'cloudy';if((c>=71&&c<=77)||c===85||c===86)return'snow';return'rain'}
+function wxNow(){const C=wxCfg();if(C.mode==='manual')return C.manual||'sun';if(C.mode==='auto')return wxLive.code||'off';return'off'}
+function wxIcon(){const w=wxNow();if(w==='off'||(w==='sun'&&todNow()==='night'))return'';return WX_ICON[w]||''}
+function wxApply(){const w=wxNow();if(w==='off'||w==='sun')delete room.dataset.wx;else room.dataset.wx=w;if(typeof applyTod==='function')applyTod()}
+async function wxFetch(force){const C=wxCfg();if(C.mode!=='auto'||C.lat==null)return;const key=C.lat+','+C.lon;
+  if(!force&&wxLive.key===key&&Date.now()-wxLive.at<30*60*1000)return;
+  try{const c=JSON.parse(localStorage.getItem('neko-wx-cache')||'null');if(!force&&c&&c.key===key&&Date.now()-c.at<30*60*1000){wxLive=c;wxApply();return}}catch(e){}
+  try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${C.lat}&longitude=${C.lon}&current=weather_code&timezone=auto`);const j=await r.json();
+    const code=wxCodeMap(j&&j.current?j.current.weather_code:0);wxLive={code,at:Date.now(),key};try{localStorage.setItem('neko-wx-cache',JSON.stringify(wxLive))}catch(e){}wxApply();drawWx()}
+  catch(e){const m=$('wxMsg');if(m&&!$('wxPanel').hidden)m.textContent='暫時抓不到天氣，等一下會再試'}}
+function drawWx(){const C=wxCfg();document.querySelectorAll('#wxMode .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===C.mode)));
+  $('wxAuto').hidden=C.mode!=='auto';$('wxManual').hidden=C.mode!=='manual';
+  document.querySelectorAll('#wxPick .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.w===(C.manual||'sun'))));
+  const box=$('wxCities');if(!box.children.length)WX_CITIES.forEach(([nm,la,lo])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=nm;b.dataset.c=nm;b.onclick=()=>wxSetCity(nm,la,lo);box.appendChild(b)});
+  box.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.c===C.city)));
+  const m=$('wxMsg');if(C.mode==='auto')m.textContent=C.city?(wxLive.code?`${C.city}現在：${WX_ICON[wxLive.code]} ${WX_NAME[wxLive.code]}`:`${C.city}：讀取天氣中…`):'先選一個城市';
+  else if(C.mode==='manual')m.textContent=`窗外現在是${WX_NAME[C.manual||'sun']}`;else m.textContent='天氣關掉了，窗外會一直是晴天'}
+function wxSetCity(nm,la,lo){const C=wxCfg();C.city=nm;C.lat=Math.round(la*100)/100;C.lon=Math.round(lo*100)/100;wxLive={code:null,at:0,key:''};save();drawWx();wxFetch(true)}
+document.querySelectorAll('#wxMode .chip').forEach(b=>b.onclick=()=>{const C=wxCfg();C.mode=b.dataset.m;save();drawWx();wxApply();if(C.mode==='auto')wxFetch()});
+document.querySelectorAll('#wxPick .chip').forEach(b=>b.onclick=()=>{wxCfg().manual=b.dataset.w;save();drawWx();wxApply()});
+$('wxFind').onclick=async()=>{const q=$('wxQ').value.trim(),box=$('wxResults');if(!q)return;box.textContent='搜尋中…';
+  try{const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=zh&format=json`),j=await r.json();box.innerHTML='';
+    if(!j.results||!j.results.length){box.textContent='找不到這個城市，換個寫法試試（例如英文名稱）';return}
+    j.results.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=[it.name,it.admin1,it.country].filter(Boolean).join('・');b.onclick=()=>{wxSetCity(it.name,it.latitude,it.longitude);box.innerHTML=''};box.appendChild(b)})}
+  catch(e){box.textContent='搜尋失敗，等一下再試'}};
+$('wxQ').addEventListener('keydown',e=>{if(e.key==='Enter')$('wxFind').click()});
+$('wxBtn').onclick=()=>{drawWx();$('wxPanel').hidden=false;wxFetch()};$('wxClose').onclick=()=>{$('wxPanel').hidden=true};
+document.querySelectorAll('.window,.zsky').forEach(el=>{const i=document.createElement('i');i.className='wx';el.appendChild(i)});
+setTimeout(()=>{wxApply();wxFetch()},1500);setInterval(()=>wxFetch(),10*60*1000);
 
 </script>
 </body>
