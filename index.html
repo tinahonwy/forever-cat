@@ -2047,7 +2047,15 @@ const AIKEY='neko-gemini-key',AIMODEL='neko-gemini-model',CHATKEY='neko-chat-v1'
 const AI_MODELS=[['gemini-3.1-flash-lite','3.1 Flash-Lite（最省、預設）'],['gemini-3.5-flash-lite','3.5 Flash-Lite'],['gemini-3.6-flash','3.6 Flash（比較聰明）']];
 const ls={get:k=>{try{return localStorage.getItem(k)||''}catch(e){return''}},set:(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){}}};
 const aiKey=()=>ls.get(AIKEY).trim(),aiModel=()=>ls.get('neko-gemini-model-custom').trim()||ls.get(AIMODEL)||AI_MODELS[0][0];
+/* AI 回覆的 JSON 有時會被包在說明文字或 ``` 裡、或被截斷：盡量撈出真正的內容，撈不到就當失敗（改用貓語），絕不把「Here is the JSON」這種字給貓說 */
+const hasCJK=t=>/[\u3400-\u9fff]/.test(String(t||''));
+function parseAIJSON(raw){raw=String(raw||'').trim();if(!raw)return null;
+  try{return JSON.parse(raw)}catch(e){}
+  const t=raw.replace(/```(?:json)?/gi,'').trim();try{return JSON.parse(t)}catch(e){}
+  const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}
+  return null}
 let chatHist=[];try{chatHist=JSON.parse(ls.get(CHATKEY)||'[]')}catch(e){chatHist=[]}
+chatHist=Array.isArray(chatHist)?chatHist.filter(m=>m&&(m.role==='me'||hasCJK(m.text))&&!/here is|json/i.test(m.text||'')):[];
 function pushHist(role,text){chatHist.push({role,text,t:Date.now()});if(chatHist.length>24)chatHist=chatHist.slice(-24);ls.set(CHATKEY,JSON.stringify(chatHist))}
 function aiOn(){return S.talkMode==='ai'&&!!aiKey()}
 function catProfile(day){
@@ -2086,14 +2094,14 @@ async function askGemini(text){
   const order=[aiModel(),...AI_MODELS.map(m=>m[0]).filter(m=>m!==aiModel())];let last;
   for(let i=0;i<order.length;i++){
     try{const o=await askGeminiOnce(text,order[i]);modelOverride=i?order[i]:'';return o}
-    catch(e){last=e;if(!busyErr(e))throw e;await new Promise(r=>setTimeout(r,i?600:1200))}
+    catch(e){last=e;if(!busyErr(e)&&!/格式/.test(e.message||''))throw e;await new Promise(r=>setTimeout(r,i?600:1200))}
   }
   throw last}
 async function askGeminiOnce(text,model){
   const contents=chatHist.slice(-12).map(m=>({role:m.role==='me'?'user':'model',parts:[{text:m.text}]}));
   contents.push({role:'user',parts:[{text}]});
   const body={systemInstruction:{parts:[{text:systemPrompt()}]},contents,
-    generationConfig:{temperature:1,maxOutputTokens:200,responseMimeType:'application/json',
+    generationConfig:{temperature:1,maxOutputTokens:600,responseMimeType:'application/json',
       responseSchema:{type:'OBJECT',properties:{say:{type:'STRING'},action:{type:'STRING',enum:['come','wag','hop','blink','back','bed','ear','eat','none']},face:{type:'STRING',enum:['normal','happy','closed','annoyed']}},required:['say','action','face']}}};
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
   try{
@@ -2102,12 +2110,14 @@ async function askGeminiOnce(text,model){
     const j=await res.json().catch(()=>({}));
     if(!res.ok){const e=new Error((j.error&&j.error.message)||('HTTP '+res.status));e.status=res.status;throw e}
     const raw=(((j.candidates||[])[0]||{}).content||{}).parts?.map(p=>p.text||'').join('')||'';
-    let o;try{o=JSON.parse(raw)}catch(e){o={say:raw.replace(/[{}"]/g,'').slice(0,40),action:'ear',face:'normal'}}
-    if(!o.say)throw Object.assign(new Error('空的回應'),{status:0});
+    let o=parseAIJSON(raw);
+    if(!o||typeof o!=='object'){const m=/"say"\s*:\s*"((?:[^"\\]|\\.)*)/.exec(raw);o=m?{say:m[1].replace(/\\n/g,' ').replace(/\\"/g,'"'),action:'ear',face:'normal'}:null}
+    if(!o||!o.say||!hasCJK(o.say)||/here is|json/i.test(o.say))throw Object.assign(new Error('AI 回覆格式怪怪的'),{status:0});
+    o.say=String(o.say).trim().slice(0,60);
     return o;
   }finally{clearTimeout(to)}
 }
-function aiErrText(e){const s=e.status;
+function aiErrText(e){const s=e.status;if(/格式/.test(e.message||''))return'AI 這次回得怪怪的，先用貓語回你';
   if(e.name==='AbortError')return'AI 太久沒回應';
   if(s===400||s===401||s===403)return'金鑰不被接受（'+String(e.message||'').slice(0,60)+'），請到「AI 說話設定」檢查';
   if(s===404)return'找不到這個模型，請到設定換一個';
@@ -2223,7 +2233,7 @@ async function gemJSON(sys,user,schema){
            generationConfig:{temperature:.2,maxOutputTokens:800,responseMimeType:'application/json',responseSchema:schema}})});
       const j=await res.json().catch(()=>({}));
       if(!res.ok){const e=new Error((j.error&&j.error.message)||('HTTP '+res.status));e.status=res.status;throw e}
-      return JSON.parse((((j.candidates||[])[0]||{}).content||{}).parts.map(p=>p.text||'').join(''))}
+      {const o=parseAIJSON((((j.candidates||[])[0]||{}).content||{}).parts?.map(p=>p.text||'').join('')||'');if(!o)throw Object.assign(new Error('AI 回覆格式怪怪的'),{status:0});return o}}
     catch(e){last=e;if(!busyErr(e))throw e;await new Promise(r=>setTimeout(r,800))}}
   throw last}
 const ZCODES=ZONES.map(z=>z[0]);
@@ -2946,7 +2956,7 @@ async function gemParts(sys,parts,schema,maxTok){
            generationConfig:{temperature:.2,maxOutputTokens:maxTok||1200,responseMimeType:'application/json',responseSchema:schema}})});
       const j=await res.json().catch(()=>({}));
       if(!res.ok){const e=new Error((j.error&&j.error.message)||('HTTP '+res.status));e.status=res.status;throw e}
-      return JSON.parse((((j.candidates||[])[0]||{}).content||{}).parts.map(p=>p.text||'').join(''))}
+      {const o=parseAIJSON((((j.candidates||[])[0]||{}).content||{}).parts?.map(p=>p.text||'').join('')||'');if(!o)throw Object.assign(new Error('AI 回覆格式怪怪的'),{status:0});return o}}
     catch(e){last=e;if(!busyErr(e))throw e;await new Promise(r=>setTimeout(r,800))}}
   throw last}
 function shrinkImage(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error('讀不到這張照片'));
