@@ -570,6 +570,14 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 .gcard{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .gcard>*{flex-shrink:0}
 body:has(.guide:not([hidden])) #viewHome .toolbar{display:none}
+.bug{position:absolute;left:0;top:0;z-index:62;cursor:pointer;will-change:transform;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+.bug .wg{transform-box:fill-box;transform-origin:50% 100%;animation:bugwing .05s linear infinite alternate}.bug .wg2{animation-delay:.025s}
+@keyframes bugwing{to{transform:scaleY(.35)}}
+#bird{pointer-events:auto;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.bug .wg{animation:none}}
+.gecko{position:absolute;left:0;top:0;z-index:1;cursor:pointer;transition:opacity .6s;will-change:transform}.gecko.gone{opacity:0}
+.gecko.moving svg{animation:gwig .14s ease-in-out infinite alternate}@keyframes gwig{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+@media (prefers-reduced-motion:reduce){.gecko.moving svg{animation:none}}
 </style>
 </head>
 <body>
@@ -1762,6 +1770,7 @@ function step(dt){
   if(wandOn&&!H.jump&&!H.inBox&&H.y<.05&&playTick(dt))return;
   if(H.state==='sit'&&H.waitFood){if(foodAmt(H.waitFood)>.01){startEat(H.waitFood);return}if(H.timer<=0)H.waitFood=null;else return}
   if(H.state==='pose'&&typeof poseStep==='function'){poseStep(dt);return}
+  if(H.state==='bug'&&typeof bugStep==='function'){bugStep(dt);return}
   if(typeof funStep==='function'&&funStep(dt))return;
   if(H.state==='walk'){H.facing=Math.sign(H.target-H.x)||H.facing;
     const d=H.target-H.x,sp=(.07+.06*P01('energy'))*(H.runFast?2.4:1)*(1+Math.min(1.5,Math.abs(d)*ZN*.5))*dt/ZN;
@@ -1797,7 +1806,7 @@ function crumb(it){const b=relRect(IT[it][0]);if(!b)return;const c=document.crea
   room.appendChild(c);setTimeout(()=>c.remove(),800)}
 function apply(dt){
   const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w),t=H.t,v=H.view;
-  const st=H.state,walking=['walk','chase','stalk','dash','search'].includes(st)||(st==='hide'&&Math.abs(H.x-(H.hideX??H.x))>.005)||(st==='pose'&&H.pose&&H.pose.k==='weave'),hiding=st==='hide'&&!walking,sleeping=st==='sleep',dir=walking?(Math.sign(H.target-H.x)||1):(H.facing||1),ph=t*(st==='stalk'?4.5:st==='dash'?15:st==='chase'?12:9),m=RM?0:1;
+  const st=H.state,walking=['walk','chase','stalk','dash','search'].includes(st)||(st==='hide'&&Math.abs(H.x-(H.hideX??H.x))>.005)||(st==='pose'&&H.pose&&H.pose.k==='weave')||(st==='bug'&&H.bugPh==='stalk'),hiding=st==='hide'&&!walking,sleeping=st==='sleep',dir=walking?(Math.sign(H.target-H.x)||1):(H.facing||1),ph=t*(st==='stalk'?4.5:st==='dash'?15:st==='chase'?12:9),m=RM?0:1;
   let lt=0;const flopping=(st==='roll'&&(H.rollPh==='flop'||H.rollPh==='side'))||(st==='pose'&&H.pose&&H.pose.k==='belly');
   if(!sleeping&&!walking&&performance.now()-H.pAt<2500)lt=Math.max(-1,Math.min(1,(H.px-(px+w/2))/(rw*.3)));
   H.look+=(lt-H.look)*Math.min(1,dt*5);
@@ -1839,8 +1848,8 @@ function apply(dt){
   const wig=st==='ready'?Math.sin(t*22)*w*.012*m:0;if(st==='ready'){sy*=.88;sx*=1.04}
   if(st==='stalk'){sy*=.86;sx*=1.05}
   if(st==='bat'||st==='beg2'){sy*=1.07;y+=w*.04}
-  {const ph=st==='roll'?H.rollPh:(st==='pose'&&H.pose&&H.pose.k==='belly'?'flop':null),tg=ph==='flop'?168:ph==='side'?168+Math.sin(t*3.2)*30:0;H.rollRot=(H.rollRot||0)+(tg-(H.rollRot||0))*Math.min(1,dt*(m?5:30));
-   const rr=H.rollRot;if(Math.abs(rr)>.5){rot+=rr;y+=w*.38*(1-Math.cos(rr*Math.PI/180))}if(ph==='rub')rot+=Math.sin(t*5)*8*(m||.3)}
+  {const ph=st==='roll'?H.rollPh:((st==='pose'&&H.pose&&H.pose.k==='belly')||(st==='sleep'&&H.sleepPose==='belly')?'flop':null),tg=ph==='flop'?168:ph==='side'?168+Math.sin(t*3.2)*30:0;H.rollRot=(H.rollRot||0)+(tg-(H.rollRot||0))*Math.min(1,dt*(m?5:30));
+   const rr=H.rollRot;if(Math.abs(rr)>.5){rot+=rr;y+=w*.273*(1-Math.cos(rr*Math.PI/180))}if(ph==='rub')rot+=Math.sin(t*5)*8*(m||.3)}
   if(st==='birdwatch'){sy*=.95;if(m&&Math.random()<dt*2)H.wag=.4}if(st==='litter'){sy*=.9;sx*=1.04;y+=w*.03}if(st==='treat')sy*=1+Math.sin(t*14)*.015*m;
   if(st==='leap'&&H.leapT>0){const p=1-H.leapT/.7;y+=Math.sin(p*Math.PI)*(H.leapH||.6)*w;sy*=1.08}
   if(st==='grab')rot+=Math.sin(t*26)*4*(m||.3);
@@ -1862,7 +1871,7 @@ function apply(dt){
   if(typeof followCam==='function')followCam(px,w,dt);
   layoutRoom(rw,rh,w);drawNeeds();
   const n=S.name||'〚貓代詞〛';
-  const txt=H.statusT>0?H.statusTxt:st==='pose'&&H.pose&&typeof POSES!=='undefined'&&POSES[H.pose.k]?`${n}${POSES[H.pose.k].st}`:st==='pushprep'?`${n}盯著你，爪子慢慢伸向杯子…（點〚貓代詞〛可以阻止）`:st==='roll'?`${n}抱著貓草在地上打滾`:st==='litter'?`${n}在上廁所，不要盯著看啦`:st==='treat'?`${n}在吃零食`:st==='beg2'?`${n}站起來討零食`:(st==='beg'&&tool==='treat')?`${n}盯著你手上的零食`:H.carryGift?`${n}叼著東西走過來`:H.hug?(H.warned?`${n}開始扭來扭去，想下來了`:Math.abs(H.dragV||0)>w*.3?`${n}被你抱著走來走去`:`${n}讓你抱著`):st==='chase'?`${n}在追逗貓棒`:st==='stalk'?`${n}壓低身體慢慢靠近`:st==='ready'?(wandOn&&FT.hidden?`${n}盯著逗貓棒消失的地方`:`${n}盯著逗貓棒，屁股扭扭`):st==='bat'?`${n}站起來用爪子撥`:st==='leap'?`${n}跳起來抓！`:st==='grab'?`${n}抱著逗貓棒踢踢`:st==='dash'?`${n}衝出來了！`:st==='search'?`${n}在找逗貓棒`:st==='hide'?(hiding?`${n}躲在${ROOM_ITEMS[H.hideK]?.[0]||'家具'}後面偷看`:`${n}偷偷躲起來`):walking?(H.goSleep?`${n}想去睡覺了`:H.runFast?`${n}衝過去了`:`${n}在走來走去`):sleeping?`${n}睡著了`:st==='drink'?`${n}在喝水`:st==='sniff'?`${n}在聞聞看`:st==='beg'?`${n}喵喵叫，想吃飯`:H.waitFood?`${n}等著吃${H.waitFood==='plate'?'罐頭':'飯'}`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
+  const txt=H.statusT>0?H.statusTxt:st==='bug'?`${n}${H.prey==='gecko'?'盯著壁虎':'盯著小飛蟲'}咔咔叫`:st==='pose'&&H.pose&&typeof POSES!=='undefined'&&POSES[H.pose.k]?`${n}${POSES[H.pose.k].st}`:st==='pushprep'?`${n}盯著你，爪子慢慢伸向杯子…（點〚貓代詞〛可以阻止）`:st==='roll'?`${n}抱著貓草在地上打滾`:st==='litter'?`${n}在上廁所，不要盯著看啦`:st==='treat'?`${n}在吃零食`:st==='beg2'?`${n}站起來討零食`:(st==='beg'&&tool==='treat')?`${n}盯著你手上的零食`:H.carryGift?`${n}叼著東西走過來`:H.hug?(H.warned?`${n}開始扭來扭去，想下來了`:Math.abs(H.dragV||0)>w*.3?`${n}被你抱著走來走去`:`${n}讓你抱著`):st==='chase'?`${n}在追逗貓棒`:st==='stalk'?`${n}壓低身體慢慢靠近`:st==='ready'?(wandOn&&FT.hidden?`${n}盯著逗貓棒消失的地方`:`${n}盯著逗貓棒，屁股扭扭`):st==='bat'?`${n}站起來用爪子撥`:st==='leap'?`${n}跳起來抓！`:st==='grab'?`${n}抱著逗貓棒踢踢`:st==='dash'?`${n}衝出來了！`:st==='search'?`${n}在找逗貓棒`:st==='hide'?(hiding?`${n}躲在${ROOM_ITEMS[H.hideK]?.[0]||'家具'}後面偷看`:`${n}偷偷躲起來`):walking?(H.goSleep?`${n}想去睡覺了`:H.runFast?`${n}衝過去了`:`${n}在走來走去`):sleeping?`${n}${(typeof SLEEP_TXT!=='undefined'&&SLEEP_TXT[H.sleepPose])||'睡著了'}`:st==='drink'?`${n}在喝水`:st==='sniff'?`${n}在聞聞看`:st==='beg'?`${n}喵喵叫，想吃飯`:H.waitFood?`${n}等著吃${H.waitFood==='plate'?'罐頭':'飯'}`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
   if(!bubble.hidden)bubble.classList.toggle('flip',px+w*.58+bubble.offsetWidth>rw-6);
 }
@@ -2081,7 +2090,7 @@ function catProfile(day){
   const w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>(l||[]).map(z=>(ZONES.find(x=>x[0]===z)||[,z])[1]).join('、')||'沒有特別';
   const notes=Object.values(S.persNotes||{}).filter(Boolean);
   const h=new Date().getHours(),tod=h<5?'深夜':h<11?'早上':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';
-  const est=H.state==='pose'&&H.pose&&typeof POSES!=='undefined'&&POSES[H.pose.k]?'正'+POSES[H.pose.k].st.replace(/^(?!在)/,'在'):H.state==='eat'?(H.eatSrc==='plate'?`正在吃${typeof canName==='function'?canName():'罐頭'}`:'正在吃飼料'):H.state==='drink'?'正在喝水':H.state==='litter'?'正在上廁所':H.state==='roll'?'正在玩貓草':H.state==='treat'?'正在吃主人給的零食':H.inBox?'躲在紙箱裡':H.state==='birdwatch'?'在陽台看鳥':null;
+  const est=H.state==='bug'?(H.prey==='gecko'?'正在盯著牆上的壁虎咔咔叫':'正在盯著一隻小飛蟲咔咔叫'):H.state==='birdwatch'?'正在陽台盯著小鳥咔咔叫':H.state==='pose'&&H.pose&&typeof POSES!=='undefined'&&POSES[H.pose.k]?'正'+POSES[H.pose.k].st.replace(/^(?!在)/,'在'):H.state==='eat'?(H.eatSrc==='plate'?`正在吃${typeof canName==='function'?canName():'罐頭'}`:'正在吃飼料'):H.state==='drink'?'正在喝水':H.state==='litter'?'正在上廁所':H.state==='roll'?'正在玩貓草':H.state==='treat'?'正在吃主人給的零食':H.inBox?'躲在紙箱裡':H.state==='birdwatch'?'在陽台看鳥':null;
   const st=est||(H.hug?'正被主人抱著':H.state==='sleep'?'正在貓窩睡覺':H.state==='walk'?'在房間裡走動':H.view==='back'?'坐著，屁股對著主人':'坐著發呆');
   const food=typeof foodAmt==='function'?[foodAmt('plate')>.02?`盤子裡有還沒吃完的${typeof canName==='function'?canName():'罐頭'}`:'',foodAmt('bowl')>.02?'碗裡有飼料':''].filter(Boolean).join('、'):'';
   return [`名字：${S.name||'貓咪'}`,
@@ -3748,7 +3757,7 @@ function houseAct(k){const n=S.name||'〚貓代詞〛';
   if(k==='hbed'){const pil=Math.random()<.4;startWalk(hxOf(pil?.693:.655),false,()=>{setHView('front');jumpTo(surfY(pil?.275:.255),()=>{H.onPillow=pil;H.state='sleep';H.timer=20+Math.random()*15;setFace('closed');say('Zzz…',1500);logAct(pil?'pillow':'hbed',pil?'霸佔你的枕頭，睡得超熟':'跳上你的床，窩在被子上睡覺',true)})})}
   if(k==='xmasTree')treeKnock();if(k==='parkour')parkour();
   if(k==='counter')startWalk(hxOf(.113),false,()=>{setHView('front');jumpTo(surfY(.41),()=>{H.onCounter=true;sitDown('front');H.timer=6+Math.random()*6;say('（偷看）',1000);logAct('counter','偷偷跳上廚房流理台',true);setTimeout(maybePush,1800)})})}
-function showBird(on){const b=$('bird');if(on){b.removeAttribute('hidden');b.classList.remove('fly');void b.getBoundingClientRect();b.classList.add('land')}else if(!b.hasAttribute('hidden')){b.classList.remove('land');b.classList.add('fly');setTimeout(()=>{b.setAttribute('hidden','');b.classList.remove('fly')},900)}}
+function showBird(on){const b=$('bird');if(on){if(!b.hasAttribute('hidden')&&!b.classList.contains('fly'))return;b.removeAttribute('hidden');b.classList.remove('fly');void b.getBoundingClientRect();b.classList.add('land')}else if(!b.hasAttribute('hidden')){b.classList.remove('land');b.classList.add('fly');setTimeout(()=>{b.setAttribute('hidden','');b.classList.remove('fly')},900)}}
 $('fridge').addEventListener('click',e=>{e.stopPropagation();if(roomEdit)return;const f=$('fridge'),n=S.name||'〚貓代詞〛';lastInteract=Date.now();idleFired=false;
   f.classList.add('open');setTimeout(()=>f.classList.remove('open'),2600);note('你打開冰箱',2);
   if(H.hug||wandOn||['litter','roll','eat'].includes(H.state))return;
@@ -4640,10 +4649,14 @@ function idlePose(){if(H.y>.05||H.inBox||H.inLitter||H.hug||wandOn||tool)return 
   let r=Math.random()*opts.reduce((s,o)=>s+o[1],0);for(const[k,w]of opts){if((r-=w)<=0)return startPose(k)}return false}
 /* 每一格畫面：依姿勢調整身體零件 */
 function poseApply(v,t,m,o,w,dt){
+  if(typeof critterTick==='function')critterTick(dt,w);
   if(H.tailUpT>0)H.tailUpT-=dt||0;
   const p=H.state==='pose'?H.pose:null,q=m||.3;
   const tailUp=(H.tailUpT>0)||(p&&(p.k==='rub'||p.k==='weave'));
   if(tailUp&&v!=='back'){const tp=TAIL_PIVOT[v],wob=Math.sin(t*3)*4*q;setT('tail',v==='side'?`rotate(${35+wob} ${tp[0]} ${tp[1]})`:`rotate(${-40+wob} ${tp[0]} ${tp[1]})`)}
+  if(typeof critterApply==='function')o=critterApply(v,t,m,o,w);
+  if(typeof sleepApply==='function')o=sleepApply(v,t,m,o,w);
+  {const rr=Math.abs(H.rollRot||0);if(v==='side'&&rr>20)setT('head',`rotate(${62*Math.min(1,rr/168)} 200 180)`)}
   if(!p)return o;
   const e=Math.max(0,Math.min(1,p.t/.3,(p.dur-p.t)/.3)),f=H.facing||1;
   switch(p.k){
@@ -4660,6 +4673,126 @@ function poseApply(v,t,m,o,w,dt){
     case'shake':if(v==='front'){setT('head',`rotate(${Math.sin(t*30)*18*e} 150 190)`);o.rot+=Math.sin(t*30)*4*e*q}break;
     case'stare':H.look=p.dir*.85;break;
   }
+  return o}
+
+/* ===== 窗外的小鳥、家裡的小飛蟲：貓看到會盯著「咔咔咔」叫，有時候還會撲過去抓 ===== */
+var BUG=null,BIRDV={until:0,noticed:true};
+var BUG_SVG={fly:'<svg viewBox="0 0 30 24" width="100%" height="100%"><ellipse class="wg" cx="10" cy="8" rx="7" ry="5" fill="#cfe6f5" fill-opacity=".8"/><ellipse class="wg wg2" cx="20" cy="8" rx="7" ry="5" fill="#cfe6f5" fill-opacity=".8"/><ellipse cx="15" cy="14" rx="5" ry="6.5" fill="#3d3a3a"/><circle cx="15" cy="7.5" r="3.4" fill="#3d3a3a"/></svg>',
+  moth:'<svg viewBox="0 0 30 24" width="100%" height="100%"><path class="wg" d="M15,12 C8,2 1,5 3,12 C4,17 10,17 15,13Z" fill="#e9dcc0"/><path class="wg wg2" d="M15,12 C22,2 29,5 27,12 C26,17 20,17 15,13Z" fill="#e9dcc0"/><ellipse cx="15" cy="13" rx="2.4" ry="6" fill="#8a7458"/></svg>'};
+function birdShown(){const b=$('bird');return!b.hasAttribute('hidden')&&!b.classList.contains('fly')}
+function catFree(){return!H.hug&&!wandOn&&!tool&&!roomEdit&&H.y<.05&&!H.inBox&&!H.inLitter&&!H.jump&&['sit','walk','pose'].includes(H.state)}
+function spawnBug(){if(BUG||view!=='home')return;const tod=todNow(),night=tod==='night'||tod==='dusk';
+  const z=night?2:Math.floor(Math.random()*ZN),el=document.createElement('span');el.className='bug';el.setAttribute('role','button');el.setAttribute('aria-label','小飛蟲，點一下趕走');
+  el.innerHTML=BUG_SVG[night?'moth':'fly'];room.appendChild(el);
+  const hx=night?.73:(z+.2+Math.random()*.6)/ZN;
+  BUG={el,z,x:hx,y:.25,hx,hy:night?.3:.4,tx:hx,ty:.4,t:0,life:30+Math.random()*25,flee:0,noticed:false,re:0};
+  el.addEventListener('click',e=>{e.stopPropagation();if(BUG&&BUG.el===el){BUG.flee=1;note('你把小飛蟲趕走了',2)}})}
+function removeBug(){if(BUG){BUG.el.remove();BUG=null}}
+function critterSpawn(){if(view!=='home'||document.hidden||roomEdit)return;const tod=todNow(),w=typeof wxNow==='function'?wxNow():'off';
+  if(!BUG&&Math.random()<(tod==='night'||tod==='dusk'?.18:.1))spawnBug();
+  if(!GECKO&&Math.random()<(tod==='night'||tod==='dusk'?.16:.04))spawnGecko();
+  if(!birdShown()&&H.state!=='birdwatch'&&(tod==='day'||tod==='dawn')&&w!=='rain'&&w!=='snow'&&Math.random()<(w==='cloudy'?.06:.12)){
+    showBird(true);BIRDV={until:performance.now()+(20+Math.random()*15)*1000,noticed:false}}}
+setInterval(critterSpawn,15000);
+/* 每一格畫面都會呼叫：移動小飛蟲、看貓有沒有注意到小鳥或小飛蟲 */
+function critterTick(dt,w){dt=dt||0;const rw=room.clientWidth,rh=room.clientHeight,now=performance.now();if(typeof geckoTick==='function')geckoTick(dt,w);
+  if(birdShown()&&H.state!=='birdwatch'&&now>BIRDV.until){showBird(false);BIRDV.noticed=true}
+  if(birdShown()&&!BIRDV.noticed&&catFree()&&H.state!=='pose'){const near=zoneOf(H.x)===3;
+    if(Math.random()<dt*(near?.6:.1)){BIRDV.noticed=true;BIRDV.until=now+40000;logAct('birdSeen','聽到陽台有小鳥，跑去窗邊盯著看',true);houseAct('birdwatch')}}
+  else if(birdShown()&&!BIRDV.noticed&&H.state==='sleep'&&Math.random()<dt*.02){BIRDV.noticed=true;wake();BIRDV.until=now+40000;logAct('birdSeen','被小鳥的叫聲吵醒，跑去陽台看',true);houseAct('birdwatch')}
+  if(!BUG)return;const B=BUG;B.t+=dt;
+  if(B.flee){B.ty-=dt*.9;B.tx+=dt*.05;B.x+=(B.tx-B.x)*Math.min(1,dt*4);B.y+=(B.ty-B.y)*Math.min(1,dt*4);if(B.y<-.15){removeBug();return}}
+  else{B.re-=dt;if(B.re<=0){B.re=.8+Math.random()*1.4;const swatting=H.state==='bug';
+      B.tx=B.hx+(Math.random()-.5)*(swatting?.03:.11)/ZN*4;B.ty=swatting?.5+Math.random()*.12:B.hy+(Math.random()-.5)*.22}
+    B.x+=(B.tx-B.x)*Math.min(1,dt*1.6)+Math.sin(B.t*9)*.0004;B.y+=(B.ty-B.y)*Math.min(1,dt*1.6)+Math.cos(B.t*11)*.002;
+    B.life-=dt;if(B.life<=0&&H.state!=='bug')B.flee=1}
+  const sz=Math.max(14,w*.13);B.el.style.width=sz+'px';B.el.style.height=(sz*.8)+'px';B.el.style.transform=`translate(${B.x*rw-sz/2}px,${B.y*rh}px)`;
+  if(!B.flee&&!B.noticed&&B.t>2){const same=zoneOf(H.x)===B.z,asleep=H.state==='sleep';
+    if(same&&catFree()&&H.state!=='pose'&&Math.random()<dt*(.25+.35*P01('energy'))){B.noticed=true;startBugWatch()}
+    else if(same&&asleep&&Math.random()<dt*.03){B.noticed=true;wake();startBugWatch()}}}
+function startBugWatch(){H.prey='bug';H.state='bug';H.bugPh='watch';H.timer=2+Math.random()*2.5;setHView('front');H.goSleep=false;say('咔咔咔…',1500);
+  logAct('bugSeen','發現一隻小飛蟲，盯著牠咔咔咔地叫')}
+function bugStep(dt){const rw=room.clientWidth,w=hc.offsetWidth,B=H.prey==='gecko'?GECKO:BUG;
+  if(!B||B.flee&&H.bugPh!=='swat'){H.bugPh=null;sitDown('front');if(!B)return;say('…喵',900);return}
+  H.px=B.x*rw;H.pAt=performance.now();
+  if(H.bugPh==='watch'){if(Math.random()<dt*.4)say(pick(['咔咔…','（尾巴抖抖）','咔咔咔！','（盯）']),1000);
+    if(H.timer<=0){if(Math.random()<.25+.5*P01('energy')){H.bugPh='stalk';setHView('side')}else{H.bugPh=null;sitDown('front');logAct(H.prey==='gecko'?'geckoMeh':'bugMeh',H.prey==='gecko'?'盯著壁虎看了一下，懶得抓':'盯著小飛蟲看了一下，懶得抓')}}return}
+  if(H.bugPh==='stalk'){const tx=Math.min(.99,Math.max(.01,(B.x*rw-w/2)/Math.max(1,rw-w))),sp=.06*dt/ZN*4;H.target=tx;H.facing=Math.sign(tx-H.x)||H.facing;
+    if(Math.abs(tx-H.x)<=sp*1.5){H.x=tx;H.bugPh='swat';H.timer=1.1;setHView('front');H.hop=.55;say('喵！',700)}else H.x+=Math.sign(tx-H.x)*sp;return}
+  if(H.bugPh==='swat'&&H.timer<=0){const n=S.name||'〚貓代詞〛';H.bugPh=null;if(H.prey==='gecko'){geckoOutcome(B,w);return}
+    if(Math.random()<.3){const r=B.el.getBoundingClientRect(),rr=room.getBoundingClientRect();popText(r.left-rr.left,r.top-rr.top,'啪！');removeBug();
+      sitDown('front');setFace('happy',2);heart();H.mood=Math.min(1,H.mood+.06);say('（得意）',1300);logAct('bugCaught','跳起來一掌抓到小飛蟲，好得意',true);
+      setTimeout(()=>aiEvent('（你剛剛在家裡跳起來抓到一隻小飛蟲）',{allowMove:false}),1500)}
+    else{B.flee=1;sitDown('front');say('喵…（飛走了）',1300);logAct('bugMiss','撲過去抓小飛蟲，被牠飛走了',true)}}}
+function critterApply(v,t,m,o,w){if(H.state!=='bug')return o;const q=m||.3;
+  if(H.bugPh==='watch'){o.sy*=.95;const tp=TAIL_PIVOT[v];setT('tail',`rotate(${Math.sin(t*16)*7*q} ${tp[0]} ${tp[1]})`)}
+  if(H.bugPh==='stalk'){o.sy*=.88;o.sx*=1.04}
+  if(H.bugPh==='swat'&&v==='front'){const s1=Math.max(0,Math.sin(t*13))*q,s2=Math.max(0,Math.sin(t*13+Math.PI))*q;
+    setT('frontR',`translate(0 ${-26*(.4+s1)}) rotate(${-50*(.4+s1)} 162 228)`);setT('frontL',`translate(0 ${-26*(.4+s2)}) rotate(${50*(.4+s2)} 138 228)`);o.sy*=1.07}
+  return o}
+$('bird').addEventListener('click',e=>{e.stopPropagation();if(!birdShown())return;showBird(false);BIRDV.noticed=true;note('小鳥飛走了',2);
+  if(H.state==='birdwatch'){sitDown('front');say('喵…（飛走了）',1300)}});
+
+/* ===== 壁虎：晚上比較常出現，在窗戶和牆上爬來爬去，偶爾「嘖嘖嘖」叫；貓會盯著牠咔咔叫，跳起來抓 ===== */
+var GECKO=null;
+var GECKO_SVG='<svg viewBox="0 0 40 24" width="100%" height="100%"><g fill="#c2b28f"><path d="M1,12 C7,10.5 12,11 16,12 C12,13 7,13.5 1,12Z"/><ellipse cx="22" cy="12" rx="8" ry="3.6"/><ellipse cx="33" cy="12" rx="4.3" ry="3.3"/></g><g stroke="#c2b28f" stroke-width="1.8" stroke-linecap="round" fill="none"><path d="M26,10 l3,-6 M26,14 l3,6 M17,10 l-3,-6 M17,14 l-3,6"/></g><g fill="#c2b28f"><circle cx="29" cy="4" r="1.3"/><circle cx="29" cy="20" r="1.3"/><circle cx="14" cy="4" r="1.3"/><circle cx="14" cy="20" r="1.3"/></g><g fill="#a8977a"><circle cx="20" cy="12" r=".9"/><circle cx="24" cy="11" r=".8"/><circle cx="9" cy="12" r=".6"/></g><circle cx="35.4" cy="10.4" r=".95" fill="#3d3434"/><circle cx="35.4" cy="13.6" r=".95" fill="#3d3434"/></svg>';
+function geckoWins(){return[...room.querySelectorAll('.zone .window')].map(el=>{const zs=[...room.querySelectorAll('.zones>.zone')];return{el,z:zs.indexOf(el.closest('.zone'))}}).filter(o=>o.z>=0)}
+function geckoBox(win){const r=win.getBoundingClientRect(),rr=room.getBoundingClientRect(),rw=rr.width||1,rh=rr.height||1;
+  return{l:(r.left-rr.left)/rw,r:(r.right-rr.left)/rw,t:(r.top-rr.top)/rh,b:(r.bottom-rr.top)/rh}}
+function geckoPick(G){const B=geckoBox(G.win),onGlass=Math.random()<.6;
+  G.tx=B.l+(B.r-B.l)*(.15+Math.random()*.7);G.ty=onGlass?B.t+(B.b-B.t)*(.15+Math.random()*.7):B.b+.03+Math.random()*Math.max(.02,.62-B.b-.03)}
+function spawnGecko(){if(GECKO||view!=='home')return;const W=geckoWins();if(!W.length)return;
+  const mine=W.filter(o=>o.z===zoneOf(H.x)),o=mine.length&&Math.random()<.4?mine[0]:W[Math.floor(Math.random()*W.length)];
+  const el=document.createElement('span');el.className='gecko';el.setAttribute('role','button');el.setAttribute('aria-label','壁虎，點一下趕走');el.innerHTML=GECKO_SVG;room.appendChild(el);
+  const B=geckoBox(o.el);GECKO={el,win:o.el,z:o.z,x:B.l+(B.r-B.l)*Math.random(),y:B.t+.01,tx:0,ty:0,pause:0,ang:Math.PI/2,t:0,life:40+Math.random()*30,flee:0,noticed:false,chirp:6+Math.random()*15};
+  geckoPick(GECKO);
+  el.addEventListener('click',e=>{e.stopPropagation();if(GECKO&&GECKO.el===el&&!GECKO.flee){GECKO.flee=1;note('你把壁虎趕走了',2)}})}
+function removeGecko(){if(GECKO){const el=GECKO.el;GECKO=null;el.classList.add('gone');setTimeout(()=>el.remove(),700)}}
+function geckoChirp(G){const rr=room.clientWidth,rh=room.clientHeight;popText(G.x*rr,G.y*rh-18,'嘖嘖嘖');
+  try{if(voiceOn()&&MUS.ctx&&MUS.ctx.state==='running'){const c=sfxCtx(MUS.ctx),t0=c.currentTime+.02;
+    for(let i=0;i<6;i++){const o=c.createOscillator(),g=c.createGain(),t=t0+i*.09;o.type='square';o.frequency.value=3000+Math.random()*400;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.035,t+.004);g.gain.exponentialRampToValueAtTime(.0005,t+.03);o.connect(g);g.connect(c._sfx);o.start(t);o.stop(t+.04)}}}catch(e){}}
+function startGeckoWatch(fromFar){const G=GECKO;if(!G)return;const rw=room.clientWidth,w=hc.offsetWidth,tx=Math.min(.99,Math.max(.01,(G.x*rw-w/2)/Math.max(1,rw-w)));
+  if(fromFar)logAct('geckoHear','聽到壁虎嘖嘖叫，跑過去找',true);
+  startWalk(tx,false,()=>{if(!GECKO||GECKO.flee){sitDown('front');return}H.state='bug';H.prey='gecko';H.bugPh='watch';H.timer=2.5+Math.random()*2.5;setHView('front');say('咔咔咔…',1500);
+    logAct('geckoSeen','發現牆上有一隻壁虎，盯著牠咔咔咔地叫',true)},fromFar)}
+function geckoTick(dt,w){const G=GECKO;if(!G)return;const rw=room.clientWidth||1,rh=room.clientHeight||1;G.t+=dt;let moving=false;
+  if(G.flee){const B=geckoBox(G.win),ty=B.t-.06,dx=(G.tx-G.x)*rw,dy=(ty-G.y)*rh,d=Math.hypot(dx,dy)||1,st=rh*.75*dt;
+    if(G.flee===1&&G.tx===undefined)G.tx=G.x;if(d<=st||G.flee===2){removeGecko();return}G.x+=dx/d*st/rw;G.y+=dy/d*st/rh;G.ang=Math.atan2(dy,dx);moving=true}
+  else{if(G.pause>0)G.pause-=dt;else{const dx=(G.tx-G.x)*rw,dy=(G.ty-G.y)*rh,d=Math.hypot(dx,dy),st=rh*.28*dt;
+      if(d<=st){G.pause=1.2+Math.random()*4;geckoPick(G)}else{G.x+=dx/d*st/rw;G.y+=dy/d*st/rh;G.ang=Math.atan2(dy,dx);moving=true}}
+    G.life-=dt;if(G.life<=0&&H.state!=='bug'){G.flee=1;G.tx=G.x}
+    G.chirp-=dt;if(G.chirp<=0){G.chirp=18+Math.random()*25;geckoChirp(G);
+      if(!G.noticed&&catFree()&&H.state!=='pose'&&Math.random()<.5){G.noticed=true;startGeckoWatch(zoneOf(H.x)!==G.z)}}}
+  const sw=Math.max(26,w*.34),sh=sw*.6;G.el.style.width=sw+'px';G.el.style.height=sh+'px';G.el.classList.toggle('moving',moving);
+  G.el.style.transform=`translate(${G.x*rw-sw/2}px,${G.y*rh-sh/2}px) rotate(${G.ang*180/Math.PI}deg)`;
+  if(!G.flee&&!G.noticed&&G.t>3&&zoneOf(H.x)===G.z){
+    if(catFree()&&H.state!=='pose'&&Math.random()<dt*(.18+.3*P01('energy'))){G.noticed=true;startGeckoWatch(false)}
+    else if(H.state==='sleep'&&Math.random()<dt*.015){G.noticed=true;wake();startGeckoWatch(false)}}}
+function geckoOutcome(B,w){const rh=room.clientHeight,reach=B.y*rh>rh*.89-w*1.6;sitDown('front');
+  if(reach&&Math.random()<.35){const r=B.el.getBoundingClientRect(),rr=room.getBoundingClientRect();popText(r.left-rr.left,r.top-rr.top,'啪！');B.flee=2;
+    setFace('happy',2);heart();H.mood=Math.min(1,H.mood+.06);say('（得意）',1300);logAct('geckoCaught','跳起來按住牆上的壁虎，壁虎掙脫溜走了，還是很得意',true);
+    setTimeout(()=>aiEvent('（你剛剛跳起來按住牆上的一隻壁虎，牠掙脫溜走了）',{allowMove:false}),1500)}
+  else{B.flee=1;B.tx=B.x;say(reach?'喵…（溜走了）':'喵！（拍窗戶）',1300);logAct('geckoMiss',reach?'撲過去抓壁虎，壁虎一溜煙跑掉了':'站起來拍窗戶上的壁虎，壁虎一溜煙爬走了',true)}}
+
+/* ===== 睡姿：坐著打盹、香箱、縮成一團、側躺伸長、翻肚子睡 =====
+   每次睡著時挑一種：看時間、天氣、心情，也看這隻貓自己的喜好；記憶本裡提到睡姿的話（例如「會翻肚子睡」）會更常出現。 */
+var SLEEP_TXT={sit:'坐著打盹',loaf:'縮成香箱睡著了',curl:'捲成一團睡著了',side:'側躺著睡得好熟',belly:'翻肚子睡得好熟'};
+var SLEEP_KW={belly:/翻肚.*睡|睡.*翻肚|肚子朝上/,loaf:/香箱/,curl:/(捲|縮)成一團|捲起來睡|甜甜圈/,side:/側躺|側睡|伸長.*睡|攤平/};
+function pickSleepPose(){const tod=todNow(),wx=typeof wxNow==='function'?wxNow():'off',cold=tod==='night'||wx==='snow'||wx==='rain',facts=learned().map(f=>f.t).join('／');
+  const w={sit:.15,loaf:.25,curl:.15+(cold?.3:0),side:.15+(tod==='day'?.15:0),belly:.06+(H.mood>.7?.2:0)+(P01('affection')>.6?.08:0)};
+  let tot=0;Object.keys(w).forEach(k=>{w[k]*=poseLike('sleep_'+k)*(SLEEP_KW[k]&&SLEEP_KW[k].test(facts)?3:1);tot+=w[k]});
+  let r=Math.random()*tot;for(const k in w){if((r-=w[k])<=0)return k}return'loaf'}
+function sleepApply(v,t,m,o,w){if(H.state!=='sleep'){if(H.sleepPose)H.sleepPose=null;return o}
+  if(!H.sleepPose){H.sleepPose=pickSleepPose();const sv={curl:'side',side:'side',belly:'side'}[H.sleepPose]||'front';if(H.view!==sv)setHView(sv)}
+  const k=H.sleepPose;
+  if(k==='loaf'&&v==='front'){setT('frontL','translate(0 222) scale(1 .25) translate(0 -222)');setT('frontR','translate(0 222) scale(1 .25) translate(0 -222)');
+    setT('backL','translate(0 236) scale(1 .2) translate(0 -236)');setT('backR','translate(0 236) scale(1 .2) translate(0 -236)');o.sy*=.9/.94;o.sx*=1.02}
+  if(k==='curl'&&v==='side'){['legNF','legFF','legNB','legFB'].forEach(p=>setT(p,'translate(0 228) scale(1 .25) translate(0 -228)'));
+    setT('head','translate(-14 34) rotate(28 200 180)');const tp=TAIL_PIVOT.side;setT('tail',`rotate(122 ${tp[0]} ${tp[1]})`);o.sy*=.8;o.sx*=.96}
+  if(k==='side'&&v==='side'){setT('legNF','rotate(-72 193 232)');setT('legFF','rotate(-78 213 232)');setT('legNB','rotate(72 97 232)');setT('legFB','rotate(78 117 232)');
+    setT('head','translate(0 16) rotate(10 200 180)');o.sy*=.72/.94;o.sx*=1.1/1.04}
+  if(k==='belly'&&v==='side'){setT('legNF','rotate(-35 193 232)');setT('legFF','rotate(-20 213 232)');setT('legNB','rotate(15 97 232)');setT('legFB','rotate(30 117 232)')}
   return o}
 
 $('howBtn').onclick=()=>{const h=document.querySelector('#viewHome .homehint.small'),on=!h.classList.contains('show');h.classList.toggle('show',on);$('howBtn').setAttribute('aria-expanded',String(on))};
