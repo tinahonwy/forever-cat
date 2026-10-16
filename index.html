@@ -905,6 +905,8 @@ body:has(.guide:not([hidden])) #viewHome .toolbar{display:none}
     <h2 id="memTitle">〚貓代詞〛記得的事</h2>
     <p class="gsub">你平常跟〚貓代詞〛說的話會在背景慢慢整理成記憶，〚貓代詞〛說話時會參考這些。記錯的可以按 ✕ 刪掉。</p>
     <div class="gsum"><b>互動習慣</b><br><span id="memHabit"></span></div>
+    <div class="gsum" id="planBox"></div>
+    <div class="btns"><button class="btn" id="planRedo" type="button">請 AI 重新編排今天的劇本</button></div>
     <div class="askset"><label><input type="checkbox" id="askOn"> 每天問我關於〚貓代詞〛的小問題</label><span>每天最多</span><select id="askPer" aria-label="每天最多幾題"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select><span>題</span></div>
     <div class="memlist" id="memList"></div>
     <form class="memadd" id="memAdd"><select id="memCat" aria-label="分類"></select><input id="memText" maxlength="120" placeholder="自己補充一件關於〚貓代詞〛的事" aria-label="補充的記憶"><button class="btn primary" type="submit">記住</button></form>
@@ -1572,7 +1574,7 @@ async function loadCloud(u){
   else{if(owner!=='guest'&&owner!==u.uid){booting=true;await applyData({...DEF},{});booting=false}owner=u.uid}
   try{const ps=await getDoc(presRef(u.uid)),pd=ps.exists()?ps.data():null;if(pd&&pd.sid!==SID&&pd.ms&&Date.now()-pd.ms<150000&&note)note(`提醒：這隻貓也在「${pd.dev||'另一台裝置'}」開著，那邊會先暫停同步，以這台為主`,6)}catch(e){}
   if(stale())return;
-  cloudOk=u.uid;loading=false;if(view==='home'){drawHomeCat();drawPhrases();memLabel()}doSave();presClaim();if(!presUnsub)presStart(u.uid)}
+  cloudOk=u.uid;loading=false;setTimeout(()=>{if(typeof ensurePlan==='function')ensurePlan()},2000);if(view==='home'){drawHomeCat();drawPhrases();memLabel()}doSave();presClaim();if(!presUnsub)presStart(u.uid)}
 /* 每天第一次登入，把讀到的雲端資料另存一份（保留兩天份），出事可以拿回來 */
 async function autoBak(uid,d){try{if(ls.get('neko-bak-day-'+uid)===today())return;
   const b1=await getDoc(doc(db,'users',uid,'cats','bak1'));
@@ -1764,8 +1766,9 @@ function step(dt){
       else{sitDown('front');if(H.onArrive){const f=H.onArrive;H.onArrive=null;f()}}}
     else H.x+=Math.sign(d)*sp;
   }else if(H.state==='sit'&&H.timer<=0){
+    if(typeof tryHabit==='function'&&tryHabit())return;
     if(tryActivity())return;
-    const r=Math.random(),sleepy=.15+.25*(1-P01('energy'))+(1-needs().energy)*.4+(typeof todNow==='function'&&todNow()==='night'?.3:0)+(typeof wxNow==='function'&&wxNow()==='rain'?.15:0);
+    const r=Math.random(),sleepy=Math.max(0,Math.min(.85,.15+.25*(1-P01('energy'))+(1-needs().energy)*.4+(typeof todNow==='function'&&todNow()==='night'?.3:0)+(typeof wxNow==='function'&&wxNow()==='rain'?.15:0)+(typeof planSleepy==='function'?planSleepy():0)));
     if(r<1-sleepy-.15){startWalk(typeof wanderTarget==='function'?wanderTarget():.04+Math.random()*.92)}
     else if(r<1-.15&&(!roomCfg().bed.on||Math.abs(H.x-BED)>.02))goSleep();
     else{H.timer=2+Math.random()*3;if(Math.random()<.5)setHView(H.view==='back'?'front':'back')}
@@ -2090,7 +2093,7 @@ function needText(){const N=needs();return `肚子${N.full<.3?'很餓':N.full<.6
 function traitText(){const T=traits(),o=[];{const lk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)>=2),dk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)<=-2);if(lk.length)o.push(`愛吃${lk.join('、')}罐頭`);if(dk.length)o.push(`不愛${dk.join('、')}罐頭`)}if(T.appetite>=2)o.push('很貪吃');if(T.appetite<=-2)o.push('食量小');if(T.canLove>=2)o.push('超愛罐頭');if(T.picky>=2)o.push('挑食');if(T.drink>=2)o.push('很愛喝水');if(T.drink<=-2)o.push('很少喝水');if(T.demand>=2)o.push('肚子餓會一直討飯');if(T.demand<=-2)o.push('不太討飯');return o.length?`飲食習慣：${o.join('、')}`:''}
 function systemPrompt(){return `你是一隻名叫「${S.name||'貓咪'}」的貓，住在主人為你做的小小網頁房間裡。主人很愛你，這裡是讓主人可以繼續陪伴你的地方。
 
-${catProfile()}${learnedPrompt()}
+${catProfile()}${learnedPrompt()}${typeof planPrompt==='function'?planPrompt():''}
 
 說話規則：
 - 用台灣繁體中文，用貓的視角說話：以自己為中心、在意吃和睡，語氣符合上面的個性（傲嬌就嘴硬，黏人就撒嬌）。
@@ -2218,6 +2221,7 @@ function touchStory(t,wasHug){
 }
 function onHomeOpen(){
   if(typeof funHomeOpen==='function')setTimeout(funHomeOpen,0);
+  setTimeout(()=>{if(typeof ensurePlan==='function')ensurePlan()},800);
   if(typeof rollDay==='function')rollDay();
   const last=+ls.get('neko-last-seen')||0,gap=Date.now()-last;ls.set('neko-last-seen',String(Date.now()));
   if(!last||gap>=20*60*1000){recordVisit();if(pending.length>=2)setTimeout(()=>maybeLearn(true),8000)}
@@ -2236,7 +2240,7 @@ let pending=[];try{pending=JSON.parse(ls.get(PENDKEY)||'[]')}catch(e){pending=[]
 const today=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 function learned(){if(!Array.isArray(S.learned))S.learned=[];return S.learned}
 function addFact(c,t,src){t=String(t||'').trim().slice(0,120);if(!t)return false;const L=learned();
-  if(L.some(f=>f.t===t))return false;L.push({c:FACT_CATS.includes(c)?c:'習性',t,d:today(),s:src||'auto'});
+  if(L.some(f=>f.t===t))return false;L.push({c:FACT_CATS.includes(c)?c:'習性',t,d:today(),s:src||'auto'});S.planDirty=true;
   const news=L.filter(f=>f.c==='主人近況');if(news.length>NEWS_MAX)L.splice(L.indexOf(news[0]),1);
   while(L.length>FACT_MAX){const i=L.findIndex(f=>f.c!=='修正'&&f.s!=='me');L.splice(i<0?0:i,1)}
   return true}
@@ -2337,6 +2341,7 @@ function openFix(i,li){if(li.querySelector('.fix'))return;const cat=talkLog[i][1
 /* 記憶本 */
 function memLabel(){const n=learned().length;$('openMem').textContent=`${S.name||'〚貓代詞〛'}的記憶本（${n}）`}
 function drawMem(msg){
+  if(typeof drawPlan==='function')drawPlan();
   const box=$('memList');box.innerHTML='';const L=learned();
   $('memMsg').textContent=msg||(pending.length?`還有 ${pending.length} 句你說過的話等著整理${aiKey()?'，累積到 6 句會自動整理':'（需要先在 AI 說話設定貼上金鑰）'}`:'目前沒有待整理的話');
   $('memLearn').disabled=!pending.length||!aiKey()||learning;
@@ -2424,7 +2429,7 @@ function tryActivity(){const R=roomCfg(),en=P01('energy'),N=needs(),T=traits(),E
   if(R.scratch.on)opts.push(['scratch',(.06+.12*en)*itemLove('scratch')*E]);
   if(R.box.on)opts.push(['box',.12*itemLove('box')]);
   if(typeof floorTreat!=='undefined'&&floorTreat)opts.unshift(['floorTreat',.5]);
-  if(typeof litterOpt==='function'){const o2=[];litterOpt(o2);opts.unshift(...o2);giftOpt(opts)}if(typeof houseOpts==='function')houseOpts(opts);
+  if(typeof litterOpt==='function'){const o2=[];litterOpt(o2);opts.unshift(...o2);giftOpt(opts)}if(typeof houseOpts==='function')houseOpts(opts);if(typeof planOpts==='function')planOpts(opts);
   let r=Math.random();for(const[k,p]of opts){if(r<p){const[a,src]=k.split(':');if(a==='eat'){logAct('selfEat',`自己跑去吃${src==='plate'?'罐頭':'飼料'}`);doAct('eat',src)}else{if(a==='drink')logAct('drink','口渴了，自己跑去喝水');doAct(a)}return true}r-=p}return false}
 /* ===== 貓的狀態：飽足、水分、心情、精神（不會生病、不會受苦，餓了只會討飯） ===== */
 const NEED_FLOOR=.15;let needsSaveT=30,needsCaught=false;
@@ -2681,6 +2686,7 @@ function openActFix(i,li){if(li.querySelector('.fix'))return;const[,text,,key,me
     if(m[1]==='go')btns.push(mk(`〚貓代詞〛不太愛${nm}`,()=>{S.itemLove[k]=Math.max(.2,Math.round(itemLove(k)*.6*100)/100);addFact('喜好',`〚貓代詞〛不太愛${nm}${extra()}`,'me');done(`記住了，${n}以後比較少去${nm}`)}));
     else btns.push(mk(`〚貓代詞〛很愛${nm}`,()=>{S.itemLove[k]=Math.min(3,Math.round(itemLove(k)*1.6*100)/100);addFact('喜好',`〚貓代詞〛很喜歡${nm}，叫〚貓代詞〛就會過去${extra()}`,'me');done(`記住了，${n}以後會更常去${nm}`)}))}
   if(PLAY_KEYS.includes(key))btns.push(mk(`〚貓代詞〛${TOD_NAME[tk]}不想玩`,()=>{const P=playPrefs();P[tk]=Math.max(.15,Math.round((P[tk]??1)*.6*100)/100);addFact('修正',`〚貓代詞〛${TOD_NAME[tk]}通常不太想玩逗貓棒${extra()}`,'me');done(`記住了，${n}${TOD_NAME[tk]}會比較懶得玩`)}));
+  if(/^habit_/.test(key||'')&&meta&&meta.habit)btns.push(mk('〚貓代詞〛沒有這個習慣',()=>{const P=S.plan;if(P&&Array.isArray(P.habits))P.habits=P.habits.filter(h=>h.text!==meta.habit);addFact('修正',`〚貓代詞〛沒有「${meta.habit}」這個習慣${extra()}`,'me');done(`記住了，${n}以後不會這樣`)}));
   btns.push(mk('只記下我寫的',()=>{if(!inp.value.trim()){inp.focus();inp.placeholder='先寫下真正的〚貓代詞〛會怎麼做';return}addFact('修正',`（${text.replace(n,'〚貓代詞〛')}）真正的〚貓代詞〛會：${inp.value.trim()}`,'me');done('記住了')}));
   f.append(inp,...btns);li.appendChild(f)}
 /* 抓到 */
@@ -3654,7 +3660,7 @@ function clamp01(v){return Math.min(.99,Math.max(.01,v))}
 function hxOf(f){const rw=room.clientWidth||1,w=hc.offsetWidth||1;return clamp01((f*rw-w/2)/Math.max(1,rw-w))}
 function viewX(){const sc=$('roomScroll'),rw=room.clientWidth,w=hc.offsetWidth;if(!rw||!sc.clientWidth)return H.x;return clamp01((sc.scrollLeft+sc.clientWidth/2-w/2)/Math.max(1,rw-w))}
 function zoneEdge(far){const z=zoneOf(H.x),a=(z+.08)/ZN,b=(z+.92)/ZN;return far?(Math.abs(H.x-a)>Math.abs(H.x-b)?a:b):(Math.abs(H.x-a)<Math.abs(H.x-b)?a:b)}
-function wanderTarget(){const z=zoneOf(H.x);let t;
+function wanderTarget(){const z=zoneOf(H.x);let t;{const P=typeof planNow==='function'?planNow():null;if(P&&P.fav!=null&&z!==P.fav&&Math.random()<.35)return clamp01((P.fav+.15+Math.random()*.7)/ZN)}
   if(Math.random()<.72){t=(z+.05+Math.random()*.9)/ZN;if(Math.abs(t-H.x)<.03)t=(z+(t*ZN-z<.5?.8:.2))/ZN}
   else{let z2=Math.floor(Math.random()*ZN);if(z2===z)z2=(z+1+Math.floor(Math.random()*(ZN-1)))%ZN;t=(z2+.15+Math.random()*.7)/ZN}
   return clamp01(t)}
@@ -4385,6 +4391,112 @@ document.addEventListener('visibilitychange',()=>{if(!MUS.ctx)return;if(document
   EV.forEach(t=>document.addEventListener(t,go,{capture:true,passive:true}));
   if(P.on){MUS.pending=true;drawMusic()}}
 
+
+/* ===== AI 導演：每隻貓每天一份自己的「行為劇本」，規則照著劇本演 =====
+   有 Gemini 金鑰：AI 讀記憶本和基本資料，一天編排一次（記憶有變動時最多每 3 小時重排一次，每天最多 4 次）。
+   沒有金鑰：用這隻貓自己的亂數種子產生一份固定的劇本，所以每隻貓的習慣都不一樣。 */
+var PLAN_W=['tree','scratch','box','birdwatch','sunbathe','rainwatch','hbed','counter','parkour','drink','beg'];
+var PLAN_NAME={tree:'貓跳台',scratch:'貓抓板',box:'紙箱',birdwatch:'看鳥',sunbathe:'曬太陽',rainwatch:'看雨',hbed:'上你的床',counter:'跳流理台',parkour:'半夜跑酷',drink:'喝水',beg:'討飯'};
+var HABIT_ACTS=['fridge','window','greet','lick','bed'].concat(PLAN_W);
+var HABIT_SELFLOG=['birdwatch','sunbathe','rainwatch','hbed','counter','parkour','beg'];
+var SEED_HABITS=[[7,'fridge','坐到冰箱前面等早餐'],[8,'window','跑到窗邊看外面'],[18,'greet','跑過來找你'],[21,'box','鑽進紙箱準備睡覺'],[14,'sunbathe','跑去陽台曬太陽'],[22,'hbed','先去床上占位置'],[10,'lick','坐著認真舔毛'],[16,'tree','爬到貓跳台最上面巡視']];
+var ZKEYS=['kitchen','living','bedroom','balcony'];
+var planBusy=false;
+function catSeed(){if(!S.seed)S.seed=1+Math.floor(Math.random()*2e9);return S.seed}
+function planNow(){const P=S.plan;return P&&typeof P==='object'&&P.w&&typeof P.wake==='number'?P:null}
+function inHr(h,r){const a=((r[0]%24)+24)%24,b=((r[1]%24)+24)%24;return a<=b?h>=a&&h<b:h>=a||h<b}
+function planMode(){const P=planNow();if(!P)return'';const h=new Date().getHours();
+  if(inHr(h,[P.sleep,P.wake]))return'sleep';if((P.naps||[]).some(r=>inHr(h,r)))return'nap';if((P.active||[]).some(r=>inHr(h,r)))return'active';return''}
+function planSleepy(){const m=planMode();return m==='sleep'?.35:m==='nap'?.25:m==='active'?-.2:0}
+function planMul(k){const P=planNow();if(!P)return 1;const a=String(k).split(':')[0];
+  if(['litter','floorTreat','gift','eat'].includes(a))return 1;
+  let m=P.w[a]!=null?P.w[a]:1;const mode=planMode();
+  if(['tree','scratch','parkour','counter','birdwatch','box'].includes(a)){if(mode==='sleep')m*=.3;else if(mode==='nap')m*=.5;else if(mode==='active')m*=1.6}
+  return m}
+function planOpts(opts){opts.forEach(o=>{o[1]*=planMul(o[0])})}
+function seedPlan(){const r=seeded(catSeed()),c=r(),wake=c<.3?5:c<.75?7:9,sleep=c<.3?22:c<.75?23:1,nap=12+Math.floor(r()*3),eve=c<.75?19:21;
+  const w={};PLAN_W.forEach(k=>{w[k]=Math.round((.5+r()*1.1)*100)/100});
+  const pool=SEED_HABITS.slice(),habits=[],n=1+Math.floor(r()*2);
+  for(let i=0;i<n&&pool.length;i++){const[h,act,text]=pool.splice(Math.floor(r()*pool.length),1)[0];habits.push({hour:h,act,chance:Math.round((.45+r()*.35)*100)/100,text})}
+  return{d:today(),at:Date.now(),src:'seed',wake,sleep,naps:[[nap,nap+2]],active:[[wake,wake+2],[eve,(eve+2)%24]],w,fav:Math.floor(r()*4),habits,sum:''}}
+function cleanPlan(o,src){o=o&&typeof o==='object'?o:{};const hr=v=>((Math.round(+v||0)%24)+24)%24;
+  const rng=a=>(Array.isArray(a)?a:[]).slice(0,3).map(x=>[hr(x&&x.a),hr(x&&x.b)]).filter(([a,b])=>a!==b);
+  const w={};PLAN_W.forEach(k=>{const v=+((o.weights||{})[k]);w[k]=isFinite(v)&&v>0?Math.round(Math.max(.2,Math.min(2.5,v))*100)/100:1});
+  const habits=(Array.isArray(o.habits)?o.habits:[]).filter(x=>x&&HABIT_ACTS.includes(x.act)&&isFinite(+x.hour)).slice(0,4)
+    .map(x=>({hour:hr(x.hour),act:x.act,chance:Math.round(Math.max(.1,Math.min(1,+x.chance||.6))*100)/100,text:String(x.text||'').replace(/^(〚貓代詞〛|他|她)/,'').trim().slice(0,30)||'照自己的習慣行動'}));
+  const fav=ZKEYS.indexOf(o.fav);
+  return{d:today(),at:Date.now(),src,wake:isFinite(+o.wake)?hr(o.wake):7,sleep:isFinite(+o.sleep)?hr(o.sleep):23,naps:rng(o.naps),active:rng(o.active),w,fav:fav<0?1:fav,habits,sum:String(o.sum||'').slice(0,120)}}
+var PLAN_SCHEMA={type:'OBJECT',properties:{
+  wake:{type:'INTEGER'},sleep:{type:'INTEGER'},
+  naps:{type:'ARRAY',items:{type:'OBJECT',properties:{a:{type:'INTEGER'},b:{type:'INTEGER'}},required:['a','b']}},
+  active:{type:'ARRAY',items:{type:'OBJECT',properties:{a:{type:'INTEGER'},b:{type:'INTEGER'}},required:['a','b']}},
+  weights:{type:'OBJECT',properties:Object.fromEntries(PLAN_W.map(k=>[k,{type:'NUMBER'}]))},
+  fav:{type:'STRING',enum:ZKEYS},
+  habits:{type:'ARRAY',items:{type:'OBJECT',properties:{hour:{type:'INTEGER'},act:{type:'STRING',enum:HABIT_ACTS},chance:{type:'NUMBER'},text:{type:'STRING'}},required:['hour','act','chance','text']}},
+  sum:{type:'STRING'}},required:['wake','sleep','naps','active','weights','fav','habits','sum']};
+async function aiPlan(){const n=S.name||'貓咪',d=today();
+  const sys=`你是貓咪「${n}」的行為導演。網頁裡的虛擬${n}由程式依規則行動，你要根據主人提供的真實資料，替它編排今天的行為劇本，讓它的作息、偏好和小習慣盡量像主人家真正的${n}。
+規則：
+- 只根據下面的資料推測；資料沒提到的就用符合個性的合理設定，不要編造誇張的習慣
+- wake、sleep 是早上起床、晚上主要睡覺的整點（0 到 23）
+- naps 是白天午睡時段、active 是最活潑的時段，各 1 到 3 段，用整點 a 到 b（不含 b）
+- weights 是各種活動的偏好倍率：1 是普通、0.3 很少做、2 很常做。可以用的活動：tree 貓跳台、scratch 貓抓板、box 紙箱、birdwatch 陽台看鳥、sunbathe 曬太陽、rainwatch 窗邊看雨、hbed 跳上主人的床、counter 跳上流理台、parkour 半夜跑酷、drink 喝水、beg 討飯
+- fav 是最常待的房間：kitchen 廚房、living 客廳、bedroom 臥室、balcony 陽台
+- habits 是最多 4 個每天固定的小習慣：hour 是整點，act 從這些選：fridge 坐到冰箱前等、window 窗邊發呆、greet 跑來找主人、lick 舔毛、bed 回貓窩睡，或上面 weights 的活動；chance 是當天會發生的機率 0 到 1；text 是發生時顯示的句子，不含貓的名字、15 字以內，例如「坐到冰箱前面等早餐」。只有資料裡真的提到或非常合理才放，沒有就給空陣列
+- sum 用一句台灣繁體中文說明今天的劇本，用「〚貓代詞〛」稱呼貓
+
+${catProfile(d)}${learnedPrompt()}`;
+  const o=await gemParts(sys,[{text:`今天是 ${d}（星期${WD[new Date().getDay()]}），請編排今天的劇本。`}],PLAN_SCHEMA,1500);
+  return cleanPlan(o,'ai')}
+function planAiLeft(){const d=today();if(!S.planAi||S.planAi.d!==d)S.planAi={d,n:0};return 4-S.planAi.n}
+async function ensurePlan(force){if(planBusy)return false;const P=planNow(),d=today(),stale=!P||P.d!==d;
+  const cloudReady=!user||cloudOk===user.uid,canAI=!!aiKey()&&cloudReady&&planAiLeft()>0;
+  const age=P?Date.now()-(P.at||0):1e12;
+  const wantAI=canAI&&(force||stale||(S.planDirty&&age>3*3600e3)||(P&&P.src!=='ai'&&age>3600e3));
+  if(wantAI){planBusy=true;drawPlanSafe();
+    try{S.planAi.n++;S.plan=await aiPlan();S.planDirty=false;S.habitDone=null;save();drawPlanSafe(force?'AI 重新編排好了':'');return true}
+    catch(e){if(stale)S.plan=P&&P.src==='ai'?{...P,d}:seedPlan();else if(S.plan)S.plan.at=Date.now();save();drawPlanSafe(force?'編排失敗：'+aiErrText(e):'');return false}
+    finally{planBusy=false;drawPlanSafe()}}
+  if(force){drawPlanSafe(!aiKey()?'重新編排需要 Gemini 金鑰':!cloudReady?'還沒讀到雲端的貓，等一下再試':'今天重新編排的次數用完了，明天再試');return false}
+  if(stale){S.plan=P&&P.src==='ai'?{...P,d}:seedPlan();save();drawPlanSafe()}
+  return false}
+function drawPlanSafe(msg){if(!$('memPanel').hidden)drawPlan(msg)}
+function tryHabit(){const P=planNow();if(!P||!Array.isArray(P.habits)||!P.habits.length||wandOn||H.hug||tool)return false;
+  const h=new Date().getHours(),d=today();if(!S.habitDone||S.habitDone.d!==d)S.habitDone={d};
+  for(const x of P.habits){const k=x.hour+'-'+x.act;if(x.hour!==h||S.habitDone[k])continue;S.habitDone[k]=1;save();
+    if(Math.random()>x.chance)continue;if(doHabit(x))return true}
+  return false}
+function doHabit(x){const R=roomCfg(),a=x.act,t=x.text||'照自己的習慣行動';
+  const need={tree:'tree',scratch:'scratch',box:'box',drink:'fountain',bed:'bed'};if(need[a]&&!(R[need[a]]&&R[need[a]].on))return false;
+  if(!HABIT_SELFLOG.includes(a))logAct('habit_'+a,t,true,{habit:t});
+  switch(a){
+    case'fridge':startWalk(hxOf(.075),false,()=>{setHView('front');H.state='beg';H.timer=6;say('喵～',1200)});break;
+    case'window':startWalk(hxOf(.31),false,()=>{setHView('back');H.state='sit';H.timer=10+Math.random()*6});break;
+    case'greet':comeOver(()=>{setFace('happy',2);heart();say('喵～',1200)});break;
+    case'lick':sitDown('front');H.timer=5;H.lickT=4;setFace('closed',3);say('（舔舔毛）',1400);break;
+    case'bed':goSleep();break;
+    case'tree':case'scratch':case'box':case'drink':case'beg':case'rainwatch':doAct(a);break;
+    default:houseAct(a)}
+  return true}
+function planPrompt(){const P=planNow();if(!P)return'';const m=planMode();
+  return`\n你今天的作息：${P.wake} 點起床、${P.sleep} 點睡覺${m==='sleep'?'，現在是你的睡覺時間，會想睡':m==='nap'?'，現在是你的午睡時間':m==='active'?'，現在是你最有精神的時段':''}。`}
+function drawPlan(msg){const box=$('planBox');if(!box)return;const P=planNow(),n=S.name||'〚貓代詞〛';box.innerHTML='';
+  const b=document.createElement('b');b.textContent='今天的作息劇本';box.appendChild(b);
+  const line=t=>{box.appendChild(document.createElement('br'));box.appendChild(document.createTextNode(t))};
+  if(planBusy)line('AI 正在編排…');
+  if(!P)line('還沒有劇本，打開「貓咪的家」就會自動產生');
+  else{const rs=a=>(a||[]).map(([x,y])=>`${x}–${y} 點`).join('、')||'沒有';
+    line(P.src==='ai'?`AI 依記憶本和基本資料編排（${P.d}）`:`依${n}自己的個性自動產生${aiKey()?'，AI 等一下會依記憶重新編排':'（貼上 Gemini 金鑰後，AI 會依記憶本重新編排）'}`);
+    if(P.sum)line(P.sum);
+    line(`${P.wake} 點起床、${P.sleep} 點睡覺；午睡 ${rs(P.naps)}；最活潑 ${rs(P.active)}`);
+    line(`最常待：${HZ[P.fav]?HZ[P.fav][1]:'客廳'}`);
+    const ks=PLAN_W.slice().sort((x,y)=>P.w[y]-P.w[x]),hi=ks.filter(k=>P.w[k]>=1.3).slice(0,3),lo=ks.filter(k=>P.w[k]<=.7).slice(-3);
+    if(hi.length)line(`比較常：${hi.map(k=>PLAN_NAME[k]).join('、')}`);if(lo.length)line(`比較少：${lo.map(k=>PLAN_NAME[k]).join('、')}`);
+    if(P.habits&&P.habits.length)line(`小習慣：${P.habits.map(x=>`${x.hour} 點${x.text}`).join('、')}`)}
+  const btn=$('planRedo');btn.disabled=planBusy||!aiKey();btn.textContent=aiKey()?'請 AI 重新編排今天的劇本':'請 AI 編排（需要 Gemini 金鑰）';
+  if(msg)$('memMsg').textContent=msg}
+$('planRedo').onclick=()=>{ensurePlan(true)};
+setInterval(()=>{if(view==='home'&&!document.hidden)ensurePlan()},10*60*1000);
 
 $('howBtn').onclick=()=>{const h=document.querySelector('#viewHome .homehint.small'),on=!h.classList.contains('show');h.classList.toggle('show',on);$('howBtn').setAttribute('aria-expanded',String(on))};
 
