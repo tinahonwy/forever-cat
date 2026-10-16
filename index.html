@@ -1033,7 +1033,7 @@ body:has(.guide:not([hidden])) #viewHome .toolbar{display:none}
   <div class="trickmenu" id="trickMenu" hidden role="menu" aria-label="教把戲"></div>
 </div>
 <aside class="homeside" aria-label="貓的狀態與聊天">
-  <div class="morebar"><button class="mbtn" id="albumBtn" type="button"><i>📒</i>相簿</button><button class="mbtn" id="voiceBtn" type="button"><i>🎙️</i>牠的叫聲</button><button class="mbtn" id="wxBtn" type="button"><i id="wxBtnIcon">🌦️</i><span id="wxBtnText">天氣</span></button><button class="mbtn mtoggle" id="musicBtn" type="button" aria-pressed="false"><i>🎵</i><span id="musicLbl">配樂</span><b class="sw" aria-hidden="true"></b></button><label class="mvol" id="musicVolWrap" hidden><span aria-hidden="true">🔈</span><input type="range" id="musicVol" min="0" max="100" value="50" aria-label="配樂音量"><span aria-hidden="true">🔊</span></label></div>
+  <div class="morebar"><button class="mbtn" id="albumBtn" type="button"><i>📒</i>相簿</button><button class="mbtn" id="voiceBtn" type="button"><i>🎙️</i>牠的叫聲</button><button class="mbtn" id="wxBtn" type="button"><i id="wxBtnIcon">🌦️</i><span id="wxBtnText">天氣</span></button><button class="mbtn mtoggle" id="musicBtn" type="button" aria-pressed="false"><i>🎵</i><span id="musicLbl">配樂</span><b class="sw" aria-hidden="true"></b></button><button class="mbtn mtoggle" id="mixBtn" type="button" aria-pressed="true" hidden><i>🎧</i><span id="mixLbl">不打斷其他音樂</span><b class="sw" aria-hidden="true"></b></button><label class="mvol" id="musicVolWrap" hidden><span aria-hidden="true">🔈</span><input type="range" id="musicVol" min="0" max="100" value="50" aria-label="配樂音量"><span aria-hidden="true">🔊</span></label></div>
   <div class="askcard" id="askCard" hidden role="region" aria-label="關於〚貓代詞〛的小問題">
     <div class="askhead"><span>小問題</span><span id="askLeft"></span></div>
     <p class="askq" id="askQ"></p>
@@ -4118,7 +4118,7 @@ async function recVoice(k,btn){
   vMsg(k,'請在跳出的視窗按「允許」使用麥克風…');btn.disabled=true;
   const musWas=MUS.on;try{if(MUS.ctx)await MUS.ctx.suspend()}catch(e){}try{if(musSilent)musSilent.pause()}catch(e){}
   try{if(navigator.audioSession)navigator.audioSession.type='play-and-record'}catch(e){}
-  const restore=()=>{try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}if(musWas&&MUS.ctx){try{musUnlockIOS();MUS.ctx.resume()}catch(e){}}btn.disabled=false};
+  const restore=()=>{try{if(navigator.audioSession)navigator.audioSession.type=musSessType()}catch(e){}if(musWas&&MUS.ctx){try{musUnlockIOS();MUS.ctx.resume()}catch(e){}}btn.disabled=false};
   let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}})}
   catch(e){restore();vMsg(k,e&&e.name==='NotAllowedError'?'麥克風被拒絕了：到手機「設定」裡允許這個網站使用麥克風，或改用「選檔案」':'拿不到麥克風（'+(e&&e.name||'錯誤')+'），可以改用「選檔案」',true);return}
   const type=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||'';
@@ -4356,13 +4356,22 @@ var musSilent=null;
 function musSilentURL(){const n=4000,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i)};
   w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);b.fill(128,44);
   let s='';b.forEach(c=>s+=String.fromCharCode(c));return'data:audio/wav;base64,'+btoa(s)}
-function musUnlockIOS(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+/* 「不打斷其他音樂」（預設開）：跟 YouTube、Spotify 等一起播放，不搶聲音；代價是 iPhone 開靜音鍵時這裡也會沒聲音。
+   關掉才用「播放音樂」模式：靜音鍵開著也有聲音，但會讓其他 App 的音樂暫停 */
+function musMix(){try{return localStorage.getItem('neko-mix')!=='0'}catch(e){return true}}
+function musSessType(){return musMix()?'ambient':'playback'}
+function drawMix(){const b=$('mixBtn');if(!b)return;const on=musMix();b.setAttribute('aria-pressed',String(on));$('mixLbl').textContent=on?'不打斷其他音樂':'不打斷其他音樂 關'}
+function musUnlockIOS(){try{if(navigator.audioSession)navigator.audioSession.type=musSessType()}catch(e){}
+  if(musMix()){try{if(musSilent&&!musSilent.paused)musSilent.pause()}catch(e){}return}
   try{if(!musSilent){musSilent=new Audio(musSilentURL());musSilent.loop=true;musSilent.setAttribute('playsinline','');musSilent.preload='auto'}if(musSilent.paused){const p=musSilent.play();if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
 async function musStart(){musUnlockIOS();if(!musInit()){$('musicMsg')&&($('musicMsg').textContent='這個瀏覽器不能播放配樂');return false}
   try{await MUS.ctx.resume()}catch(e){}MUS.on=true;MUS.next=MUS.ctx.currentTime+.15;MUS.step=0;MUS.bar=0;musSetVol(MUS.vol);clearInterval(MUS.timer);MUS.timer=setInterval(musTick,100);musTick();return true}
 function musStop(){MUS.on=false;clearInterval(MUS.timer);MUS.timer=null;try{if(musSilent)musSilent.pause()}catch(e){}if(MUS.ctx){MUS.master.gain.setTargetAtTime(0,MUS.ctx.currentTime,.25);musRain(false)}}
 function drawMusic(){const b=$('musicBtn'),on=MUS.on||!!MUS.pending;$('musicLbl').textContent=on?'配樂 開':'配樂 關';b.setAttribute('aria-pressed',String(on));$('musicVolWrap').hidden=!MUS.on;$('musicVol').value=Math.round(MUS.vol*100)}
 $('musicBtn').onclick=async()=>{if(MUS.pending){MUS.pending=false;MUS.on=false;musSave();drawMusic();return}if(MUS.on)musStop();else await musStart();musSave();drawMusic()};
+{const b=$('mixBtn');b.hidden=!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);drawMix();
+  b.onclick=()=>{const on=!musMix();try{localStorage.setItem('neko-mix',on?'1':'0')}catch(e){}drawMix();musUnlockIOS();if(MUS.ctx&&MUS.on)MUS.ctx.resume().catch(()=>{});
+    note(on?'可以一邊聽 YouTube 一邊玩了。iPhone 開著靜音鍵時，這裡的聲音也會靜音':'手機開靜音鍵也聽得到這裡的聲音，但會讓 YouTube 等其他音樂暫停',4)}}
 $('musicVol').oninput=e=>{musSetVol(+e.target.value/100);musSave()};
 document.addEventListener('visibilitychange',()=>{if(!MUS.ctx)return;if(document.hidden)MUS.ctx.suspend().catch(()=>{});else if(MUS.on)MUS.ctx.resume().catch(()=>{})});
 {const P=musPrefs();MUS.vol=P.vol;drawMusic();
