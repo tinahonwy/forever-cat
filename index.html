@@ -783,6 +783,7 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
     <div class="voicerow" data-k="meow"><b>喵聲</b><span class="vstat"></span><div class="vbtns"><button class="btn" data-a="rec" type="button">🎙 錄音</button><button class="btn" data-a="file" type="button">選檔案</button><button class="btn" data-a="play" type="button">▶ 試聽</button><button class="btn" data-a="del" type="button">刪除</button></div></div>
     <div class="voicerow" data-k="purr"><b>呼嚕聲</b><span class="vstat"></span><div class="vbtns"><button class="btn" data-a="rec" type="button">🎙 錄音</button><button class="btn" data-a="file" type="button">選檔案</button><button class="btn" data-a="play" type="button">▶ 試聽</button><button class="btn" data-a="del" type="button">刪除</button></div></div>
     <label class="vtoggle"><input type="checkbox" id="voiceOn"> 在家裡播放牠的聲音</label>
+    <label class="vtoggle"><input type="checkbox" id="voiceDef"> 還沒上傳時，先用預設的貓叫聲</label>
     <p class="gsub" id="voiceMsg"></p>
     <input type="file" id="voiceFile" accept="audio/*" hidden>
   </div>
@@ -3954,9 +3955,64 @@ voiceInit();
 async function loadVoice(uid){if(!db)return;for(const k of['meow','purr']){try{const sn=await getDoc(doc(db,'users',uid,'cats','voice-'+k));if(!user||user.uid!==uid)return;
   const v=sn.exists()?sn.data().d||null:null;VOICE[k]=v;delete voiceEl[k];try{if(v)localStorage.setItem(VKEY(k),v);else localStorage.removeItem(VKEY(k))}catch(e){}}catch(e){}}drawVoice()}
 function voiceOn(){return S.voiceOn!==false}
-function voicePlay(k,maxMs,force){const v=VOICE[k];if(!v||(!force&&!voiceOn()))return false;let a=voiceEl[k];if(!a){a=new Audio(v);voiceEl[k]=a}
+/* ===== 預設貓叫聲：沒上傳自己貓的聲音時，用程式合成的喵聲和呼嚕聲（不用音檔、沒有版權問題） ===== */
+function sfxCtx(c){if(!c){if(!musInit())return null;c=MUS.ctx;if(c.state!=='running')c.resume().catch(()=>{})}
+  if(!c._sfx){const g=c.createGain();g.gain.value=.55;const cp=c.createDynamicsCompressor();cp.threshold.value=-8;cp.ratio.value=6;g.connect(cp);cp.connect(c.destination);c._sfx=g}return c}
+function sfxNoise(c,sec){const n=Math.ceil(c.sampleRate*sec),b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;const s=c.createBufferSource();s.buffer=b;return s}
+function catPitch(){const sz=+S.size||1;return Math.max(.8,Math.min(1.3,1.12-(sz-1)*.5))*(S.voicePitch||1)}
+// kind：mew 短短的、meow 一般、long 拉長討東西、trill 「嚕？」的打招呼
+/* 喵聲合成：模仿真貓叫「m—ee—ow」的嘴型變化
+   聲帶：泛音豐富的脈衝；嘴巴：低通濾波器從「閉嘴 m」打開到「ee/a」再收成「ow」；
+   再加上一點點音高抖動和氣音，聽起來比較像活的貓 */
+function synthMeow(kind='meow',c0,t0){const c=sfxCtx(c0);if(!c)return 0;const t=t0!=null?t0:c.currentTime+.02,out=c._sfx;
+  const P=catPitch()*(.97+Math.random()*.06),f0=(kind==='mew'?600:kind==='trill'?460:500)*P;
+  const dur=kind==='mew'?.38:kind==='long'?1.15:kind==='trill'?.42:.78,T=x=>t+dur*x;
+  if(!c._glot){const n=40,re=new Float32Array(n),im=new Float32Array(n);for(let h=1;h<n;h++)im[h]=1/Math.pow(h,1.85);c._glot=c.createPeriodicWave(re,im)}
+  const o=c.createOscillator();o.setPeriodicWave(c._glot);const fq=o.frequency;
+  // 音高：先往上、在高處停一下、最後往下掉（「喵～嗚」）
+  if(kind==='trill'){fq.setValueAtTime(f0*.9,t);fq.linearRampToValueAtTime(f0*1.25,T(.85));fq.linearRampToValueAtTime(f0*1.18,T(1))}
+  else if(kind==='mew'){fq.setValueAtTime(f0*.97,t);fq.linearRampToValueAtTime(f0*1.05,T(.35));fq.linearRampToValueAtTime(f0*.9,T(1))}
+  else{fq.setValueAtTime(f0*.92,t);fq.linearRampToValueAtTime(f0*1.06,T(.35));fq.linearRampToValueAtTime(f0*1.03,T(.6));fq.linearRampToValueAtTime(f0*.84,T(1))}
+  // 活的聲音：慢的顫音＋快的小抖動
+  const v1=c.createOscillator(),g1=c.createGain();v1.frequency.value=4.5;g1.gain.value=f0*(kind==='long'?.006:.003);v1.connect(g1);g1.connect(fq);
+  const v2=c.createOscillator(),g2=c.createGain();v2.type='triangle';v2.frequency.value=17+Math.random()*4;g2.gain.value=0;v2.connect(g2);g2.connect(fq);
+  const src=c.createGain();src.gain.value=1;o.connect(src);
+  // 氣音
+  const ns=sfxNoise(c,dur+.2),nb=c.createBiquadFilter(),ng=c.createGain();nb.type='bandpass';nb.frequency.value=1800;nb.Q.value=.8;ng.gain.value=kind==='trill'?.03:.05;ns.connect(nb);nb.connect(ng);ng.connect(src);
+  // 嘴巴：低通截止頻率 = 嘴張多大
+  const mouth=c.createBiquadFilter();mouth.type='lowpass';mouth.Q.value=.9;const mf=mouth.frequency;
+  if(kind==='trill'){mf.setValueAtTime(800,t);mf.linearRampToValueAtTime(1400,T(.6));mf.linearRampToValueAtTime(1100,T(1))}
+  else{mf.setValueAtTime(600,t);mf.exponentialRampToValueAtTime(kind==='mew'?2600:2300,T(.35));mf.setValueAtTime(kind==='mew'?2600:2200,T(.55));mf.exponentialRampToValueAtTime(900,T(.95))}
+  // 共振峰：第一、第二共振峰跟著「ee → a → ow」移動
+  const pk=(f,q,g)=>{const b=c.createBiquadFilter();b.type='peaking';b.frequency.value=f;b.Q.value=q;b.gain.value=g;return b};
+  const F1=pk(600,1.4,6),F2=pk(1800,1.8,3.5);
+  if(kind!=='trill'){F1.frequency.setValueAtTime(420,t);F1.frequency.linearRampToValueAtTime(1050,T(.4));F1.frequency.linearRampToValueAtTime(600,T(1));
+    F2.frequency.setValueAtTime(2500,t);F2.frequency.linearRampToValueAtTime(1800,T(.45));F2.frequency.linearRampToValueAtTime(950,T(1))}
+  else{F1.frequency.value=480;F2.frequency.value=1400}
+  const env=c.createGain(),eg=env.gain;
+  if(kind==='trill'){eg.setValueAtTime(0,t);eg.linearRampToValueAtTime(.32,T(.15));eg.setValueAtTime(.32,T(.75));eg.linearRampToValueAtTime(0,T(1));
+    const am=c.createOscillator(),ag=c.createGain(),trem=c.createGain();am.frequency.value=27;ag.gain.value=.45;trem.gain.value=.55;am.connect(ag);ag.connect(trem.gain);src.connect(trem);trem.connect(mouth);am.start(t);am.stop(T(1)+.1)}
+  else{eg.setValueAtTime(0,t);eg.linearRampToValueAtTime(.12,T(.06));eg.linearRampToValueAtTime(.42,T(.3));eg.setValueAtTime(.38,T(.62));eg.linearRampToValueAtTime(.18,T(.88));eg.linearRampToValueAtTime(0,T(1));src.connect(mouth)}
+  mouth.connect(F1);F1.connect(F2);F2.connect(env);
+  const hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=200;const sm=c.createBiquadFilter();sm.type='lowpass';sm.frequency.value=3000;sm.Q.value=.5;env.connect(hp);hp.connect(sm);sm.connect(out);
+  [o,v1,v2,ns].forEach(n=>{n.start(t);n.stop(T(1)+.15)});return dur}
+function synthPurr(sec=2.6,c0,t0){const c=sfxCtx(c0);if(!c)return 0;const t=t0!=null?t0:c.currentTime+.02,out=c._sfx;
+  const ns=sfxNoise(c,sec+.2),lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=260;lp.Q.value=.5;
+  const am=c.createGain();am.gain.value=0;const lfo=c.createOscillator();lfo.type='triangle';lfo.frequency.value=24+Math.random()*3;const lg=c.createGain();lg.gain.value=.5;lfo.connect(lg);lg.connect(am.gain);
+  const off=c.createConstantSource?c.createConstantSource():null;if(off){off.offset.value=.5;off.connect(am.gain)}
+  const rum=c.createOscillator();rum.type='sawtooth';rum.frequency.value=lfo.frequency.value;const rl=c.createBiquadFilter();rl.type='lowpass';rl.frequency.value=160;const rg=c.createGain();rg.gain.value=.6;rum.connect(rl);rl.connect(rg);rg.connect(am);
+  const br=c.createGain();br.gain.setValueAtTime(0,t);const cyc=1.5;for(let x=0;x<sec;x+=cyc){br.gain.linearRampToValueAtTime(.55,t+x+cyc*.18);br.gain.linearRampToValueAtTime(.32,t+x+cyc*.5);br.gain.linearRampToValueAtTime(.8,t+x+cyc*.68);br.gain.linearRampToValueAtTime(.4,t+x+cyc*.98)}
+  br.gain.linearRampToValueAtTime(0,t+sec);
+  const lp2=c.createBiquadFilter();lp2.type='lowpass';lp2.frequency.value=200;ns.connect(lp);lp.connect(lp2);lp2.connect(am);am.connect(br);br.connect(out);
+  [ns,lfo,rum].forEach(n=>{n.start(t);n.stop(t+sec+.1)});if(off){off.start(t);off.stop(t+sec+.1)}return sec}
+function meowKind(t){t=String(t||'');if(/[？?]/.test(t))return'trill';if(/喵[～~]?喵|喵嗚+|喵～～|肚子餓/.test(t))return'long';if(/喵！|喵!/.test(t))return'mew';return'meow'}
+function voiceDefOn(){return S.voiceDefault!==false}
+
+function voicePlay(k,maxMs,force,txt){const v=VOICE[k];if(!force&&!voiceOn())return false;
+  if(!v){if(!force&&!voiceDefOn())return false;try{if(k==='purr')synthPurr(Math.min(3.2,(maxMs||2600)/1000));else synthMeow(meowKind(txt))}catch(e){}return true}
+  let a=voiceEl[k];if(!a){a=new Audio(v);voiceEl[k]=a}
   try{a.pause();a.currentTime=0;a.volume=k==='purr'?.8:1;const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){}clearTimeout(a._t);if(maxMs)a._t=setTimeout(()=>{try{a.pause()}catch(e){}},maxMs);return true}
-function voiceSay(t){const now=Date.now();if(/喵/.test(t)&&now-voiceAt.meow>4000){if(voicePlay('meow'))voiceAt.meow=now}
+function voiceSay(t){const now=Date.now();if(/喵/.test(t)&&now-voiceAt.meow>4000){if(voicePlay('meow',0,false,t))voiceAt.meow=now}
   else if(/呼嚕/.test(t)&&now-voiceAt.purr>6000){if(voicePlay('purr',3500))voiceAt.purr=now}}
 async function saveVoice(k,url){VOICE[k]=url;delete voiceEl[k];try{if(url)localStorage.setItem(VKEY(k),url);else localStorage.removeItem(VKEY(k))}catch(e){$('voiceMsg').textContent='這台裝置空間不夠，存不進去'}
   if(user&&db&&cloudOk===user.uid){try{await setDoc(doc(db,'users',user.uid,'cats','voice-'+k),{d:url||'',at:Date.now()})}catch(e){$('voiceMsg').textContent='雲端儲存失敗（'+(e.code||e.message)+'）'}}
@@ -3966,8 +4022,8 @@ function blobURL(b){return new Promise((res,rej)=>{const r=new FileReader();r.on
 async function takeVoice(k,blob){const m=$('voiceMsg');if(blob.size>450000){m.textContent='檔案太大了，請剪短到 10 秒以內再試';return}
   const url=await blobURL(blob),len=await audioLen(url);if(len>10.5){m.textContent=`這段有 ${Math.round(len)} 秒，請剪短到 10 秒以內`;return}
   await saveVoice(k,url);m.textContent=`${VC_NAME[k]}存好了${len?`（${len.toFixed(1)} 秒）`:''}`;voicePlay(k,6000,true)}
-function drawVoice(){document.querySelectorAll('.voicerow').forEach(r=>{const k=r.dataset.k,has=!!VOICE[k];r.querySelector('.vstat').textContent=has?'✓ 已設定':'還沒有';
-  r.querySelector('[data-a=play]').disabled=!has;r.querySelector('[data-a=del]').disabled=!has});$('voiceOn').checked=voiceOn()}
+function drawVoice(){document.querySelectorAll('.voicerow').forEach(r=>{const k=r.dataset.k,has=!!VOICE[k];r.querySelector('.vstat').textContent=has?'✓ 用你上傳的聲音':(voiceDefOn()?'目前用預設的貓叫聲':'還沒有');
+  r.querySelector('[data-a=play]').disabled=!has&&!voiceDefOn();r.querySelector('[data-a=del]').disabled=!has});$('voiceOn').checked=voiceOn();$('voiceDef').checked=voiceDefOn()}
 let voiceFileK='meow';
 async function recVoice(k,btn){const m=$('voiceMsg');
   if(voiceRec){try{voiceRec.stop()}catch(e){}return}
@@ -3986,6 +4042,7 @@ document.querySelectorAll('.voicerow').forEach(r=>r.querySelectorAll('button').f
   if(a==='del'){if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='再按一次刪除';setTimeout(()=>{b.dataset.arm='';b.textContent='刪除'},2500);return}b.dataset.arm='';b.textContent='刪除';await saveVoice(k,null);m.textContent=`${VC_NAME[k]}刪掉了`}}));
 $('voiceFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(f)await takeVoice(voiceFileK,f)};
 $('voiceOn').onchange=()=>{S.voiceOn=$('voiceOn').checked;save()};
+$('voiceDef').onchange=()=>{S.voiceDefault=$('voiceDef').checked;save();drawVoice()};
 $('voiceBtn').onclick=()=>{drawVoice();$('voiceMsg').textContent=user?'':'沒登入的話，聲音只會存在這台裝置。';$('voicePanel').hidden=false};
 $('voiceClose').onclick=()=>{if(voiceRec)try{voiceRec.stop()}catch(e){}$('voicePanel').hidden=true};
 
@@ -4215,7 +4272,8 @@ document.addEventListener('visibilitychange',()=>{if(!MUS.ctx)return;if(document
   const EV=['pointerup','touchend','click','keydown'];
   const go=e=>{if(e&&e.target&&e.target.closest&&e.target.closest('#musicBtn'))return;
     if(MUS.pending&&!MUS.on){MUS.pending=false;musStart().then(()=>{musSave();drawMusic()});return}
-    if(MUS.on&&MUS.ctx){musUnlockIOS();if(MUS.ctx.state!=='running')MUS.ctx.resume().catch(()=>{})}};
+    if(MUS.on&&MUS.ctx){musUnlockIOS();if(MUS.ctx.state!=='running')MUS.ctx.resume().catch(()=>{})}
+    else if(voiceOn()&&voiceDefOn()){try{musUnlockIOS();if(!MUS.ctx)musInit();if(MUS.ctx&&MUS.ctx.state!=='running')MUS.ctx.resume().catch(()=>{})}catch(e){}}};
   EV.forEach(t=>document.addEventListener(t,go,{capture:true,passive:true}));
   if(P.on){MUS.pending=true;drawMusic()}}
 
