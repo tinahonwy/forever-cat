@@ -2187,6 +2187,7 @@ $('aiForget').onclick=()=>{chatHist=[];ls.set(CHATKEY,'');$('aiMsg').textContent
 /* ===== AI 旁白事件：摸摸抱抱的感想、主動找你 ===== */
 const AUTO_DAY_MAX=40;let autoAt=0,lastInteract=Date.now(),idleFired=false;
 function autoBudget(){const k='neko-auto-'+new Date().toISOString().slice(0,10),n=+ls.get(k)||0;return{ok:n<AUTO_DAY_MAX,use:()=>ls.set(k,String(n+1))}}
+function evOwnerView(desc){const n=S.name||'貓咪';return desc.replace(/^（|）$/g,'').replace(/你/g,'\u0001').replace(/主人/g,'你').replace(/\u0001/g,n)}
 async function aiEvent(desc,{allowMove=true,force=false}={}){
   if(!aiOn()||aiBusy||view!=='home'||document.hidden)return;
   if(!force&&Date.now()-autoAt<25000)return;
@@ -2198,7 +2199,7 @@ async function aiEvent(desc,{allowMove=true,force=false}={}){
     if(asleep&&!['none','bed','come'].includes(r.a))wake();
     if(o.face&&o.face!=='normal')setFace(o.face,2.6);
     perform(r,null,asleep,2600+o.say.length*110);
-    talkLog.push(['ev',desc.replace(/^（|）$/g,'')]);talkLog.push(['cat',o.say]);while(talkLog.length>6)talkLog.shift();drawLog();
+    talkLog.push(['ev',evOwnerView(desc)]);talkLog.push(['cat',o.say]);while(talkLog.length>6)talkLog.shift();drawLog();
   }catch(e){}finally{aiBusy=false;$('sayBtn').disabled=false}
 }
 function touchStory(t,wasHug){
