@@ -1883,19 +1883,14 @@ function petTick(zone){if(touch)touch.zones.add(zone);
   const n=S.name||'〚貓代詞〛',liked=(S.likes||[]).includes(zone),hated=(S.dislikes||[]).includes(zone),temper=P01('temper'),aff=P01('affection');
   if(H.state==='sleep'){
     if(liked&&Math.random()<.8){say('呼嚕…',1200);note(`${n}睡夢中呼嚕呼嚕`);return}
-    wake();setFace(hated?'annoyed':'normal',1.5);say(hated?'喵！':'喵？',1300);return;
+    wakeReact(hated,n);return;
   }
   if(H.state==='jump')return;if(['walk','scratch','eat'].includes(H.state)){sitDown('front')}
   if(H.view==='back'&&Math.random()<.5)setHView('front');
   H.timer=Math.max(H.timer,3);
-  if(H.cooldown>0||hated){if(touch)touch.bad='hate';
-    H.mood-=.1;setFace('annoyed',1.6);H.swat=.4;say(hated?(Math.random()<.5?'哈～！':'不要摸那裡'):'喵！夠了',1400);note(`${n}不喜歡被摸${ZONE_NAME[zone]}`);
-    logAct('petHate',hated?`被摸${ZONE_NAME[zone]}，不喜歡，哈氣（心情下降）`:`已經被摸夠了，還被摸${ZONE_NAME[zone]}，不耐煩（心情下降）`,false,{zone,hated});
-    if(H.mood<.35||temper>.6||Math.random()<.4){touchEnd(true);H.cooldown=6;setTimeout(()=>{if(H.state==='sit')walkAway()},500)}
-    return;
-  }
+  if(H.cooldown>0||hated){petHateReact(zone,hated,n,temper);return}
   const limit=(1.5-temper)*(.6+aff)*1500;
-  if(H.petRecent>limit){if(touch)touch.bad='over';H.cooldown=6;setFace('annoyed',1.6);H.swat=.4;say('咬！（輕輕的）',1500);note(`${n}被摸太久，不耐煩了`);H.mood-=.06;logAct('petOver','被摸太久，輕咬一口走開（心情下降）',true,{zone});touchEnd(true);setTimeout(()=>{if(H.state==='sit')walkAway()},600);return}
+  if(H.petRecent>limit){petOverReact(zone,n);return}
   if(zone==='belly'&&!liked&&Math.random()<.25+temper*.5){if(touch)touch.bad='trap';H.trap=.9;setFace('annoyed',1.2);say('抱住你的手！咬咬',1500);note(`${n}抱住你的手踢踢`);logAct('petTrap','被摸肚子，抱住你的手踢踢',true,{zone});return}
   if(liked){if(touch)touch.good++;H.mood+=.08;setFace('happy',1.8);H.lean=(Math.random()<.5?-1:1);heart();if(Math.random()<.6)say(Math.random()<.5?'呼嚕呼嚕…':'喵～',1300);note(`${n}很喜歡被摸${ZONE_NAME[zone]}`);logAct('petLike',`被摸${ZONE_NAME[zone]}，很舒服地呼嚕（心情上升）`,false,{zone})}
   else{H.mood+=.03;if(H.mood>.6)setFace('happy',1.2);if(Math.random()<.3)say('喵',900);note(`${n}讓你摸${ZONE_NAME[zone]}`)}
@@ -1913,8 +1908,8 @@ function hugPetUp(e){const t=touch2;touch2=null;if(!t||!H.hug)return;
   if(t.moved<14&&performance.now()-t.t0<450){const z=zoneAt(e);if(touch)touch.zones.add(z);if((S.dislikes||[]).includes(z))petTick(z);else{H.mood+=.02;setFace('happy',1.2);heart();say(Math.random()<.5?'呼嚕…':'喵～',1000)}}}
 function hugPatience(){const pref=S.hugPref||'mood',aff=P01('affection'),tmp=P01('temper');
   const b=pref==='love'?40:pref==='hate'?2.5:5+aff*10+H.mood*6;return b*(1.3-tmp*.6)*(.8+Math.random()*.4)}
-function escapeHug(){const n=S.name||'〚貓代詞〛';logAct('hugEscape','抱太久了，掙脫跳下來（心情下降）',true);H.hug=false;H.y=H.carry||0;H.carry=0;H.dragV=0;H.wriggle=.7;H.state='sit';
-  setFace('annoyed',1.4);say('喵嗚！放開我',1400);note(`${n}掙脫跳下來了`,2.5);H.mood-=.06;H.cooldown=4;
+function escapeHug(){const n=S.name||'〚貓代詞〛',hw=hugReactWords(false);logAct('hugEscape',hw.t+'（心情下降）',true);H.hug=false;H.y=H.carry||0;H.carry=0;H.dragV=0;H.wriggle=hw.wr;H.state='sit';
+  setFace('annoyed',1.4);say(hw.say,1400);note(`${n}掙脫跳下來了`,2.5);H.mood-=.06;H.cooldown=4;
   if(touch){touch.escaped=true;touch.mode='done';clearTimeout(touch.hold)}}
 function startHug(){
   const n=S.name||'〚貓代詞〛',pref=S.hugPref||'mood',aff=P01('affection');
@@ -1922,7 +1917,7 @@ function startHug(){
   if(H.state==='sleep')p*=.6;
   if(Math.random()<p){const rr=room.getBoundingClientRect();H.dragX=touch.x-rr.left;H.dragY=H.dragY0=touch.y-rr.top;H.carry=0;H.dragV=0;H.warned=false;H.patience=hugPatience();
     H.y=0;H.jump=null;H.inBox=false;H.inLitter=false;H.hug=true;H.state='sit';H.goSleep=false;setHView('front');setFace('happy');say('呼嚕呼嚕…');note(`${n}讓你抱著`,0);heart();logAct('hugOk','讓你抱起來，呼嚕呼嚕',true)}
-  else{H.wriggle=.9;setHView('front');setFace('annoyed',1.4);say('喵嗚～放開我',1400);logAct('hugFail','不想被抱，扭來扭去跳走了（心情下降）',true);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done';touch.hugFail=true}
+  else{const hw=hugReactWords(true);H.wriggle=hw.wr;setHView('front');setFace('annoyed',1.4);say(hw.say,1400);logAct('hugFail',hw.t+'（心情下降）',true);note(`${n}不想被抱，扭來扭去`,1.2);H.mood-=.05;touch.mode='done';touch.hugFail=true}
 }
 hc.addEventListener('pointerdown',e=>{
   if(wandOn)return;e.preventDefault();
@@ -2261,10 +2256,64 @@ async function gemJSON(sys,user,schema){
     catch(e){last=e;if(!busyErr(e))throw e;await new Promise(r=>setTimeout(r,800))}}
   throw last}
 const ZCODES=ZONES.map(z=>z[0]);
+/* ===== 反應方式：被摸到討厭的地方、被摸太久、被抱太久、睡覺被吵醒時，這隻貓會怎麼反應 =====
+   主人在「不該這樣」按一下，或自己寫一句話，就會改成真貓的反應方式，動作和 AI 說話都跟著改。 */
+var REACT_SIT={petHate:'被摸到討厭的地方',petOver:'被摸太久',hug:'被抱太久或不想被抱',wake:'睡覺時被摸醒'};
+var REACT_DEF={petHate:'hiss',petOver:'bite',hug:'struggle',wake:'grumpy'};
+var REACT_OPT={
+  petHate:{hiss:'會哈氣、揮爪子',leave:'不會哈氣，只會默默走開',tail:'會甩尾巴警告',bite:'會輕咬一下',push:'會用手把你推開'},
+  petOver:{bite:'會輕咬一口再走開',leave:'只會默默走開',tail:'會甩尾巴警告',push:'會用手把你推開',hiss:'會哈氣'},
+  hug:{struggle:'會扭來扭去跳走',meow:'會喵喵叫抗議要下來',bite:'會輕咬一下要你放開',push:'會用手推你的臉'},
+  wake:{grumpy:'會不高興地醒來',sleepy:'會迷迷糊糊繼續睡',happy:'醒來會撒嬌',leave:'會換個地方繼續睡'}};
+var REACT_KW=[[/哈氣|哈人|嘶/,'hiss'],[/走開|跑開|離開|躲開|逃走|閃人/,'leave'],[/甩尾|尾巴/,'tail'],[/咬/,'bite'],[/推/,'push'],[/扭|掙扎/,'struggle'],[/叫|喵/,'meow'],[/繼續睡|不理|沒反應|翻.*身/,'sleepy'],[/撒嬌|蹭|呼嚕|開心/,'happy'],[/換.*(地方|位置)|跑去.*睡/,'leave'],[/生氣|不高興|瞪/,'grumpy']];
+function reactStyle(k){const R=S.react&&typeof S.react==='object'?S.react:{};return REACT_OPT[k]&&REACT_OPT[k][R[k]]?R[k]:REACT_DEF[k]}
+function setReact(k,v){if(!REACT_OPT[k]||!REACT_OPT[k][v])return false;if(!S.react||typeof S.react!=='object')S.react={};S.react[k]=v;return true}
+function reactSitOf(key,meta){if(key==='petHate')return meta&&meta.hated===false?'petOver':'petHate';if(key==='petOver')return'petOver';
+  if(key==='hugEscape'||key==='hugFail')return'hug';if(key==='wakeUp')return'wake';return''}
+function reactText(){return Object.keys(REACT_SIT).map(k=>`${REACT_SIT[k]}${REACT_OPT[k][reactStyle(k)]}`).join('；')}
+/* 主人自己寫的修正：先用關鍵字判斷，判斷不出來才請 AI 翻譯（只在主人送出修正時用一次） */
+async function reactFromText(sit,text){if(!REACT_OPT[sit]||!text)return'';
+  for(const[re,v]of REACT_KW)if(re.test(text)&&REACT_OPT[sit][v])return v;
+  if(!aiKey())return'';
+  try{const keys=Object.keys(REACT_OPT[sit]),o=await gemJSON(`主人在描述他家的貓「${S.name||'貓咪'}」${REACT_SIT[sit]}時的反應。請判斷最接近哪一種，完全對不上就回 none。選項：${keys.map(k=>k+'='+REACT_OPT[sit][k]).join('、')}`,text,{type:'OBJECT',properties:{style:{type:'STRING',enum:[...keys,'none']}},required:['style']});
+    return o&&REACT_OPT[sit][o.style]?o.style:''}catch(e){return''}}
+/* 被摸到討厭的地方（hated）或已經不耐煩了還被摸（over） */
+function petHateReact(zone,hated,n,temper){const sit=hated?'petHate':'petOver',st=reactStyle(sit),zn=ZONE_NAME[zone];if(touch)touch.bad='hate';
+  const leave=(d=500)=>{touchEnd(true);H.cooldown=6;setTimeout(()=>{if(H.state==='sit')walkAway()},d)};
+  const what=hated?`被摸${zn}，不喜歡`:`已經被摸夠了，還被摸${zn}`;let t='';
+  if(st==='leave'){H.mood-=.06;setFace('annoyed',1);say('…',800);t='，默默走開';leave(300)}
+  else if(st==='tail'){H.mood-=.06;H.wag=1.8;setFace('annoyed',1.4);say('（尾巴用力甩）',1200);t='，甩尾巴警告';
+    const now=Date.now();H.tailWarn=(now-(H.tailWarnAt||0)<6000?(H.tailWarn||0):0)+1;H.tailWarnAt=now;if(H.tailWarn>=2||H.mood<.3){t+='，然後走開';leave(400)}}
+  else if(st==='bite'){H.mood-=.08;H.swat=.4;setFace('annoyed',1.4);say('（輕咬一口）',1200);t='，輕咬一口';if(Math.random()<.6){t+='走開';leave(500)}}
+  else if(st==='push'){H.mood-=.06;H.swat=.5;setFace('annoyed',1.2);say('（用手推開你）',1200);t='，用手把你推開';if(Math.random()<.5)leave(600)}
+  else{H.mood-=.1;setFace('annoyed',1.6);H.swat=.4;say(hated?(Math.random()<.5?'哈～！':'不要摸那裡'):'喵！夠了',1400);t=hated?'，哈氣':'，不耐煩';if(H.mood<.35||temper>.6||Math.random()<.4)leave(500)}
+  note(`${n}不喜歡被摸${zn}`);logAct('petHate',`${what}${t}（心情下降）`,false,{zone,hated})}
+function petOverReact(zone,n){const st=reactStyle('petOver');if(touch)touch.bad='over';H.cooldown=6;H.mood-=.06;note(`${n}被摸太久，不耐煩了`);
+  const go=d=>{touchEnd(true);setTimeout(()=>{if(H.state==='sit')walkAway()},d)};let t;
+  if(st==='leave'){setFace('annoyed',1);say('…',800);t='被摸太久，默默走開';go(300)}
+  else if(st==='tail'){H.wag=1.8;setFace('annoyed',1.4);say('（尾巴用力甩）',1200);t='被摸太久，甩尾巴警告';touchEnd(true)}
+  else if(st==='push'){H.swat=.5;setFace('annoyed',1.2);say('（用手推開你）',1200);t='被摸太久，用手把你推開';go(700)}
+  else if(st==='hiss'){H.swat=.4;setFace('annoyed',1.6);say('哈～！',1200);t='被摸太久，哈氣走開';go(500)}
+  else{setFace('annoyed',1.6);H.swat=.4;say('咬！（輕輕的）',1500);t='被摸太久，輕咬一口走開';go(600)}
+  logAct('petOver',t+'（心情下降）',true,{zone})}
+/* 抱抱：掙脫（escape）或一開始就不給抱（fail） */
+function hugReactWords(fail){const st=reactStyle('hug');
+  if(st==='meow')return{say:'喵！喵嗚！',t:fail?'不想被抱，喵喵叫抗議，跳下去了':'抱太久了，喵喵叫抗議要下來',wr:.4};
+  if(st==='bite'){H.swat=.4;return{say:'（輕咬一下）',t:fail?'不想被抱，輕咬一下要你放開':'抱太久了，輕咬一下要你放開',wr:.35}}
+  if(st==='push'){H.swat=.5;return{say:'（用手推你的臉）',t:fail?'不想被抱，用手推你的臉':'抱太久了，用手推你的臉要下來',wr:.4}}
+  return{say:fail?'喵嗚～放開我':'喵嗚！放開我',t:fail?'不想被抱，扭來扭去跳走了':'抱太久了，掙脫跳下來',wr:fail?.9:.7}}
+/* 睡覺被摸醒（不是摸到喜歡的地方時） */
+function wakeReact(hated,n){const st=reactStyle('wake');
+  if(st==='sleepy'&&!hated){say('（翻個身，繼續睡）',1300);H.timer=Math.max(H.timer,6);logAct('wakeUp','睡覺被你摸，翻個身繼續睡',false);return}
+  if(st==='happy'&&!hated){wake();setFace('happy',2);heart();say('喵～',1200);if(typeof startPose==='function')startPose('stretch',{quiet:true});logAct('wakeUp','睡覺被你摸醒，伸個懶腰撒嬌',false);return}
+  if(st==='leave'){wake();setFace('annoyed',1.2);say('（換個地方睡）',1300);setTimeout(()=>{if(H.state==='sit'||H.state==='pose')startWalk(typeof wanderTarget==='function'?wanderTarget():.5,true)},500);logAct('wakeUp','睡覺被你吵醒，換個地方繼續睡',false);return}
+  wake();setFace(hated?'annoyed':'normal',1.5);say(hated?'喵！':'喵？',1300);logAct('wakeUp',hated?'睡覺時被摸到討厭的地方，不高興地醒來':'睡覺被你摸醒，不高興地看著你',true)}
+
 const LEARN_SCHEMA={type:'OBJECT',properties:{
   facts:{type:'ARRAY',items:{type:'OBJECT',properties:{c:{type:'STRING',enum:FACT_CATS.filter(c=>c!=='修正')},t:{type:'STRING'}},required:['c','t']}},
   affection:{type:'INTEGER'},temper:{type:'INTEGER'},energy:{type:'INTEGER'},
   appetite:{type:'INTEGER'},canLove:{type:'INTEGER'},picky:{type:'INTEGER'},drink:{type:'INTEGER'},demand:{type:'INTEGER'},
+  react:{type:'OBJECT',properties:Object.fromEntries(Object.keys(REACT_OPT).map(k=>[k,{type:'STRING',enum:[...Object.keys(REACT_OPT[k]),'none']}]))},
   likes:{type:'ARRAY',items:{type:'STRING',enum:ZCODES}},dislikes:{type:'ARRAY',items:{type:'STRING',enum:ZCODES}}},required:['facts']};
 let learning=false;
 async function maybeLearn(force){
@@ -2281,6 +2330,7 @@ async function maybeLearn(force){
 不要推測、不要把主人的情緒或問句當成事實、不要重複已經記得的事。沒有新資訊就回傳空陣列。
 affection（親人）、temper（脾氣）、energy（活潑）是對個性的微調，範圍 -5 到 5，只有主人明確描述〚貓代詞〛的個性時才填非 0，例如「你超黏我」affection +3。
 appetite（貪吃程度）、canLove（愛不愛罐頭）、picky（挑食）、drink（愛喝水）、demand（餓了會不會討飯）也是 -3 到 3 的微調，只有主人明確提到時才填非 0，例如「你一聽到開罐頭就衝過來」canLove +3、「你都吃一半就跑掉」picky +2。
+react 是〚貓代詞〛在特定情況的反應方式，只有主人明確描述時才填，其他填 none：${Object.keys(REACT_OPT).map(k=>`${k}（${REACT_SIT[k]}）：${Object.entries(REACT_OPT[k]).map(([v,d])=>v+'='+d).join('、')}`).join('；')}。例如主人說「你不喜歡被摸肚子，但不會哈氣，只會跑開」，petHate 就填 leave。
 likes、dislikes 只在主人明確說到〚貓代詞〛喜歡或討厭被摸哪裡時才填，代碼：${ZONES.map(([z,zn])=>z+'='+zn).join('、')}。
 
 已經記得的事：
@@ -2294,6 +2344,7 @@ ${known}`;
     (o.likes||[]).forEach(z=>{if(ZCODES.includes(z)&&!S.likes.includes(z)){S.likes=[...S.likes,z];S.dislikes=S.dislikes.filter(x=>x!==z)}});
     (o.dislikes||[]).forEach(z=>{if(ZCODES.includes(z)&&!S.dislikes.includes(z)){S.dislikes=[...S.dislikes,z];S.likes=S.likes.filter(x=>x!==z)}});
     pending=pending.slice(batch.length);ls.set(PENDKEY,JSON.stringify(pending));
+    if(o.react&&typeof o.react==='object')Object.entries(o.react).forEach(([k,v])=>setReact(k,v));
     S.learnedAt=Date.now();render();memLabel();setTimeout(()=>compactMemory(),1000);if(!$('memPanel').hidden)drawMem(added?`整理好了，新記住 ${added} 件事`:'整理好了，這次沒有新的事');
   }catch(e){if(!$('memPanel').hidden)drawMem('整理失敗：'+aiErrText(e))}
   finally{learning=false}
@@ -2337,7 +2388,10 @@ function learnedPrompt(){const L=learned(),facts=L.filter(f=>f.c!=='主人近況
 /* 「不像〚貓代詞〛」修正 */
 function openFix(i,li){if(li.querySelector('.fix'))return;const cat=talkLog[i][1];let prev='';for(let k=i-1;k>=0;k--)if(talkLog[k][0]!=='cat'){prev=talkLog[k][1];break}
   const f=document.createElement('form');f.className='fix';const inp=document.createElement('input');inp.id='fix-'+i;inp.maxLength=100;inp.placeholder=`真正的${S.name||'〚貓代詞〛'}會怎麼做、怎麼回？`;inp.setAttribute('aria-label','真正的〚貓代詞〛會怎麼反應');
-  const ok=document.createElement('button');ok.className='btn primary';ok.textContent='記住';f.append(inp,ok);li.appendChild(f);inp.focus();
+  const ok=document.createElement('button');ok.className='btn primary';ok.textContent='記住';f.append(inp,ok);li.appendChild(f);
+  {const row=document.createElement('div');row.className='fix';const QF=[['太黏人了','affection',-10,'〚貓代詞〛沒那麼黏人，回應比較淡'],['太冷淡了','affection',10,'〚貓代詞〛比較黏人、愛撒嬌'],['太兇了','temper',-10,'〚貓代詞〛脾氣比較好，說話不兇'],['太乖了','temper',10,'〚貓代詞〛比較傲嬌，有自己的脾氣'],['話太多了','',0,'〚貓代詞〛話不多，回應通常很短'],['不像貓','',0,'〚貓代詞〛說話要更像貓，少講人類的道理']];
+   QF.forEach(([lab,k,d,fact])=>{const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=lab;b.onclick=()=>{if(k)S[k]=Math.max(0,Math.min(100,(S[k]??50)+d));addFact('修正',`${fact}（例如不會說「${cat.slice(0,20)}」）`,'me');save();memLabel();render();row.remove();f.replaceWith(Object.assign(document.createElement('small'),{textContent:`記住了，${S.name||'〚貓代詞〛'}下次會更像〚貓代詞〛`}))};row.appendChild(b)});row.style.flexWrap='wrap';f.appendChild(row)}
+  inp.focus();
   f.onsubmit=e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;addFact('修正',`${prev?`主人${/^主人/.test(prev)?'那時':'說「'+prev.slice(0,30)+'」'}時，`:''}真正的〚貓代詞〛會：${v}（不是「${cat.slice(0,30)}」）`,'me');save();memLabel();
     f.replaceWith(Object.assign(document.createElement('small'),{textContent:`記住了，${S.name||'〚貓代詞〛'}下次會更像〚貓代詞〛`}))}}
 
@@ -2690,7 +2744,10 @@ function openActFix(i,li){if(li.querySelector('.fix'))return;const[,text,,key,me
     else btns.push(mk(`〚貓代詞〛很愛${nm}`,()=>{S.itemLove[k]=Math.min(3,Math.round(itemLove(k)*1.6*100)/100);addFact('喜好',`〚貓代詞〛很喜歡${nm}，叫〚貓代詞〛就會過去${extra()}`,'me');done(`記住了，${n}以後會更常去${nm}`)}))}
   if(PLAY_KEYS.includes(key))btns.push(mk(`〚貓代詞〛${TOD_NAME[tk]}不想玩`,()=>{const P=playPrefs();P[tk]=Math.max(.15,Math.round((P[tk]??1)*.6*100)/100);addFact('修正',`〚貓代詞〛${TOD_NAME[tk]}通常不太想玩逗貓棒${extra()}`,'me');done(`記住了，${n}${TOD_NAME[tk]}會比較懶得玩`)}));
   if(/^habit_/.test(key||'')&&meta&&meta.habit)btns.push(mk('〚貓代詞〛沒有這個習慣',()=>{const P=S.plan;if(P&&Array.isArray(P.habits))P.habits=P.habits.filter(h=>h.text!==meta.habit);addFact('修正',`〚貓代詞〛沒有「${meta.habit}」這個習慣${extra()}`,'me');done(`記住了，${n}以後不會這樣`)}));
-  btns.push(mk('只記下我寫的',()=>{if(!inp.value.trim()){inp.focus();inp.placeholder='先寫下真正的〚貓代詞〛會怎麼做';return}addFact('修正',`（${text.replace(n,'〚貓代詞〛')}）真正的〚貓代詞〛會：${inp.value.trim()}`,'me');done('記住了')}));
+  const rsit=typeof reactSitOf==='function'?reactSitOf(key,meta):'';
+  if(rsit){const cur=reactStyle(rsit);Object.entries(REACT_OPT[rsit]).filter(([v])=>v!==cur).forEach(([v,d])=>btns.push(mk(`〚貓代詞〛${d}`,()=>{setReact(rsit,v);addFact('習性',`${REACT_SIT[rsit]}時，〚貓代詞〛${d}${extra()}`,'me');done(`記住了，下次${REACT_SIT[rsit]}，${n}${d}`)})))}
+  btns.push(mk('只記下我寫的',async()=>{const v=inp.value.trim();if(!v){inp.focus();inp.placeholder='先寫下真正的〚貓代詞〛會怎麼做';return}addFact('修正',`（${text.replace(n,'〚貓代詞〛')}）真正的〚貓代詞〛會：${v}`,'me');
+    if(rsit){done('記住了，正在把它變成動作…');const st=await reactFromText(rsit,v);if(st&&setReact(rsit,st)){save();note(`記住了，下次${REACT_SIT[rsit]}，${n}${REACT_OPT[rsit][st]}`,4)}}else done('記住了')}));
   f.append(inp,...btns);li.appendChild(f)}
 /* 抓到 */
 function caught(){const n=S.name||'〚貓代詞〛',now=performance.now();if(now-PL.caughtAt<1500)return;PL.caughtAt=now;PL.caught++;
@@ -4338,25 +4395,47 @@ function musInit(){if(MUS.ctx)return true;const AC=window.AudioContext||window.w
 const MNOTE=n=>440*Math.pow(2,(n-69)/12);
 // C 大調溫柔的和弦進行：C – Am – F – G（每個和弦兩小節）
 const MCH=[[48,60,64,67],[45,57,60,64],[41,57,60,65],[43,55,59,62]],MSCALE=[0,2,4,7,9];
-function musMood(){const t=typeof todNow==='function'?todNow():'day',w=typeof wxNow==='function'?wxNow():'off';return{night:t==='night',dusk:t==='dusk'||t==='dawn',rain:w==='rain'||w==='snow'}}
+function musMood(){const t=typeof todNow==='function'?todNow():'day',w=typeof wxNow==='function'?wxNow():'off';return{night:t==='night',dusk:t==='dusk'||t==='dawn',rain:w==='rain'||w==='snow',wx:w}}
 function musOut(g,wet=.5){g.connect(MUS.dry);const s=MUS.ctx.createGain();s.gain.value=wet;g.connect(s);s.connect(MUS.rev)}
 function musPad(notes,t,dur,lvl){const c=MUS.ctx,f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=900;const g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(lvl,t+1.2);g.gain.setValueAtTime(lvl,t+dur-1.2);g.gain.linearRampToValueAtTime(0,t+dur+.4);
   f.connect(g);musOut(g,.6);notes.forEach(n=>[-4,4].forEach(dt=>{const o=c.createOscillator();o.type='triangle';o.frequency.value=MNOTE(n);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+dur+.5)}))}
 function musBell(n,t,lvl){const c=MUS.ctx,g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(lvl,t+.008);g.gain.exponentialRampToValueAtTime(.0005,t+1.9);musOut(g,.55);
   [[1,1],[2,.22],[3.01,.08]].forEach(([k,a])=>{const o=c.createOscillator(),og=c.createGain();o.type='sine';o.frequency.value=MNOTE(n)*k;og.gain.value=a;o.connect(og);og.connect(g);o.start(t);o.stop(t+2)})}
 function musBass(n,t,lvl){const c=MUS.ctx,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=MNOTE(n);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(lvl,t+.04);g.gain.exponentialRampToValueAtTime(.0005,t+1.4);o.connect(g);musOut(g,.2);o.start(t);o.stop(t+1.5)}
-function musRain(on){const c=MUS.ctx;if(on&&!MUS.rain){const len=c.sampleRate*2,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;l=(l+.02*w)/1.02;d[i]=l*3.5}
-    const s=c.createBufferSource();s.buffer=b;s.loop=true;const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=1400;f.Q.value=.6;const g=c.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.06,c.currentTime+3);
-    s.connect(f);f.connect(g);g.connect(MUS.master);s.start();MUS.rain={s,g}}
-  else if(!on&&MUS.rain){const r=MUS.rain;MUS.rain=null;r.g.gain.linearRampToValueAtTime(0,c.currentTime+2);setTimeout(()=>{try{r.s.stop()}catch(e){}},2500)}}
+/* 窗外的環境音：下雨是雨聲、陰天是風聲、下雪是很輕的雪夜聲；晴天白天偶爾有鳥叫，晚上有蟲鳴 */
+function musNoise(c){if(c._ambBuf)return c._ambBuf;const len=c.sampleRate*3,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;l=(l+.02*w)/1.02;d[i]=l*3.5}c._ambBuf=b;return b}
+function musAmb(kind){const c=MUS.ctx;if(!c)return;kind=kind||'';if(MUS.ambK===kind)return;
+  if(MUS.amb){const a=MUS.amb;MUS.amb=null;const now=c.currentTime;a.g.gain.cancelScheduledValues(now);a.g.gain.setValueAtTime(a.g.gain.value,now);a.g.gain.linearRampToValueAtTime(0,now+2);setTimeout(()=>a.nodes.forEach(n=>{try{n.stop()}catch(e){}}),2600)}
+  MUS.ambK=kind;if(!kind)return;
+  const g=c.createGain();g.gain.value=0;g.connect(MUS.master);const nodes=[];let lvl=.05;
+  const noise=()=>{const s=c.createBufferSource();s.buffer=musNoise(c);s.loop=true;s.loopStart=Math.random();nodes.push(s);return s};
+  const lfo=(hz,amt,target)=>{const o=c.createOscillator(),k=c.createGain();o.frequency.value=hz;k.gain.value=amt;o.connect(k);k.connect(target);nodes.push(o)};
+  if(kind==='rain'){const s1=noise(),f1=c.createBiquadFilter();f1.type='bandpass';f1.frequency.value=1400;f1.Q.value=.6;s1.connect(f1);f1.connect(g);
+    const s2=noise(),f2=c.createBiquadFilter(),g2=c.createGain();f2.type='lowpass';f2.frequency.value=320;g2.gain.value=.5;s2.connect(f2);f2.connect(g2);g2.connect(g);lvl=.06}
+  else if(kind==='wind'){const s1=noise(),f1=c.createBiquadFilter(),am=c.createGain();f1.type='bandpass';f1.Q.value=1.1;f1.frequency.value=520;am.gain.value=.65;
+    lfo(.08,260,f1.frequency);lfo(.13,.35,am.gain);s1.connect(f1);f1.connect(am);am.connect(g);lvl=.055}
+  else if(kind==='snow'){const s1=noise(),f1=c.createBiquadFilter(),am=c.createGain();f1.type='lowpass';f1.frequency.value=420;f1.Q.value=.4;am.gain.value=.7;
+    lfo(.05,.3,am.gain);s1.connect(f1);f1.connect(am);am.connect(g);lvl=.028}
+  nodes.forEach(n=>n.start());g.gain.linearRampToValueAtTime(lvl,c.currentTime+3);MUS.amb={g,nodes}}
+function musRain(on){musAmb(on?'rain':'')}
+function musBlip(t,f0,f1,dur,lvl,wet=.35){const c=MUS.ctx,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(lvl,t+dur*.25);g.gain.linearRampToValueAtTime(0,t+dur);o.connect(g);musOut(g,wet);o.start(t);o.stop(t+dur+.05)}
+function musChirp(t){const n=2+Math.floor(Math.random()*3),b=2400+Math.random()*900;for(let i=0;i<n;i++)musBlip(t+i*.11,b,b*1.55,.07,.035)}
+function musCricket(t){const f=4300+Math.random()*300;for(let i=0;i<3;i++)musBlip(t+i*.07,f,f*.98,.045,.014,.15)}
+function musDrip(t){const f=1300+Math.random()*700;musBlip(t,f,f*.45,.09,.03,.5)}
 function musTick(){const c=MUS.ctx;if(!c||!MUS.on)return;const M=musMood(),bpm=M.night?58:M.dusk?66:72,beat=60/bpm,eighth=beat/2;
-  musRain(M.rain);
+  musAmb(M.wx==='rain'?'rain':M.wx==='snow'?'snow':M.wx==='cloudy'?'wind':'');
   while(MUS.next<c.currentTime+.4){const t=MUS.next,st=MUS.step%16,bar=MUS.bar,ch=MCH[Math.floor(bar/2)%4];
     if(st===0&&bar%2===0)musPad(ch.slice(1),t,beat*8,M.night?.035:.045);
     if(st===0||st===8)musBass(ch[0],t,M.night?.09:.12);
     const dens=M.night?.22:M.rain?.3:.42,on=st%2===0?dens+.15:dens*.45;
     if(Math.random()<on){const oct=M.night?60:72,pool=Math.random()<.6?ch.slice(1).map(n=>n%12):MSCALE;const pc=pool[Math.floor(Math.random()*pool.length)];
       let n=oct+pc;if(MUS.lastN&&Math.abs(n-MUS.lastN)>7)n+=n>MUS.lastN?-12:12;if(n<oct-5)n+=12;MUS.lastN=n;musBell(n,t+(Math.random()-.5)*.012,M.night?.07:.09)}
+    if(st===0){const r=Math.random();
+      if(M.wx==='rain'){if(r<.5)musDrip(t+Math.random()*beat*3)}
+      else if(M.wx==='snow'){if(r<.25)musBell(91+[0,2,4,7][Math.floor(Math.random()*4)],t+Math.random()*beat*2,.025)}
+      else if(M.night){if(r<.55)musCricket(t+Math.random()*beat*2)}
+      else if(M.wx==='sun'||M.wx==='off'){if(r<.3)musChirp(t+Math.random()*beat*3)}}
     MUS.next+=eighth;MUS.step++;if(MUS.step%16===0)MUS.bar++}}
 function musSetVol(v){MUS.vol=v;if(MUS.master&&MUS.on)MUS.master.gain.setTargetAtTime(v*1.6,MUS.ctx.currentTime,.3)}
 /* iPhone：網頁音效（Web Audio）會被側邊的靜音鍵靜音，而且一定要在「點擊」當下才能開始出聲。
@@ -4481,8 +4560,8 @@ function doHabit(x){const R=roomCfg(),a=x.act,t=x.text||'照自己的習慣行�
     case'tree':case'scratch':case'box':case'drink':case'beg':case'rainwatch':doAct(a);break;
     default:houseAct(a)}
   return true}
-function planPrompt(){const P=planNow();if(!P)return'';const m=planMode();
-  return`\n你今天的作息：${P.wake} 點起床、${P.sleep} 點睡覺${m==='sleep'?'，現在是你的睡覺時間，會想睡':m==='nap'?'，現在是你的午睡時間':m==='active'?'，現在是你最有精神的時段':''}。`}
+function planPrompt(){const P=planNow(),rt=typeof reactText==='function'?`\n你的反應習慣（說話時也要一致，例如不會哈氣的話就不要說哈氣）：${reactText()}。`:'';if(!P)return rt;const m=planMode();
+  return rt+`\n你今天的作息：${P.wake} 點起床、${P.sleep} 點睡覺${m==='sleep'?'，現在是你的睡覺時間，會想睡':m==='nap'?'，現在是你的午睡時間':m==='active'?'，現在是你最有精神的時段':''}。`}
 function drawPlan(msg){const box=$('planBox');if(!box)return;const P=planNow(),n=S.name||'〚貓代詞〛';box.innerHTML='';
   const b=document.createElement('b');b.textContent='今天的作息劇本';box.appendChild(b);
   const line=t=>{box.appendChild(document.createElement('br'));box.appendChild(document.createTextNode(t))};
