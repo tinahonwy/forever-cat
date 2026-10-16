@@ -2440,7 +2440,7 @@ function catchUpNeeds(){
   const n=needs(),now=Date.now(),dt=Math.min(3*86400,Math.max(0,(now-(n.t||now))/1000));
   const R=roomCfg(),T=traits(),stepSec=600;
   let eaten=0,drank=0,slept=0,usedLitter=0;
-  let toilet=Math.max(0,Math.min(1,+n.toilet||0));
+  bowelInit(n);const BR=bowelRates();let pee=n.pee,poo=n.poo;
   for(let elapsed=0;elapsed<dt;){
     const step=Math.min(stepSec,dt-elapsed);
     const hour=new Date(now-(dt-elapsed)*1000).getHours();
@@ -2464,15 +2464,14 @@ function catchUpNeeds(){
       }
     }
     if(R.fountain.on&&n.water<.6){n.water=Math.min(1,n.water+.42);drank++}
-    toilet=Math.min(1,toilet+step/(2.5*3600));
-    if(R.litter.on&&toilet>=.85){
-      const d=litterDirt();d.push(usedLitter%3===2?'poop':'pee');
+    pee=Math.min(1,pee+step*BR.pee);poo=Math.min(1,poo+step*BR.poo);
+    if(R.litter.on&&(pee>=1||poo>=1)){
+      const d=litterDirt();if(poo>=1){d.push('poop');poo=-Math.random()*.15;usedLitter++}if(pee>=1){d.push('pee');pee=-Math.random()*.15;usedLitter++}
       if(d.length>6)d.splice(0,d.length-6);
-      usedLitter++;toilet=.08;
     }
     elapsed+=step;
   }
-  n.toilet=toilet;
+  n.pee=pee;n.poo=poo;n.toilet=Math.max(pee,poo);
   n.mood=(+n.mood||.7)+(.6-(+n.mood||.7))*Math.min(1,dt/7200);
   n.t=now;H.mood=n.mood;
   // 原本的離線彩蛋仍保留，但避免重複補算貓砂（已在上方計算）。
@@ -3491,14 +3490,17 @@ $('giftEl').onclick=e=>{e.stopPropagation();const G=S.giftOn,n=S.name||'〚貓�
 
 /* 貓砂盆：上廁所、撥沙、便後暴衝、鏟屎 */
 function litterDirt(){const R=roomCfg();if(!Array.isArray(R.litter.dirt))R.litter.dirt=[];return R.litter.dirt}
-function toiletTick(dt){const n=needs();n.toilet=Math.min(1,(n.toilet||0)+dt/(2.5*3600));if(typeof weekTick==='function')weekTick(dt)}
+/* 上廁所：尿尿約每 7 小時、大便約每 18 小時（愛喝水的尿多一點、食量大的便多一點），每次間隔有一點隨機 */
+function bowelRates(){const T=traits(),c=v=>Math.max(.7,Math.min(1.4,1+(+v||0)*.05));return{pee:c(T.drink)/(7*3600),poo:c(T.appetite)/(18*3600)}}
+function bowelInit(n){if(typeof n.pee!=='number'||typeof n.poo!=='number'){const t=+n.toilet||0;n.pee=Math.min(.6,t*.5);n.poo=Math.min(.4,t*.3)}}
+function toiletTick(dt){const n=needs();bowelInit(n);const BR=bowelRates();n.pee=Math.min(1,n.pee+dt*BR.pee);n.poo=Math.min(1,n.poo+dt*BR.poo);n.toilet=Math.max(n.pee,n.poo);if(typeof weekTick==='function')weekTick(dt)}
 function funCatchUp(dt,opt={}){const R=roomCfg();
   if(dt>3*3600&&!S.cupDown&&Math.random()<.3*Math.max(.2,1+traits().naughty*.15)){S.cupDown=true;S.parkourAway=1}
   if(!opt.skipLitter&&R.litter&&R.litter.on){const uses=Math.min(3,Math.floor(dt/(4*3600)));const d=litterDirt();for(let i=0;i<uses;i++)d.push(Math.random()<.6?'pee':'poop');if(d.length>6)d.splice(0,d.length-6);
     if(uses)needs().toilet=Math.random()*.4}
   else if(!opt.skipLitter)needs().toilet=0;
   if(dt>2*3600&&!S.giftOn&&Math.random()<.3*Math.max(.05,1+traits().gift*.2)){const g=pick(GIFTS);S.giftOn={e:g[0],t:g[1],x:.28+Math.random()*.18};S.giftAway=1}}
-function litterOpt(opts){const R=roomCfg();if(R.litter&&R.litter.on&&(needs().toilet||0)>.8)opts.push(['litter',2])}
+function litterOpt(opts){const R=roomCfg();if(R.litter&&R.litter.on&&(needs().toilet||0)>.9)opts.push(['litter',2])}
 function drawLitter(){const g=$('litterDirt');if(!g)return;const d=litterDirt(),key=d.join(',');if(g.dataset.k===key)return;g.dataset.k=key;
   g.innerHTML=d.slice(0,6).map((k,i)=>{const x=22+i*11+(i%2)*3,y=11+(i%3);return k==='poop'?`<ellipse cx="${x}" cy="${y}" rx="4.2" ry="2.6" fill="#7a5a3e"/><ellipse cx="${x+3}" cy="${y-1}" rx="3" ry="2" fill="#8a6a4c"/>`:`<ellipse cx="${x}" cy="${y}" rx="5" ry="2.8" fill="#cdb48a"/>`}).join('')}
 function goLitter(){const R=roomCfg(),n=S.name||'〚貓代詞〛';if(!R.litter.on)return;
@@ -3506,11 +3508,11 @@ function goLitter(){const R=roomCfg(),n=S.name||'〚貓代詞〛';if(!R.litter.o
     if(litterDirt().length>=3&&!H.complained){H.complained=true;say('（聞聞）…喵！',1500);setFace('annoyed',1.5);H.mood-=.05;
       logAct('litterDirty','覺得貓砂盆太髒，不太想用，跑來跟你抱怨（心情下降）',true);setTimeout(()=>comeOver(()=>{H.state='beg';H.timer=4;say('喵～（砂盆好髒）',1600)}),1200);return}
     H.complained=false;
-    jumpTo(.12,()=>{H.y=0;H.inLitter=true;H.state='litter';H.litterK=Math.random()<.6?'pee':'poop';H.timer=5+Math.random()*3;setHView('front');setFace('normal');
+    jumpTo(.12,()=>{H.y=0;H.inLitter=true;H.state='litter';{const nd=needs();bowelInit(nd);H.litterK=nd.poo>=.85&&nd.poo>=nd.pee-.1?'poop':'pee'}H.timer=5+Math.random()*3;setHView('front');setFace('normal');
       say(H.litterK==='poop'?'（嗯…專心）':'（專心）',1500);note(`${n}在上廁所，不要盯著〚貓代詞〛看啦`,5)})})}
 function sandPuff(){const R=roomCfg(),rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,cx=R.litter.x*(rw-w)+w/2;
   for(let i=0;i<6;i++){const c=document.createElement('span');c.className='crumb sand';c.style.left=(cx+(Math.random()-.5)*w*.5)+'px';c.style.top=(rh*.89-w*.2)+'px';c.style.setProperty('--dx',((Math.random()-.5)*50)+'px');room.appendChild(c);setTimeout(()=>c.remove(),800)}}
-function finishLitter(){const n=S.name||'〚貓代詞〛',k=H.litterK||'pee',d=litterDirt();d.push(k);if(d.length>6)d.shift();needs().toilet=0;say('（撥沙撥沙）',1200);sandPuff();
+function finishLitter(){const n=S.name||'〚貓代詞〛',k=H.litterK||'pee',d=litterDirt();d.push(k);if(d.length>6)d.shift();{const nd=needs();bowelInit(nd);nd[k==='poop'?'poo':'pee']=-Math.random()*.15;nd.toilet=Math.max(nd.pee,nd.poo)}say('（撥沙撥沙）',1200);sandPuff();
   H.inLitter=false;H.hop=.55;const T=traits(),zoom=k==='poop'&&Math.random()<.45+T.zoom*.08+P01('energy')*.2;
   logAct(zoom?'litterZoom':'litter',k==='poop'?(zoom?'上完大號撥撥沙，突然暴衝跑了一圈':'去貓砂盆上大號，撥沙蓋好'):'去貓砂盆尿尿，撥沙蓋好',true);save();drawLitter();
   if(zoom)setTimeout(()=>{say('喵喵喵！',900);startWalk(zoneEdge(true),false,()=>startWalk(viewX(),false,null,true),true)},500);else sitDown('front')}
@@ -3520,7 +3522,7 @@ function scoop(){const n=S.name||'〚貓代詞〛';if(roomEdit||wandOn)return;la
   const c=d.length;d.length=0;save();drawLitter();
   const R=roomCfg(),rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth;popText(R.litter.x*(rw-w)+w/2,rh*.89-w*.45,'鏟鏟～');
   note(`你清了貓砂（${c} 團）`,3);logAct('scoop',c>=3?'等了好久，終於等到你清貓砂':'看你清貓砂',true);
-  if(Math.random()<.3&&H.state!=='sleep'&&!H.hug&&!wandOn)setTimeout(()=>{needs().toilet=Math.max(needs().toilet||0,.85);note(`${n}馬上跑去試用乾淨的貓砂`,3);goLitter()},1500)}
+  if(Math.random()<.3&&H.state!=='sleep'&&!H.hug&&!wandOn)setTimeout(()=>{{const nd=needs();bowelInit(nd);nd.pee=Math.max(nd.pee,.9);nd.toilet=Math.max(nd.pee,nd.poo)}note(`${n}馬上跑去試用乾淨的貓砂`,3);goLitter()},1500)}
 IT.litter.forEach(el=>el.addEventListener('click',()=>{if(roomEdit)return;scoop()}));
 
 /* 狀態推進與畫面 */
