@@ -905,8 +905,6 @@ body:has(.guide:not([hidden])) #viewHome .toolbar{display:none}
     <h2 id="memTitle">〚貓代詞〛記得的事</h2>
     <p class="gsub">你平常跟〚貓代詞〛說的話會在背景慢慢整理成記憶，〚貓代詞〛說話時會參考這些。記錯的可以按 ✕ 刪掉。</p>
     <div class="gsum"><b>互動習慣</b><br><span id="memHabit"></span></div>
-    <div class="gsum" id="planBox"></div>
-    <div class="btns"><button class="btn" id="planRedo" type="button">請 AI 重新編排今天的劇本</button></div>
     <div class="askset"><label><input type="checkbox" id="askOn"> 每天問我關於〚貓代詞〛的小問題</label><span>每天最多</span><select id="askPer" aria-label="每天最多幾題"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select><span>題</span></div>
     <div class="memlist" id="memList"></div>
     <form class="memadd" id="memAdd"><select id="memCat" aria-label="分類"></select><input id="memText" maxlength="120" placeholder="自己補充一件關於〚貓代詞〛的事" aria-label="補充的記憶"><button class="btn primary" type="submit">記住</button></form>
@@ -1226,7 +1224,7 @@ function featureParts(v='front',opt={}){
     if(t==='fold')return`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round" transform="${pre}"/>`;
     return`<path d="${e.d}" fill="#f6b3b8" stroke="#f6b3b8" stroke-width="3" stroke-linejoin="round" transform="${pre} translate(${e.a[0]},${e.a[1]}) scale(.45) translate(${-e.a[0]},${-e.a[1]})"/>`};
   const fc=opt.face||(opt.closed?'closed':'normal'),ln=d=>`<path d="${d}" stroke="${ink}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
-  const eye=(cx,cy,col)=>fc==='closed'?ln(`M${cx-r},${cy-1} q${r},${r} ${2*r},0`):fc==='happy'?ln(`M${cx-r},${cy+2} q${r},${-r*1.3} ${2*r},0`):fc==='annoyed'?ln(`M${cx-r},${cy-(cx<150?2:-2)} L${cx+r},${cy+(cx<150?2:-2)}`):`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>`;
+  const eye=(cx,cy,col)=>(fc==='closed'||fc==='yawn')?ln(`M${cx-r},${cy-1} q${r},${r} ${2*r},0`):fc==='happy'?ln(`M${cx-r},${cy+2} q${r},${-r*1.3} ${2*r},0`):fc==='annoyed'?ln(`M${cx-r},${cy-(cx<150?2:-2)} L${cx+r},${cy+(cx<150?2:-2)}`):`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"/>`;
   if(v==='front'){
     F.head=inner(S.earL,'')+inner(S.earR,MIRROR);
     if(S.fur==='none')F.head+=`<path d="M132,72 q18,-7 36,0 M138,82 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
@@ -1236,7 +1234,7 @@ function featureParts(v='front',opt={}){
     F.face+=`<g class="eyes">${eye(120,130,S.eyeL)}${eye(180,130,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
     F.face+=`<ellipse cx="150" cy="142" rx="5.5" ry="4" fill="${S.nose}"/>`;
     F.face+=`<path class="tongueF" d="M145,151 q5,10 10,0Z" fill="#f08a96" opacity="0"/>`;
-    F.face+=`<path d="M138,148 q6,8 12,0 q6,8 12,0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    F.face+=fc==='yawn'?`<ellipse cx="150" cy="158" rx="9" ry="11" fill="#7a3b46"/><ellipse cx="150" cy="164" rx="6" ry="4" fill="#f08a96"/>`:`<path d="M138,148 q6,8 12,0 q6,8 12,0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
     F.face+=wpath(whisk(150-74*g.hf,140,-1,S.whL,L)+whisk(150+74*g.hf,140,1,wR,L));
   }
   if(v==='side'){
@@ -1740,7 +1738,7 @@ function step(dt){
   H.hugK+=((H.hug?1:0)-H.hugK)*Math.min(1,dt*6);
   if(H.wriggle>0){H.wriggle-=dt;if(H.wriggle<=0){H.hop=.55;walkAway();note(`${S.name||'〚貓代詞〛'}逃走了`)}return}
   if(H.hug&&!(touch&&touch.mode==='hug'))dropHug();
-  if(H.hug){const rw=room.clientWidth,w=hc.offsetWidth;
+  if(H.hug){if(H.state==='pose'&&typeof poseStep==='function')poseStep(dt);const rw=room.clientWidth,w=hc.offsetWidth;
     if(H.dragX!=null){const tx=Math.min(1,Math.max(0,(H.dragX-w/2)/Math.max(1,rw-w))),nx=H.x+(tx-H.x)*Math.min(1,dt*10);
       H.dragV=H.dragV*.8+.2*((nx-H.x)*(rw-w)/Math.max(dt,1e-3));H.x=nx;
       const tc=Math.max(0,Math.min(1.5,(H.dragY0-H.dragY)/w+.15));H.carry=(H.carry||0)+(tc-(H.carry||0))*Math.min(1,dt*10)}
@@ -1758,6 +1756,7 @@ function step(dt){
     if(a>=J.dur+J.post+J.pause){H.y=J.to;H.jump=null;H.jumpPhase=null;H.state='sit';J.cb&&J.cb()}return}
   if(wandOn&&!H.jump&&!H.inBox&&H.y<.05&&playTick(dt))return;
   if(H.state==='sit'&&H.waitFood){if(foodAmt(H.waitFood)>.01){startEat(H.waitFood);return}if(H.timer<=0)H.waitFood=null;else return}
+  if(H.state==='pose'&&typeof poseStep==='function'){poseStep(dt);return}
   if(typeof funStep==='function'&&funStep(dt))return;
   if(H.state==='walk'){H.facing=Math.sign(H.target-H.x)||H.facing;
     const d=H.target-H.x,sp=(.07+.06*P01('energy'))*(H.runFast?2.4:1)*(1+Math.min(1.5,Math.abs(d)*ZN*.5))*dt/ZN;
@@ -1771,13 +1770,13 @@ function step(dt){
     const r=Math.random(),sleepy=Math.max(0,Math.min(.85,.15+.25*(1-P01('energy'))+(1-needs().energy)*.4+(typeof todNow==='function'&&todNow()==='night'?.3:0)+(typeof wxNow==='function'&&wxNow()==='rain'?.15:0)+(typeof planSleepy==='function'?planSleepy():0)));
     if(r<1-sleepy-.15){startWalk(typeof wanderTarget==='function'?wanderTarget():.04+Math.random()*.92)}
     else if(r<1-.15&&(!roomCfg().bed.on||Math.abs(H.x-BED)>.02))goSleep();
-    else{H.timer=2+Math.random()*3;if(Math.random()<.5)setHView(H.view==='back'?'front':'back')}
-  }else if(H.state==='sleep'&&H.timer<=0)wake();
+    else{if(typeof idlePose==='function'&&idlePose())return;H.timer=2+Math.random()*3;if(Math.random()<.5)setHView(H.view==='back'?'front':'back')}
+  }else if(H.state==='sleep'&&H.timer<=0){wake();if(typeof startPose==='function'&&Math.random()<.7)startPose(Math.random()<.65?'stretch':'yawn')}
   else if(H.state==='scratch'&&H.timer<=0)sitDown('front');
   else if(H.state==='eat'){const it=H.eatSrc||'bowl',N=needs(),a=foodAmt(it),take=Math.min(a,(it==='plate'?.12:.09)*dt);setFood(it,a-take);N.full=Math.min(1,N.full+take*(it==='plate'?.7:.55));
     if(Math.random()<dt*.35)say(it==='plate'?'吧唧吧唧':'咔滋咔滋',900);
     if(!RM&&Math.random()<dt*(it==='plate'?1.2:2.6))crumb(it);
-    if(foodAmt(it)<=.001){setFood(it,0);save();sitDown('front');setFace('happy',1.5);H.lickT=1.6;say('（舔舔嘴巴）呼嚕～',1500);logAct('eatAll',`把${it==='plate'?canName():'飼料'}吃光光了`,true,it==='plate'?{flavor:plateFlavor()}:null)}
+    if(foodAmt(it)<=.001){setFood(it,0);save();sitDown('front');setFace('happy',1.5);H.lickT=1.6;setTimeout(()=>{if(H.state==='sit'&&Math.random()<.5&&typeof startPose==='function')startPose('groom')},1800);say('（舔舔嘴巴）呼嚕～',1500);logAct('eatAll',`把${it==='plate'?canName():'飼料'}吃光光了`,true,it==='plate'?{flavor:plateFlavor()}:null)}
     else if(H.timer<=0||N.full>.97){save();sitDown('front');H.lickT=1.2;logAct('leftover',it==='plate'?`${canName()}吃了一些就走開了，盤子裡還剩一點`:'吃了一些就走開了，碗裡還剩一點',true,it==='plate'?{flavor:plateFlavor()}:null)}}
   else if(H.state==='drink'){const N=needs();N.water=Math.min(1,N.water+dt*.12);if(H.timer<=0||N.water>=.99){save();sitDown('front')}}
   else if(H.state==='sniff'&&H.timer<=0)walkAway();
@@ -1793,8 +1792,8 @@ function crumb(it){const b=relRect(IT[it][0]);if(!b)return;const c=document.crea
   room.appendChild(c);setTimeout(()=>c.remove(),800)}
 function apply(dt){
   const rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,px=H.x*(rw-w),t=H.t,v=H.view;
-  const st=H.state,walking=['walk','chase','stalk','dash','search'].includes(st)||(st==='hide'&&Math.abs(H.x-(H.hideX??H.x))>.005),hiding=st==='hide'&&!walking,sleeping=st==='sleep',dir=walking?(Math.sign(H.target-H.x)||1):(H.facing||1),ph=t*(st==='stalk'?4.5:st==='dash'?15:st==='chase'?12:9),m=RM?0:1;
-  let lt=0;
+  const st=H.state,walking=['walk','chase','stalk','dash','search'].includes(st)||(st==='hide'&&Math.abs(H.x-(H.hideX??H.x))>.005)||(st==='pose'&&H.pose&&H.pose.k==='weave'),hiding=st==='hide'&&!walking,sleeping=st==='sleep',dir=walking?(Math.sign(H.target-H.x)||1):(H.facing||1),ph=t*(st==='stalk'?4.5:st==='dash'?15:st==='chase'?12:9),m=RM?0:1;
+  let lt=0;const flopping=(st==='roll'&&(H.rollPh==='flop'||H.rollPh==='side'))||(st==='pose'&&H.pose&&H.pose.k==='belly');
   if(!sleeping&&!walking&&performance.now()-H.pAt<2500)lt=Math.max(-1,Math.min(1,(H.px-(px+w/2))/(rw*.3)));
   H.look+=(lt-H.look)*Math.min(1,dt*5);
   const amp=v==='back'?1.3:1,happy=H.face==='happy',cross=H.face==='annoyed';
@@ -1802,7 +1801,7 @@ function apply(dt){
   const tp=TAIL_PIVOT[v];setT('tail',`rotate(${ta*m} ${tp[0]} ${tp[1]})`);
   if(v==='side'){
     const scr=H.state==='scratch',eat=['eat','sniff','drink'].includes(H.state),a=walking?22*Math.sin(ph)*m:0,k=Math.sin(t*14)*m;
-    if(st==='roll'&&(H.rollPh==='flop'||H.rollPh==='side')){const q=m||.3;setT('legNF',`rotate(${-30+Math.sin(t*10)*28*q} 193 232)`);setT('legFF',`rotate(${-20+Math.sin(t*10+1.4)*28*q} 213 232)`);setT('legNB',`rotate(${Math.sin(t*16)*38*q} 97 232)`);setT('legFB',`rotate(${Math.sin(t*16+2)*38*q} 117 232)`)}
+    if(flopping){const q=m||.3;setT('legNF',`rotate(${-30+Math.sin(t*10)*28*q} 193 232)`);setT('legFF',`rotate(${-20+Math.sin(t*10+1.4)*28*q} 213 232)`);setT('legNB',`rotate(${Math.sin(t*16)*38*q} 97 232)`);setT('legFB',`rotate(${Math.sin(t*16+2)*38*q} 117 232)`)}
     else if(scr){setT('legNF',`rotate(${-105+k*18} 193 232)`);setT('legFF',`rotate(${-95-k*18} 213 232)`);setT('legNB','');setT('legFB','')}
     else{setT('legNF',`rotate(${a} 193 232)`);setT('legFB',`rotate(${a} 117 232)`);
     setT('legNB',`rotate(${-a} 97 232)`);setT('legFF',`rotate(${-a} 213 232)`)}
@@ -1814,14 +1813,14 @@ function apply(dt){
     if(v==='front'){
       setT('face',`translate(${H.look*10} ${Math.abs(H.look)*1.5})`);
       const s1=Math.max(0,Math.sin(t*11))*m,s2=Math.max(0,Math.sin(t*11+Math.PI))*m;
-      if(st==='roll'&&(H.rollPh==='flop'||H.rollPh==='side')){const a=Math.sin(t*9)*(m||.3),b=Math.sin(t*9+1.7)*(m||.3);setT('frontL',`translate(0 -14) rotate(${20+a*30} 138 228)`);setT('frontR',`translate(0 -14) rotate(${-20-b*30} 162 228)`)}
+      if(flopping){const a=Math.sin(t*9)*(m||.3),b=Math.sin(t*9+1.7)*(m||.3);setT('frontL',`translate(0 -14) rotate(${20+a*30} 138 228)`);setT('frontR',`translate(0 -14) rotate(${-20-b*30} 162 228)`)}
       else if(st==='leap'&&H.leapT>0){const p=1-H.leapT/.7,a=m?(p<.15?p/.15:p>.85?(1-p)/.15:1):1;
         setT('frontL',`translate(${-20*a} ${-176*a}) rotate(${172*a} 138 224)`);setT('frontR',`translate(${20*a} ${-176*a}) rotate(${-172*a} 162 224)`)}
       else if(H.trap>0||st==='grab'||(st==='jump'&&H.jumpPhase==='air'&&(H.jump&&H.jump.to>H.jump.from))){setT('frontL','translate(0 -16) rotate(28 138 228)');setT('frontR','translate(0 -16) rotate(-28 162 228)')}
       else if(st==='bat'||st==='beg2'){setT('frontR',`translate(0 ${-20*s1}) rotate(${-45*s1} 162 228)`);setT('frontL',`translate(0 ${-20*s2}) rotate(${45*s2} 138 228)`)}
       else if(H.swat>0){setT('frontL','');setT('frontR','translate(0 -18) rotate(-30 162 228)')}
       else{setT('frontL','');setT('frontR','')}
-      if(st==='roll'&&(H.rollPh==='flop'||H.rollPh==='side')){setT('backL',`rotate(${Math.sin(t*15)*32*(m||.3)} 111 238)`);setT('backR',`rotate(${Math.sin(t*15+2)*32*(m||.3)} 189 238)`)}else{setT('backL','');setT('backR','')}
+      if(flopping){setT('backL',`rotate(${Math.sin(t*15)*32*(m||.3)} 111 238)`);setT('backR',`rotate(${Math.sin(t*15+2)*32*(m||.3)} 189 238)`)}else{setT('backL','');setT('backR','')}
     }
     const br=m*(sleeping?.014*Math.sin(t*1.6):H.hug?.02*Math.sin(t*1.8):.016*Math.sin(t*2.4));
     setT('body',`translate(150 262) scale(1 ${1+br}) translate(-150 -262)`);
@@ -1835,7 +1834,7 @@ function apply(dt){
   const wig=st==='ready'?Math.sin(t*22)*w*.012*m:0;if(st==='ready'){sy*=.88;sx*=1.04}
   if(st==='stalk'){sy*=.86;sx*=1.05}
   if(st==='bat'||st==='beg2'){sy*=1.07;y+=w*.04}
-  {const ph=st==='roll'?H.rollPh:null,tg=ph==='flop'?168:ph==='side'?168+Math.sin(t*3.2)*30:0;H.rollRot=(H.rollRot||0)+(tg-(H.rollRot||0))*Math.min(1,dt*(m?5:30));
+  {const ph=st==='roll'?H.rollPh:(st==='pose'&&H.pose&&H.pose.k==='belly'?'flop':null),tg=ph==='flop'?168:ph==='side'?168+Math.sin(t*3.2)*30:0;H.rollRot=(H.rollRot||0)+(tg-(H.rollRot||0))*Math.min(1,dt*(m?5:30));
    const rr=H.rollRot;if(Math.abs(rr)>.5){rot+=rr;y+=w*.38*(1-Math.cos(rr*Math.PI/180))}if(ph==='rub')rot+=Math.sin(t*5)*8*(m||.3)}
   if(st==='birdwatch'){sy*=.95;if(m&&Math.random()<dt*2)H.wag=.4}if(st==='litter'){sy*=.9;sx*=1.04;y+=w*.03}if(st==='treat')sy*=1+Math.sin(t*14)*.015*m;
   if(st==='leap'&&H.leapT>0){const p=1-H.leapT/.7;y+=Math.sin(p*Math.PI)*(H.leapH||.6)*w;sy*=1.08}
@@ -1843,9 +1842,10 @@ function apply(dt){
   if(hiding){sy*=.94;if(H.hideK==='box')y+=w*.07}
   hc.style.zIndex=hiding?'0':String(CATZ);
   if(H.wriggle>0)rot+=Math.sin(t*28)*9*(m||.4);
+  if(typeof poseApply==='function'){const o=poseApply(v,t,m,{sx,sy,rot,y},w,dt);sx=o.sx;sy=o.sy;rot=o.rot;y=o.y}
   const hk=H.hugK,sc=1+.25*hk;sx*=sc;sy*=sc;if(H.hug){y+=(H.carry||0)*w;rot+=Math.max(-14,Math.min(14,(H.dragV||0)*.012))*(m||.4);if(H.warned)rot+=Math.sin(t*22)*4*(m||.4)}
   {const tg=HP.side&&HP.side.face&&HP.side.face.querySelector('.tongue');if(tg){if((st==='drink'||(st==='eat'&&H.eatSrc==='plate'))&&v==='side'){const q=m?Math.max(0,Math.sin(t*(st==='drink'?16:12))):.6;tg.setAttribute('opacity',q>.15?'1':'0');tg.setAttribute('transform',`translate(274 156) scale(1 ${.5+q*.9}) translate(-274 -156)`)}else tg.setAttribute('opacity','0')}}
-  {const tf=HP.front&&HP.front.face&&HP.front.face.querySelector('.tongueF');if(tf){if((H.lickT||0)>0&&v==='front'){tf.setAttribute('opacity','1');tf.setAttribute('transform',`translate(${Math.sin(t*9)*5*(m||.3)} 0)`)}else tf.setAttribute('opacity','0')}}
+  {const tf=HP.front&&HP.front.face&&HP.front.face.querySelector('.tongueF');if(tf){const blep=st==='pose'&&H.pose&&H.pose.k==='blep';if(((H.lickT||0)>0||blep)&&v==='front'){tf.setAttribute('opacity','1');tf.setAttribute('transform',`translate(${blep?0:Math.sin(t*9)*5*(m||.3)} 0)`)}else tf.setAttribute('opacity','0')}}
   const flip=v==='side'&&dir<0;hCat.dataset.flip=flip?'1':'';
   if(flip!==hFlipPat){hFlipPat=flip;hCat.querySelectorAll('#hv-side use').forEach(u=>u.setAttribute('href',flip?'#hpat-sideL':'#hpat-side'))}hCat.style.transformOrigin='35% 90%';
   hCat.style.transform=(flip?'scaleX(-1) ':'')+(v==='side'&&H.state==='scratch'?'rotate(-14deg)':'');
@@ -1857,7 +1857,7 @@ function apply(dt){
   if(typeof followCam==='function')followCam(px,w,dt);
   layoutRoom(rw,rh,w);drawNeeds();
   const n=S.name||'〚貓代詞〛';
-  const txt=H.statusT>0?H.statusTxt:st==='pushprep'?`${n}盯著你，爪子慢慢伸向杯子…（點〚貓代詞〛可以阻止）`:st==='roll'?`${n}抱著貓草在地上打滾`:st==='litter'?`${n}在上廁所，不要盯著看啦`:st==='treat'?`${n}在吃零食`:st==='beg2'?`${n}站起來討零食`:(st==='beg'&&tool==='treat')?`${n}盯著你手上的零食`:H.carryGift?`${n}叼著東西走過來`:H.hug?(H.warned?`${n}開始扭來扭去，想下來了`:Math.abs(H.dragV||0)>w*.3?`${n}被你抱著走來走去`:`${n}讓你抱著`):st==='chase'?`${n}在追逗貓棒`:st==='stalk'?`${n}壓低身體慢慢靠近`:st==='ready'?(wandOn&&FT.hidden?`${n}盯著逗貓棒消失的地方`:`${n}盯著逗貓棒，屁股扭扭`):st==='bat'?`${n}站起來用爪子撥`:st==='leap'?`${n}跳起來抓！`:st==='grab'?`${n}抱著逗貓棒踢踢`:st==='dash'?`${n}衝出來了！`:st==='search'?`${n}在找逗貓棒`:st==='hide'?(hiding?`${n}躲在${ROOM_ITEMS[H.hideK]?.[0]||'家具'}後面偷看`:`${n}偷偷躲起來`):walking?(H.goSleep?`${n}想去睡覺了`:H.runFast?`${n}衝過去了`:`${n}在走來走去`):sleeping?`${n}睡著了`:st==='drink'?`${n}在喝水`:st==='sniff'?`${n}在聞聞看`:st==='beg'?`${n}喵喵叫，想吃飯`:H.waitFood?`${n}等著吃${H.waitFood==='plate'?'罐頭':'飯'}`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
+  const txt=H.statusT>0?H.statusTxt:st==='pose'&&H.pose&&typeof POSES!=='undefined'&&POSES[H.pose.k]?`${n}${POSES[H.pose.k].st}`:st==='pushprep'?`${n}盯著你，爪子慢慢伸向杯子…（點〚貓代詞〛可以阻止）`:st==='roll'?`${n}抱著貓草在地上打滾`:st==='litter'?`${n}在上廁所，不要盯著看啦`:st==='treat'?`${n}在吃零食`:st==='beg2'?`${n}站起來討零食`:(st==='beg'&&tool==='treat')?`${n}盯著你手上的零食`:H.carryGift?`${n}叼著東西走過來`:H.hug?(H.warned?`${n}開始扭來扭去，想下來了`:Math.abs(H.dragV||0)>w*.3?`${n}被你抱著走來走去`:`${n}讓你抱著`):st==='chase'?`${n}在追逗貓棒`:st==='stalk'?`${n}壓低身體慢慢靠近`:st==='ready'?(wandOn&&FT.hidden?`${n}盯著逗貓棒消失的地方`:`${n}盯著逗貓棒，屁股扭扭`):st==='bat'?`${n}站起來用爪子撥`:st==='leap'?`${n}跳起來抓！`:st==='grab'?`${n}抱著逗貓棒踢踢`:st==='dash'?`${n}衝出來了！`:st==='search'?`${n}在找逗貓棒`:st==='hide'?(hiding?`${n}躲在${ROOM_ITEMS[H.hideK]?.[0]||'家具'}後面偷看`:`${n}偷偷躲起來`):walking?(H.goSleep?`${n}想去睡覺了`:H.runFast?`${n}衝過去了`:`${n}在走來走去`):sleeping?`${n}睡著了`:st==='drink'?`${n}在喝水`:st==='sniff'?`${n}在聞聞看`:st==='beg'?`${n}喵喵叫，想吃飯`:H.waitFood?`${n}等著吃${H.waitFood==='plate'?'罐頭':'飯'}`:H.state==='scratch'?`${n}在磨爪`:H.state==='eat'?`${n}在吃飯`:H.inBox?`${n}躲在紙箱裡`:H.y>.5?`${n}在貓跳台上`:v==='back'?`${n}屁股對著你`:`${n}坐著發呆`;
   if($('homeStatus').textContent!==txt)$('homeStatus').textContent=txt;
   if(!bubble.hidden)bubble.classList.toggle('flip',px+w*.58+bubble.offsetWidth>rw-6);
 }
@@ -1985,20 +1985,20 @@ function respond(text){
   if(it==='danger'){$('care').hidden=false;comeOver(()=>{setFace('closed',3);H.lean=1});sayBoth('咪…',null);
     const d=`${n}安靜地走過來，坐在你身邊`;note(d,4);return{m:'咪…',th:null,d}}
   const R={
-    home:()=>warm?{m:'喵～喵～',th:['（終於回來了）','（今天好晚喔）','（等你好久了）'],a:'come',f:'happy',heart:1,d:`${n}跑過來迎接你`}
+    home:()=>warm?{m:'喵～喵～',th:['（終於回來了）','（今天好晚喔）','（等你好久了）'],a:'rub',f:'happy',heart:1,d:`${n}跑過來迎接你`}
       :tsun?{m:'喵。',th:['（哼，現在才回來）','（我才沒有在等你）'],a:'back',d:`${n}看了你一眼，又轉過去`}
       :{m:'喵',th:['（回來啦）'],a:'wag',d:`${n}甩甩尾巴`},
     morning:()=>asleep?{m:'嗯喵…',th:['（再睡五分鐘）'],a:'wake',d:`${n}伸了個懶腰`}
-      :lazy?{m:'…喵',th:['（好睏）'],a:'blink',d:`${n}瞇著眼睛`}
+      :lazy?{m:'…喵',th:['（好睏）'],a:'yawn',d:`${n}瞇著眼睛`}
       :{m:'喵～',th:['（早安，早餐呢？）','（早！）'],a:warm?'come':'wag',f:'happy',d:warm?`${n}跑過來蹭你`:`${n}甩甩尾巴`},
     night:()=>asleep?{m:'呼嚕…',th:['（zzz）'],a:'none',d:`${n}在睡夢中呼嚕`}
       :{m:'喵～',th:warm?['（晚安，明天見）','（一起睡嗎）']:['（終於要睡了嗎）'],a:'bed',d:`${n}走去貓窩睡覺`},
-    food:()=>({m:pick(['喵喵喵！','喵！喵！']),th:['（罐罐！罐罐！）','（快點快點）','（是鮪魚嗎）'],a:roomCfg().bowl.on?'eat':'come',f:'happy',hop:1,d:`${n}衝過來了`}),
-    miss:()=>warm?{m:'呼嚕呼嚕…',th:['（我在這裡）','（蹭蹭）','（我也是）'],a:'come',f:'happy',lean:1,heart:1,d:`${n}走過來蹭你`}
+    food:()=>({m:pick(['喵喵喵！','喵！喵！']),th:['（罐罐！罐罐！）','（快點快點）','（是鮪魚嗎）'],a:roomCfg().bowl.on?'eat':'weave',f:'happy',hop:1,d:`${n}衝過來了`}),
+    miss:()=>warm?{m:'呼嚕呼嚕…',th:['（我在這裡）','（蹭蹭）','（我也是）'],a:'rub',f:'happy',lean:1,heart:1,d:`${n}走過來蹭你`}
       :{m:'…喵',th:['（知道了啦）','（慢慢眨眼）'],a:'blink',d:`${n}對你慢慢眨眼`},
     sad:()=>warm?{m:'咪…',th:['（我陪你）','（靠過來給你摸）'],a:'come',f:'closed',lean:1,d:`${n}靠過來陪你`}
       :{m:'',th:['（坐在你旁邊）'],a:'come',d:`${n}默默坐到你旁邊`},
-    sorry:()=>({m:'喵～',th:['（蹭蹭你的手）'],a:warm?'come':'blink',f:warm?'happy':null,d:warm?`${n}蹭蹭你`:`${n}對你慢慢眨眼`}),
+    sorry:()=>({m:'喵～',th:['（蹭蹭你的手）'],a:warm?'rub':'blink',f:warm?'happy':null,d:warm?`${n}蹭蹭你`:`${n}對你慢慢眨眼`}),
     praise:()=>({m:'喵～',th:tsun?['（這還用說）']:['（我知道）','（再多說一點）'],a:'wag',f:'happy',d:`${n}得意地甩尾巴`}),
     play:()=>lazy?{m:'喵…',th:['（等一下再玩）'],a:'back',d:`${n}懶得動`}:{m:'喵！',th:['（來啊來啊）'],a:'wag',hop:1,f:'happy',d:`${n}興奮起來了`},
     bye:()=>tsun?{m:'喵。',th:['（快走吧）'],a:'back',d:`${n}屁股對著你`}:{m:'喵…',th:['（早點回來）'],a:'come',d:`${n}跟到門口送你`},
@@ -2015,8 +2015,11 @@ function respond(text){
 function perform(r,th,asleep,ms){
   const fx=()=>{if(r.f)setFace(r.f,2.2);if(r.lean)H.lean=Math.random()<.5?-1:1;if(r.heart)heart();if(r.hop)H.hop=.55;H.wag=1.4;sayBoth(r.m,th,ms)};
   if(!asleep)H.tilt=(Math.random()<.5?-1:1)*6;
+  if(r.a==='greet'){if(H.state==='sleep')wake();H.tailUpT=5;comeOver(fx);return}
+  if(typeof POSES!=='undefined'&&POSES[r.a]){const P=POSES[r.a],go=()=>{const ok=startPose(r.a,{quiet:true});if(r.f&&!(ok&&P.face))setFace(r.f,2.2);if(r.heart)heart();sayBoth(r.m,th,ms)};
+    if(H.state==='sleep'&&r.a!=='lounge')wake();if(P.near&&!H.hug)comeOver(go);else go();return}
   switch(r.a){
-    case'come':comeOver(fx);break;
+    case'come':if(H.mood>.5)H.tailUpT=4;comeOver(fx);break;
     case'back':if(H.state==='walk')sitDown('front');else setHView('front');sayBoth(r.m,th,ms);setTimeout(()=>{if(H.state==='sit'&&!H.hug){setHView('back');H.timer=5}},900);break;
     case'bed':if(H.hug){fx();break}sayBoth(r.m,th,ms);goSleep();break;
     case'eat':sayBoth(r.m,th,ms);if(roomCfg().bowl.on)fillBowl(false);else comeOver(fx);break;
@@ -2078,7 +2081,7 @@ function catProfile(day){
   const w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>(l||[]).map(z=>(ZONES.find(x=>x[0]===z)||[,z])[1]).join('、')||'沒有特別';
   const notes=Object.values(S.persNotes||{}).filter(Boolean);
   const h=new Date().getHours(),tod=h<5?'深夜':h<11?'早上':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';
-  const est=H.state==='eat'?(H.eatSrc==='plate'?`正在吃${typeof canName==='function'?canName():'罐頭'}`:'正在吃飼料'):H.state==='drink'?'正在喝水':H.state==='litter'?'正在上廁所':H.state==='roll'?'正在玩貓草':H.state==='treat'?'正在吃主人給的零食':H.inBox?'躲在紙箱裡':H.state==='birdwatch'?'在陽台看鳥':null;
+  const est=H.state==='pose'&&H.pose&&typeof POSES!=='undefined'&&POSES[H.pose.k]?'正'+POSES[H.pose.k].st.replace(/^(?!在)/,'在'):H.state==='eat'?(H.eatSrc==='plate'?`正在吃${typeof canName==='function'?canName():'罐頭'}`:'正在吃飼料'):H.state==='drink'?'正在喝水':H.state==='litter'?'正在上廁所':H.state==='roll'?'正在玩貓草':H.state==='treat'?'正在吃主人給的零食':H.inBox?'躲在紙箱裡':H.state==='birdwatch'?'在陽台看鳥':null;
   const st=est||(H.hug?'正被主人抱著':H.state==='sleep'?'正在貓窩睡覺':H.state==='walk'?'在房間裡走動':H.view==='back'?'坐著，屁股對著主人':'坐著發呆');
   const food=typeof foodAmt==='function'?[foodAmt('plate')>.02?`盤子裡有還沒吃完的${typeof canName==='function'?canName():'罐頭'}`:'',foodAmt('bowl')>.02?'碗裡有飼料':''].filter(Boolean).join('、'):'';
   return [`名字：${S.name||'貓咪'}`,
@@ -2091,7 +2094,7 @@ function catProfile(day){
     day?'':`現在：${tod}，你${st}，心情${H.mood>.7?'很好':H.mood>.4?'普通':'有點差'}，${needText()}${food?'；'+food:''}。`].filter(Boolean).join('\n')}
 function needText(){const N=needs();return `肚子${N.full<.3?'很餓':N.full<.6?'有點餓':'飽飽的'}${N.water<.35?'、有點口渴':''}、精神${N.energy<.3?'很累':N.energy<.6?'普通':'很好'}`}
 function traitText(){const T=traits(),o=[];{const lk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)>=2),dk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)<=-2);if(lk.length)o.push(`愛吃${lk.join('、')}罐頭`);if(dk.length)o.push(`不愛${dk.join('、')}罐頭`)}if(T.appetite>=2)o.push('很貪吃');if(T.appetite<=-2)o.push('食量小');if(T.canLove>=2)o.push('超愛罐頭');if(T.picky>=2)o.push('挑食');if(T.drink>=2)o.push('很愛喝水');if(T.drink<=-2)o.push('很少喝水');if(T.demand>=2)o.push('肚子餓會一直討飯');if(T.demand<=-2)o.push('不太討飯');return o.length?`飲食習慣：${o.join('、')}`:''}
-function systemPrompt(){return `你是一隻名叫「${S.name||'貓咪'}」的貓，住在主人為你做的小小網頁房間裡。主人很愛你，這裡是讓主人可以繼續陪伴你的地方。
+function systemPrompt(menu){return `你是一隻名叫「${S.name||'貓咪'}」的貓，住在主人為你做的小小網頁房間裡。主人很愛你，這裡是讓主人可以繼續陪伴你的地方。
 
 ${catProfile()}${learnedPrompt()}${typeof planPrompt==='function'?planPrompt():''}
 
@@ -2106,7 +2109,7 @@ ${catProfile()}${learnedPrompt()}${typeof planPrompt==='function'?planPrompt():'
 - 你肚子餓的時候可以跟主人討飯、討罐頭；吃飽了就懶洋洋的。
 - 只說「現在」真的在發生的事：上面「現在：」寫的就是你此刻的狀態。不要說你已經吃完、喝完、玩過、吃到了什麼，除非旁白或「現在：」真的這樣寫；罐頭剛放好時你還沒吃到，可以說想吃、要去吃。
 - 以「（」開頭、用括號包起來的訊息是旁白，描述主人對你做了什麼或發生了什麼，不是主人說的話；請用貓的方式對這件事反應，例如被摸得舒服就呼嚕撒嬌、被摸到討厭的地方就抱怨、主人很久沒來就撒嬌或鬧脾氣。
-- 只回傳 JSON。action 是你要做的動作：come（走到主人面前）、wag（甩尾巴）、hop（開心跳一下）、blink（慢慢眨眼）、back（屁股轉向主人）、bed（走去貓窩睡）、eat（主人說要餵你時，去碗那邊吃飯）、ear（耳朵轉向主人）、none。face 是表情：normal、happy、closed、annoyed。`}
+- 只回傳 JSON。action 是你要做的動作，只能從這些裡面選（已經依你現在的狀態挑好了）：${actionMenuText(menu)}。選最符合你這句話和個性的動作，不要每次都選一樣的。face 是表情：normal、happy、closed、annoyed。`}
 const busyErr=e=>e&&(e.status===503||e.status===500||e.status===502||/high demand|overloaded|unavailable/i.test(e.message||''));
 let modelOverride='';
 async function askGemini(text){
@@ -2117,11 +2120,11 @@ async function askGemini(text){
   }
   throw last}
 async function askGeminiOnce(text,model){
-  const contents=chatHist.slice(-12).map(m=>({role:m.role==='me'?'user':'model',parts:[{text:m.text}]}));
+  const menu=actionMenu();const contents=chatHist.slice(-12).map(m=>({role:m.role==='me'?'user':'model',parts:[{text:m.text}]}));
   contents.push({role:'user',parts:[{text}]});
-  const body={systemInstruction:{parts:[{text:systemPrompt()}]},contents,
+  const body={systemInstruction:{parts:[{text:systemPrompt(menu)}]},contents,
     generationConfig:{temperature:1,maxOutputTokens:600,responseMimeType:'application/json',
-      responseSchema:{type:'OBJECT',properties:{say:{type:'STRING'},action:{type:'STRING',enum:['come','wag','hop','blink','back','bed','ear','eat','none']},face:{type:'STRING',enum:['normal','happy','closed','annoyed']}},required:['say','action','face']}}};
+      responseSchema:{type:'OBJECT',properties:{say:{type:'STRING'},action:{type:'STRING',enum:menu},face:{type:'STRING',enum:['normal','happy','closed','annoyed']}},required:['say','action','face']}}};
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
   try{
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -2416,7 +2419,7 @@ function doAct(k,src,o={}){const R=roomCfg();
   if(k==='sniff'){const it=src==='plate'?'plate':'bowl';const[t,face]=sideSpot(it,.4);startWalk(t,false,()=>{H.state='sniff';H.facing=face;setHView('side');H.timer=1.5;say('嗅嗅',900)})}
   if(k==='drink'){const[t,face]=sideSpot('fountain',.5);startWalk(t,false,()=>{H.state='drink';H.facing=face;setHView('side');H.timer=3+Math.random()*3;say('啪搭啪搭',1500)})}
   if(k==='beg'){const it=R.bowl.on?'bowl':R.plate.on?'plate':null;
-    if(!it||Math.random()<.4){logAct('demand','肚子餓了，跑來對你喵喵叫',true);comeOver(()=>{H.state='beg';H.timer=6;setHView('front');say('喵～喵～',1500)})}
+    if(!it||Math.random()<.4){logAct('demand','肚子餓了，跑來對你喵喵叫',true);comeOver(()=>{if(Math.random()<.5&&typeof startPose==='function'&&startPose('weave',{after:'beg'})){say('喵～喵～',1500);return}H.state='beg';H.timer=6;setHView('front');say('喵～喵～',1500)})}
     else{logAct('demand',`坐在空${it==='plate'?'盤子':'碗'}前面喵喵叫，想吃飯`,true);const[t]=sideSpot(it,.55);startWalk(t,false,()=>{setHView('front');H.state='beg';H.timer=7;say('喵～（肚子餓了）',1800)})}}
 }
 function tryActivity(){const R=roomCfg(),en=P01('energy'),N=needs(),T=traits(),E=N.energy,opts=[];
@@ -3769,7 +3772,7 @@ function callCat(){const n=S.name||'〚貓代詞〛',T=traits(),now=Date.now(),s
   if(['litter','eat','roll','treat'].includes(H.state)){say('（等一下）',1000);return}
   let pc=.15+.55*P01('affection')+T.call*.08+(H.mood-.5)*.2;if(H.state==='sleep')pc*=.5;pc=Math.max(.03,Math.min(.95,pc));
   const r=Math.random();
-  if(r<pc){if(H.state==='sleep')wake();logAct('callCome','聽到你叫〚貓代詞〛，喵一聲跑過來了',true);say('喵～！',1000);
+  if(r<pc){if(H.state==='sleep')wake();logAct('callCome','聽到你叫〚貓代詞〛，喵一聲跑過來了',true);say('喵～！',1000);H.tailUpT=5;
     if(H.y>.05||H.inBox){comeOver(()=>{setFace('happy',1.5);heart()});return}
     startWalk(viewX(),false,()=>{sitDown('front');setFace('happy',1.5);heart();H.tilt=8},true)}
   else if(r<pc+.3){if(H.state==='sleep'){say('喵…？',1000);logAct('callMeow','睡夢中聽到你叫〚貓代詞〛，應了一聲',true);return}setHView('front');H.tilt=10;say('喵？',1000);logAct('callMeow','聽到你叫〚貓代詞〛，只喵了一聲，沒有過來',true)}
@@ -3986,7 +3989,7 @@ function trickPaw(show,p){if(!trickPawEl){trickPawEl=document.createElement('spa
   if(trickPawEl.dataset.c!==S.base){const dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#5a4a42';trickPawEl.dataset.c=S.base;
     trickPawEl.innerHTML=`<svg viewBox="0 0 40 52" width="100%" height="100%"><rect x="7" y="18" width="20" height="34" rx="10" fill="${S.base}"/><ellipse cx="18" cy="15" rx="15" ry="13" fill="${S.base}" stroke="${ink}" stroke-width="2"/><ellipse cx="18" cy="19" rx="6" ry="4.6" fill="#f2a7b5"/><circle cx="9.5" cy="11" r="2.6" fill="#f2a7b5"/><circle cx="15" cy="7.5" r="2.6" fill="#f2a7b5"/><circle cx="21.5" cy="7.5" r="2.6" fill="#f2a7b5"/><circle cx="27" cy="11" r="2.6" fill="#f2a7b5"/></svg>`}
   const a=Math.min(1,p/.3),wv=Math.sin(p*10)*3;trickPawEl.hidden=false;trickPawEl.style.transform=`translate(0,${(1-a)*40+wv}%) rotate(${-12+wv}deg)`;trickPawEl.style.opacity=String(a)}
-function trickApply(v){const on=H.state==='trick'&&H.trick==='paw'&&v==='front';trickPaw(on,H.trickT||0);if(H.state!=='trick')return;const p=H.trickT||0;
+function trickApply(v){const on=H.state==='trick'&&H.trick==='paw'&&v==='front';trickPaw(on,H.trickT||0);{const g=H.state==='pose'&&H.pose&&H.pose.k==='groom'&&v==='front'&&!on;if(trickPawEl){if(g){trickPaw(true,1);const p=H.pose,e=Math.max(0,Math.min(1,(p.t-.2)/.3,(p.dur-p.t)/.3)),wv=Math.sin(p.t*6)*8;trickPawEl.hidden=e<=0;trickPawEl.style.left='50%';trickPawEl.style.top='36%';trickPawEl.style.width='24%';trickPawEl.style.transform=`translate(${wv*.4}%,${wv}%) rotate(${-30+wv}deg)`;trickPawEl.style.opacity=String(e)}else if(trickPawEl.style.left){trickPawEl.style.left='';trickPawEl.style.top='';trickPawEl.style.width='';if(!on)trickPawEl.hidden=true}}}if(H.state!=='trick')return;const p=H.trickT||0;
   if(H.trick==='paw'&&v==='front')setT('frontR','translate(0 -6)');
   if(H.trick==='sit'&&v==='front'){const a=Math.sin(Math.min(1,p/1.2)*Math.PI);setT('head',`translate(0 ${-8*a})`);setT('body',`translate(150 262) scale(1 ${1+.05*a}) translate(-150 -262)`)}}
 
@@ -4473,7 +4476,7 @@ function doHabit(x){const R=roomCfg(),a=x.act,t=x.text||'照自己的習慣行�
     case'fridge':startWalk(hxOf(.075),false,()=>{setHView('front');H.state='beg';H.timer=6;say('喵～',1200)});break;
     case'window':startWalk(hxOf(.31),false,()=>{setHView('back');H.state='sit';H.timer=10+Math.random()*6});break;
     case'greet':comeOver(()=>{setFace('happy',2);heart();say('喵～',1200)});break;
-    case'lick':sitDown('front');H.timer=5;H.lickT=4;setFace('closed',3);say('（舔舔毛）',1400);break;
+    case'lick':if(!startPose('groom')){sitDown('front');H.timer=5;H.lickT=4;setFace('closed',3)}say('（舔舔毛）',1400);break;
     case'bed':goSleep();break;
     case'tree':case'scratch':case'box':case'drink':case'beg':case'rainwatch':doAct(a);break;
     default:houseAct(a)}
@@ -4493,10 +4496,87 @@ function drawPlan(msg){const box=$('planBox');if(!box)return;const P=planNow(),n
     const ks=PLAN_W.slice().sort((x,y)=>P.w[y]-P.w[x]),hi=ks.filter(k=>P.w[k]>=1.3).slice(0,3),lo=ks.filter(k=>P.w[k]<=.7).slice(-3);
     if(hi.length)line(`比較常：${hi.map(k=>PLAN_NAME[k]).join('、')}`);if(lo.length)line(`比較少：${lo.map(k=>PLAN_NAME[k]).join('、')}`);
     if(P.habits&&P.habits.length)line(`小習慣：${P.habits.map(x=>`${x.hour} 點${x.text}`).join('、')}`)}
-  const btn=$('planRedo');btn.disabled=planBusy||!aiKey();btn.textContent=aiKey()?'請 AI 重新編排今天的劇本':'請 AI 編排（需要 Gemini 金鑰）';
+  const btn=$('planRedo');if(btn){btn.disabled=planBusy||!aiKey();btn.textContent=aiKey()?'請 AI 重新編排今天的劇本':'請 AI 編排（需要 Gemini 金鑰）'}
   if(msg)$('memMsg').textContent=msg}
-$('planRedo').onclick=()=>{ensurePlan(true)};
+if($('planRedo'))$('planRedo').onclick=()=>{ensurePlan(true)};
 setInterval(()=>{if(view==='home'&&!document.hidden)ensurePlan()},10*60*1000);
+
+/* ===== 更多動作（姿勢）：伸懶腰、打哈欠、洗臉、踩踩、蹭你、繞腳、翻肚子、香箱、趴著、抓癢、甩頭、盯空氣、吐舌頭 =====
+   規則會在合適的時候自己做；AI 說話時，也會從「現在合理的動作」裡挑一個。 */
+var POSES={
+  stretch:{n:'伸懶腰',st:'在伸懶腰',dur:2.2,view:'side',say:['（伸～懶腰）']},
+  yawn:{n:'打哈欠',st:'在打哈欠',dur:1.8,view:'front',face:'yawn',hug:1,say:['（打哈欠）']},
+  groom:{n:'洗臉',st:'在舔爪子洗臉',dur:4.5,view:'front',face:'closed'},
+  knead:{n:'踩踩',st:'在踩踩',dur:5,view:'front',face:'happy',hug:1,say:['呼嚕呼嚕…']},
+  rub:{n:'蹭你',st:'在蹭你',dur:3.2,view:'front',face:'happy',near:1,say:['呼嚕～','（蹭蹭）']},
+  weave:{n:'繞腳',st:'在你腳邊繞來繞去',dur:4.5,view:'side',near:1,say:['喵～']},
+  belly:{n:'翻肚子',st:'翻肚子給你看',dur:5,view:'side',face:'happy',say:['（翻肚肚）']},
+  loaf:{n:'香箱',st:'把腳收起來趴成香箱',dur:12,view:'front'},
+  lounge:{n:'趴著',st:'趴著伸長身體',dur:10,view:'side',face:'closed',after:'maybeSleep'},
+  scratchEar:{n:'抓癢',st:'在用後腳抓耳朵',dur:1.8,view:'front',face:'closed'},
+  shake:{n:'甩頭',st:'在甩甩頭',dur:.9,view:'front',hug:1},
+  stare:{n:'盯空氣',st:'盯著空氣看',dur:4,view:'front',say:['（盯）']},
+  blep:{n:'吐舌頭',st:'在吐舌頭忘了收',dur:5,view:'front'}};
+var ACT_DESC={come:'走到主人面前',greet:'尾巴豎高跑過來打招呼',wag:'甩尾巴',hop:'開心跳一下',blink:'慢慢眨眼',back:'屁股轉向主人',bed:'走去貓窩睡',eat:'主人說要餵你時，去碗那邊吃飯',ear:'耳朵轉向主人',none:'不動',
+  stretch:'伸懶腰',yawn:'打哈欠',groom:'舔爪子洗臉',knead:'前腳輪流踩踩',rub:'走過來側身蹭主人',weave:'在主人腳邊繞來繞去',belly:'翻肚子給主人看',loaf:'把腳收起來趴成香箱',lounge:'趴下伸長身體',shake:'甩甩頭',stare:'盯著空氣看'};
+/* 依現在的狀態，只把合理的動作交給 AI 選（睡覺時不會給「跳一下」，被抱時不會給「走過來」） */
+function actionMenu(){const R=roomCfg();let k;
+  if(H.hug)k=['none','knead','blink','ear','wag','yawn','shake'];
+  else if(H.state==='sleep')k=['none','ear','stretch','yawn','come','blink'];
+  else{k=['come','greet','wag','hop','blink','back','ear','none','stretch','yawn','groom','loaf','lounge','stare','bed'];
+    if(H.mood>=.4)k.push('rub','weave','belly','knead');else k.push('shake');
+    if((R.bowl&&R.bowl.on)||(R.plate&&R.plate.on))k.push('eat')}
+  return k}
+function actionMenuText(menu){return(menu||actionMenu()).map(k=>`${k}（${ACT_DESC[k]||k}）`).join('、')}
+/* 每隻貓對每個姿勢的喜好不同（用這隻貓自己的亂數種子，固定不變） */
+function poseLike(k){let h=catSeed();for(let i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))|0;return .55+seeded(h)()*.9}
+function startPose(k,o={}){const P=POSES[k];if(!P||H.y>.05||H.inBox||H.inLitter||H.jump||(H.hug&&!P.hug))return false;
+  const dur=(o.dur||P.dur)*(.85+Math.random()*.3);
+  H.state='pose';H.pose={k,t:0,dur,dir:Math.random()<.5?-1:1,cx:H.x,after:o.after||P.after||'sit'};H.timer=dur;
+  if(P.view&&!H.hug)setHView(P.view);
+  if(P.face)setFace(P.face,dur);else if(k==='loaf'&&Math.random()<.4)setFace('closed',dur);
+  if(P.say&&!o.quiet&&Math.random()<.6)say(pick(P.say),1300);
+  return true}
+function poseStep(dt){const p=H.pose;if(!p){H.state='sit';return}p.t+=dt;
+  if(p.k==='weave'){const ph=p.t*1.8,nx=clamp01(p.cx+Math.sin(ph)*.011),d=Math.cos(ph)>=0?1:-1;H.target=nx+d*.01;H.x=nx;H.facing=d;if(H.view!=='side')setHView('side');H.tailUpT=.5}
+  if(p.k==='rub')H.tailUpT=.5;
+  if(p.k==='groom'&&p.t>.6&&p.t<p.dur-.6)H.lickT=.3;
+  if((p.k==='knead'||p.k==='rub'||p.k==='belly')&&Math.random()<dt*.7)heart();
+  if(H.timer>0)return;
+  const a=p.after;H.pose=null;
+  if(H.hug){H.state='sit';return}
+  if(a==='sleep'||(a==='maybeSleep'&&Math.random()<.4)){H.state='sleep';H.timer=12+Math.random()*12;setHView('front');setFace('closed');return}
+  if(a==='beg'){H.state='beg';H.timer=5;setHView('front');say('喵～',1000);return}
+  sitDown('front')}
+function idlePose(){if(H.y>.05||H.inBox||H.inLitter||H.hug||wandOn||tool)return false;if(Math.random()>.5)return false;
+  const N=needs(),night=todNow()==='night',mode=typeof planMode==='function'?planMode():'';
+  const opts=[['loaf',.25],['groom',.15],['scratchEar',.07],['stare',night?.14:.04],['yawn',N.energy<.5||mode==='nap'?.14:.04],
+    ['lounge',N.energy<.6||mode==='nap'||todNow()==='day'?.12:.04],['belly',H.mood>.75?.07:0],['knead',H.mood>.7?.05:0],['blep',.04],['shake',.03],['stretch',.04]]
+    .map(([k,w])=>[k,w*poseLike(k)]);
+  let r=Math.random()*opts.reduce((s,o)=>s+o[1],0);for(const[k,w]of opts){if((r-=w)<=0)return startPose(k)}return false}
+/* 每一格畫面：依姿勢調整身體零件 */
+function poseApply(v,t,m,o,w,dt){
+  if(H.tailUpT>0)H.tailUpT-=dt||0;
+  const p=H.state==='pose'?H.pose:null,q=m||.3;
+  const tailUp=(H.tailUpT>0)||(p&&(p.k==='rub'||p.k==='weave'));
+  if(tailUp&&v!=='back'){const tp=TAIL_PIVOT[v],wob=Math.sin(t*3)*4*q;setT('tail',v==='side'?`rotate(${35+wob} ${tp[0]} ${tp[1]})`:`rotate(${-40+wob} ${tp[0]} ${tp[1]})`)}
+  if(!p)return o;
+  const e=Math.max(0,Math.min(1,p.t/.3,(p.dur-p.t)/.3)),f=H.facing||1;
+  switch(p.k){
+    case'stretch':if(v==='side'){setT('legNF',`rotate(${-60*e} 193 232)`);setT('legFF',`rotate(${-55*e} 213 232)`);setT('legNB','');setT('legFB','');setT('head',`rotate(${6*e} 200 180)`);o.rot+=9*e*f;o.sx*=1+.08*e}break;
+    case'yawn':if(v==='front'){setT('head',`translate(0 ${-4*e}) rotate(${-4*e} 150 190)`);o.sy*=1+.03*e}break;
+    case'groom':if(v==='front'){setT('frontR',`translate(${-10*e} ${-62*e}) rotate(${(-150+Math.sin(t*6)*12*q)*e} 162 228)`);setT('head',`rotate(${8*e} 150 190)`)}break;
+    case'knead':if(v==='front'){const s=Math.sin(t*6);setT('frontL',`translate(0 ${-9*Math.max(0,s)*e})`);setT('frontR',`translate(0 ${-9*Math.max(0,-s)*e})`);o.sy*=1-.02*e}break;
+    case'rub':o.rot+=Math.sin(t*2.6)*9*e*q;H.lean=Math.sin(t*2.6)*1.2;break;
+    case'loaf':if(v==='front'){const k1=1-.75*e,k2=1-.8*e;setT('frontL',`translate(0 222) scale(1 ${k1}) translate(0 -222)`);setT('frontR',`translate(0 222) scale(1 ${k1}) translate(0 -222)`);
+      setT('backL',`translate(0 236) scale(1 ${k2}) translate(0 -236)`);setT('backR',`translate(0 236) scale(1 ${k2}) translate(0 -236)`);o.sy*=1-.1*e;o.sx*=1+.05*e}break;
+    case'lounge':if(v==='side'){setT('legNF',`rotate(${-70*e} 193 232)`);setT('legFF',`rotate(${-75*e} 213 232)`);setT('legNB',`rotate(${70*e} 97 232)`);setT('legFB',`rotate(${75*e} 117 232)`);
+      setT('head',`translate(0 ${12*e}) rotate(${8*e} 200 180)`);o.sy*=1-.26*e;o.sx*=1+.1*e}break;
+    case'scratchEar':if(v==='front'){setT('backR',`translate(${30*e} ${-80*e}) rotate(${(-120+Math.sin(t*24)*12*q)*e} 189 238)`);setT('head',`rotate(${10*e} 150 190)`)}break;
+    case'shake':if(v==='front'){setT('head',`rotate(${Math.sin(t*30)*18*e} 150 190)`);o.rot+=Math.sin(t*30)*4*e*q}break;
+    case'stare':H.look=p.dir*.85;break;
+  }
+  return o}
 
 $('howBtn').onclick=()=>{const h=document.querySelector('#viewHome .homehint.small'),on=!h.classList.contains('show');h.classList.toggle('show',on);$('howBtn').setAttribute('aria-expanded',String(on))};
 
