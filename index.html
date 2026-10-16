@@ -2061,7 +2061,9 @@ function catProfile(day){
   const w3=(v,a,b,c)=>v<30?a:v<70?b:c,zn=l=>(l||[]).map(z=>(ZONES.find(x=>x[0]===z)||[,z])[1]).join('、')||'沒有特別';
   const notes=Object.values(S.persNotes||{}).filter(Boolean);
   const h=new Date().getHours(),tod=h<5?'深夜':h<11?'早上':h<14?'中午':h<18?'下午':h<22?'晚上':'深夜';
-  const st=H.hug?'正被主人抱著':H.state==='sleep'?'正在貓窩睡覺':H.state==='walk'?'在房間裡走動':H.view==='back'?'坐著，屁股對著主人':'坐著發呆';
+  const est=H.state==='eat'?(H.eatSrc==='plate'?`正在吃${typeof canName==='function'?canName():'罐頭'}`:'正在吃飼料'):H.state==='drink'?'正在喝水':H.state==='litter'?'正在上廁所':H.state==='roll'?'正在玩貓草':H.state==='treat'?'正在吃主人給的零食':H.inBox?'躲在紙箱裡':H.state==='birdwatch'?'在陽台看鳥':null;
+  const st=est||(H.hug?'正被主人抱著':H.state==='sleep'?'正在貓窩睡覺':H.state==='walk'?'在房間裡走動':H.view==='back'?'坐著，屁股對著主人':'坐著發呆');
+  const food=typeof foodAmt==='function'?[foodAmt('plate')>.02?`盤子裡有還沒吃完的${typeof canName==='function'?canName():'罐頭'}`:'',foodAmt('bowl')>.02?'碗裡有飼料':''].filter(Boolean).join('、'):'';
   return [`名字：${S.name||'貓咪'}`,
     `個性：${w3(S.affection,'怕生','普通親人','超級親人')}、${w3(S.temper,'脾氣溫和','有點傲嬌','很有脾氣')}、${w3(S.energy,'懶洋洋','普通活潑','活力過剩')}`,
     `喜歡被摸：${zn(S.likes)}；討厭被摸：${zn(S.dislikes)}；抱抱：${{love:'很愛抱抱',mood:'看心情',hate:'不喜歡被抱'}[S.hugPref]||'看心情'}`,
@@ -2069,7 +2071,7 @@ function catProfile(day){
     traitText(),
     typeof funTraitText==='function'?funTraitText(day):'',
     typeof infoText==='function'?infoText(day):'',
-    day?'':`現在：${tod}，你${st}，心情${H.mood>.7?'很好':H.mood>.4?'普通':'有點差'}，${needText()}。`].filter(Boolean).join('\n')}
+    day?'':`現在：${tod}，你${st}，心情${H.mood>.7?'很好':H.mood>.4?'普通':'有點差'}，${needText()}${food?'；'+food:''}。`].filter(Boolean).join('\n')}
 function needText(){const N=needs();return `肚子${N.full<.3?'很餓':N.full<.6?'有點餓':'飽飽的'}${N.water<.35?'、有點口渴':''}、精神${N.energy<.3?'很累':N.energy<.6?'普通':'很好'}`}
 function traitText(){const T=traits(),o=[];{const lk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)>=2),dk=FL_NAMES.filter(f=>flavorKnown(f)&&flavorPref(f)<=-2);if(lk.length)o.push(`愛吃${lk.join('、')}罐頭`);if(dk.length)o.push(`不愛${dk.join('、')}罐頭`)}if(T.appetite>=2)o.push('很貪吃');if(T.appetite<=-2)o.push('食量小');if(T.canLove>=2)o.push('超愛罐頭');if(T.picky>=2)o.push('挑食');if(T.drink>=2)o.push('很愛喝水');if(T.drink<=-2)o.push('很少喝水');if(T.demand>=2)o.push('肚子餓會一直討飯');if(T.demand<=-2)o.push('不太討飯');return o.length?`飲食習慣：${o.join('、')}`:''}
 function systemPrompt(){return `你是一隻名叫「${S.name||'貓咪'}」的貓，住在主人為你做的小小網頁房間裡。主人很愛你，這裡是讓主人可以繼續陪伴你的地方。
@@ -2085,6 +2087,7 @@ ${catProfile()}${learnedPrompt()}
 - 如果主人真心問你是不是真的〚貓代詞〛，溫柔誠實地說你是主人用回憶做出來陪他的小貓。
 - 主人難過時溫柔陪伴，也可以像貓一樣提醒他去吃飯、睡覺、找朋友聊聊。
 - 你肚子餓的時候可以跟主人討飯、討罐頭；吃飽了就懶洋洋的。
+- 只說「現在」真的在發生的事：上面「現在：」寫的就是你此刻的狀態。不要說你已經吃完、喝完、玩過、吃到了什麼，除非旁白或「現在：」真的這樣寫；罐頭剛放好時你還沒吃到，可以說想吃、要去吃。
 - 以「（」開頭、用括號包起來的訊息是旁白，描述主人對你做了什麼或發生了什麼，不是主人說的話；請用貓的方式對這件事反應，例如被摸得舒服就呼嚕撒嬌、被摸到討厭的地方就抱怨、主人很久沒來就撒嬌或鬧脾氣。
 - 只回傳 JSON。action 是你要做的動作：come（走到主人面前）、wag（甩尾巴）、hop（開心跳一下）、blink（慢慢眨眼）、back（屁股轉向主人）、bed（走去貓窩睡）、eat（主人說要餵你時，去碗那邊吃飯）、ear（耳朵轉向主人）、none。face 是表情：normal、happy、closed、annoyed。`}
 const busyErr=e=>e&&(e.status===503||e.status===500||e.status===502||/high demand|overloaded|unavailable/i.test(e.message||''));
@@ -2526,7 +2529,7 @@ function openCan(fl){const R=roomCfg(),n=S.name||'〚貓代詞〛';if(canBusy||r
   setTimeout(()=>el.classList.add('s3'),950);
   setTimeout(()=>{setFood('plate',1);roomCfg().plate.at=Date.now();save()},1400);
   setTimeout(()=>{el.hidden=true;el.className='cananim';canBusy=false},2000);
-  setTimeout(()=>aiEvent(`（主人開了一個${fl}口味的罐頭放到你的盤子裡）`,{allowMove:false}),3200)}
+  setTimeout(()=>aiEvent(`（主人開了一個${fl}口味的罐頭放到你的盤子裡。罐頭剛放好，你還沒開始吃）`,{allowMove:false}),3200)}
 $('canBtn').addEventListener('click',e=>{e.stopPropagation();if(canBusy)return;if(foodAmt('plate')>.5){note('盤子裡還有罐頭',2);return}const m=$('flavorMenu');m.hidden=!m.hidden});
 (()=>{const m=$('flavorMenu');const add=(t,f)=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=e=>{e.stopPropagation();m.hidden=true;openCan(f)};m.appendChild(b)};
   add('隨機口味',null);FL_NAMES.forEach(f=>add(f,f));document.addEventListener('pointerdown',e=>{if(!m.hidden&&!e.target.closest('#flavorMenu')&&!e.target.closest('#canBtn'))m.hidden=true})})();
