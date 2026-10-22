@@ -1704,6 +1704,7 @@ function save(){clearTimeout(saveT);saveT=setTimeout(doSave,user?1200:400)}
 let sentPaint={};
 async function doSave(){
   if(booting)return;
+  S.savedAt=Date.now();try{S.eatingNow=H.state==='eat'?{it:H.eatSrc||'bowl',at:Date.now()}:null}catch(e){}
   if(!user)guestDirty=true;
   const data={S,owner,paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintSideL:CV.sideL.toDataURL(),paintBack:CV.back.toDataURL()};
   try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
@@ -1766,7 +1767,9 @@ async function loadCloud(u){
   for(let i=0;i<3;i++){try{snap=await getDoc(doc(db,'users',u.uid,'cats','main'));err=null;break}catch(e){err=e;if(stale())return;if(i<2)await new Promise(z=>setTimeout(z,1500*(i+1)))}}
   if(stale())return;
   if(err){status('讀不到雲端的貓（'+(err.code||err.message)+'），先暫停同步，雲端資料不會被蓋掉');$('cloudRetry').hidden=false;return}
-  if(snap.exists()){const d=snap.data();await applyData(d.settings,d);if(stale())return;owner=u.uid;autoBak(u.uid,d)}
+  if(snap.exists()){const d=snap.data();let use=d.settings,pp=d;
+    try{const L=JSON.parse(localStorage.getItem(KEY)||'null');if(L&&L.owner===u.uid&&L.S&&(+L.S.savedAt||0)>(+((d.settings||{}).savedAt)||0)){use=L.S;pp=L}}catch(e){}
+    await applyData(use,pp);if(stale())return;owner=u.uid;autoBak(u.uid,d)}
   if(typeof loadVoice==='function')loadVoice(u.uid);
   else{if(owner!=='guest'&&owner!==u.uid){booting=true;await applyData({...DEF},{});booting=false}owner=u.uid}
   try{const ps=await getDoc(presRef(u.uid)),pd=ps.exists()?ps.data():null;if(pd&&pd.sid!==SID&&pd.ms&&Date.now()-pd.ms<150000&&note)note(`提醒：這隻貓也在「${pd.dev||'另一台裝置'}」開著，那邊會先暫停同步，以這台為主`,6)}catch(e){}
@@ -1795,6 +1798,9 @@ async function useHere(){$('devWarn').hidden=true;$('useHereBtn').hidden=true;sy
 $('devUseHere').onclick=useHere;$('useHereBtn').onclick=useHere;
 $('devLater').onclick=()=>{$('devWarn').hidden=true};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)return;if(syncPaused&&user)$('devWarn').hidden=false;else presClaim()});
+/* 關掉、重新整理或切走頁面時，馬上存檔（不等延遲），剛做的事才不會不見 */
+function flushSave(){if(booting)return;clearTimeout(saveT);doSave()}
+window.addEventListener('pagehide',flushSave);document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSave()});
 window.addEventListener('pagehide',()=>{if(user&&db&&!syncPaused&&cloudOk===user.uid)setDoc(presRef(user.uid),{sid:SID,ms:0,dev:devName()}).catch(()=>{})});
 $('cloudBakBtn').onclick=async()=>{const box=$('cloudBakList');if(!user||!db)return;if(!box.hidden){box.hidden=true;return}
   box.hidden=false;box.textContent='讀取中…';const list=[];
@@ -2738,6 +2744,7 @@ function catchUpNeeds(){
   n.pee=pee;n.poo=poo;n.toilet=Math.max(pee,poo);
   n.mood=(+n.mood||.7)+(.6-(+n.mood||.7))*Math.min(1,dt/7200);
   n.t=now;H.mood=n.mood;
+  {const E=S.eatingNow;S.eatingNow=null;if(E&&Date.now()-E.at<5*60*1000&&foodAmt(E.it)>.01)setTimeout(()=>{if(H.state!=='eat'&&!H.hug&&H.state!=='sleep'){logAct('eatResume','回來繼續把飯吃完',true);doAct('eat',E.it)}},1200)}
   // 原本的離線彩蛋仍保留，但避免重複補算貓砂（已在上方計算）。
   if(typeof funCatchUp==='function')funCatchUp(dt,{skipLitter:true});
   if(dt>=1800){
