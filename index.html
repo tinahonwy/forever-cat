@@ -726,7 +726,17 @@ input[type=range]{accent-color:var(--accent)}
 
 /* 可以點的新家具 */
 .deco.tap{pointer-events:auto;cursor:pointer;transition:filter .15s}
-@media (hover:hover){.deco.tap:hover{filter:brightness(1.06) drop-shadow(0 0 4px rgba(255,255,255,.7))}}
+/* 所有能互動的東西，滑鼠移上去（手機按下去）都有同樣的發光邊緣 */
+:root{--hoverglow:brightness(1.06) drop-shadow(0 0 4px rgba(255,255,255,.75)) drop-shadow(0 0 1.5px rgba(255,255,255,.9))}
+.deco.tap,#it-tree,#it-scratch,#it-boxback,#it-boxfront,#it-plate,#it-fountain,#it-bowl,#it-litterback,#it-litterfront,.bed,#fridge,#cup,#orn,.gift,.cake,#bird,.niptoy,.ftreat,.bug,.gecko{transition:filter .15s}
+@media (hover:hover){
+  .room:not(.editing):not(.wand):not(.tooling) :is(.deco.tap,#it-tree,#it-scratch,#it-plate,#it-fountain,#it-bowl,.bed,#fridge,#cup,#orn,.gift,.cake,#bird,.niptoy,.ftreat,.bug,.gecko):hover,
+  .room:not(.editing):not(.wand):not(.tooling):has(#it-boxback:hover,#it-boxfront:hover) :is(#it-boxback,#it-boxfront),
+  .room:not(.editing):not(.wand):not(.tooling):has(#it-litterback:hover,#it-litterfront:hover) :is(#it-litterback,#it-litterfront){filter:var(--hoverglow)}}
+@media (hover:none){
+  .room:not(.editing):not(.wand):not(.tooling) :is(.deco.tap,#it-tree,#it-scratch,#it-plate,#it-fountain,#it-bowl,.bed,#fridge,#cup,#orn,.gift,.cake,#bird,.niptoy,.ftreat,.bug,.gecko):active,
+  .room:not(.editing):not(.wand):not(.tooling):has(#it-boxback:active,#it-boxfront:active) :is(#it-boxback,#it-boxfront),
+  .room:not(.editing):not(.wand):not(.tooling):has(#it-litterback:active,#it-litterfront:active) :is(#it-litterback,#it-litterfront){filter:var(--hoverglow)}}
 .room.editing .deco.tap{pointer-events:none}
 .kclock{transform-origin:50% 10%}.kclock.ring{animation:clockring .7s ease-in-out}
 @keyframes clockring{20%{transform:rotate(-9deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(3deg)}}
