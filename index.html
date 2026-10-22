@@ -1410,7 +1410,6 @@ function featureParts(v='front',opt={}){
     return`<path d="${e.d}" fill="#f6a3ab" stroke="#f6a3ab" stroke-width="3" stroke-linejoin="round" transform="${pre} translate(${e.a[0]},${e.a[1]}) scale(.5) translate(${-e.a[0]},${-e.a[1]})"/>`};
   const fc=opt.face||(opt.closed?'closed':'normal'),ln=d=>`<path d="${d}" stroke="${ink}" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
   const openEye=(cx,cy,col)=>{const lit=lum(col)>.22;let e=`<ellipse cx="${cx}" cy="${cy}" rx="${(r*.78).toFixed(2)}" ry="${(r*1.02).toFixed(2)}" fill="${col}"${lit?` stroke="${ink}" stroke-width="2.4"`:''}/>`;
-    if(lit)e+=`<ellipse cx="${cx}" cy="${cy}" rx="${(r*.34).toFixed(2)}" ry="${(r*.72).toFixed(2)}" fill="#2d2724"/>`;
     return e};
   const eye=(cx,cy,col)=>(fc==='closed'||fc==='yawn')?ln(`M${cx-r},${cy-1} q${r},${r} ${2*r},0`):fc==='happy'?ln(`M${cx-r},${cy+2} q${r},${-r*1.3} ${2*r},0`):fc==='annoyed'?ln(`M${cx-r},${cy-(cx<150?2:-2)} L${cx+r},${cy+(cx<150?2:-2)}`):openEye(cx,cy,col);
   if(v==='front'){
