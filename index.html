@@ -2417,7 +2417,9 @@ function touchStory(t,wasHug){
   if(secs<2)return null;
   return`（主人摸了你的${zn}大約 ${secs} 秒${t.good?'，你覺得很舒服':''}）`;
 }
-function onHomeOpen(){
+/* 剛回來時先陪主人，不會一進門就衝去上廁所 */
+var toiletHold=0;
+function onHomeOpen(){toiletHold=Date.now()+90000;
   if(typeof funHomeOpen==='function')setTimeout(funHomeOpen,0);
   setTimeout(()=>{if(typeof ensurePlan==='function')ensurePlan()},800);
   if(typeof rollDay==='function')rollDay();
@@ -3766,19 +3768,19 @@ function funCatchUp(dt,opt={}){const R=roomCfg();
     if(uses)needs().toilet=Math.random()*.4}
   else if(!opt.skipLitter)needs().toilet=0;
   if(dt>2*3600&&!S.giftOn&&Math.random()<.3*Math.max(.05,1+traits().gift*.2)){const g=pick(GIFTS);S.giftOn={e:g[0],t:g[1],x:.28+Math.random()*.18};S.giftAway=1}}
-function litterOpt(opts){const R=roomCfg();if(R.litter&&R.litter.on&&(needs().toilet||0)>.9)opts.push(['litter',2])}
+function litterOpt(opts){const R=roomCfg();if(R.litter&&R.litter.on&&(needs().toilet||0)>.9&&Date.now()>toiletHold)opts.push(['litter',2])}
 function drawLitter(){const g=$('litterDirt');if(!g)return;const d=litterDirt(),key=d.join(',');if(g.dataset.k===key)return;g.dataset.k=key;
   g.innerHTML=d.slice(0,6).map((k,i)=>{const x=22+i*11+(i%2)*3,y=11+(i%3);return k==='poop'?`<ellipse cx="${x}" cy="${y}" rx="4.2" ry="2.6" fill="#7a5a3e"/><ellipse cx="${x+3}" cy="${y-1}" rx="3" ry="2" fill="#8a6a4c"/>`:`<ellipse cx="${x}" cy="${y}" rx="5" ry="2.8" fill="#cdb48a"/>`}).join('')}
 function goLitter(){const R=roomCfg(),n=S.name||'〚貓代詞〛';if(!R.litter.on)return;
   startWalk(R.litter.x,false,()=>{setHView('front');
     if(litterDirt().length>=3&&!H.complained){H.complained=true;say('（聞聞）…喵！',1500);setFace('annoyed',1.5);H.mood-=.05;
-      logAct('litterDirty','覺得貓砂盆太髒，不太想用，跑來跟你抱怨（心情下降）',true);setTimeout(()=>comeOver(()=>{H.state='beg';H.timer=4;say('喵～（砂盆好髒）',1600)}),1200);return}
+      logAct('litterDirty','覺得貓砂盆太髒，不太想用，跑來跟你抱怨（心情下降）',true);toiletHold=Date.now()+120000;setTimeout(()=>comeOver(()=>{H.state='beg';H.timer=4;say('喵～（砂盆好髒）',1600)}),1200);return}
     H.complained=false;
     jumpTo(.12,()=>{H.y=0;H.inLitter=true;H.state='litter';{const nd=needs();bowelInit(nd);H.litterK=nd.poo>=.85&&nd.poo>=nd.pee-.1?'poop':'pee'}H.timer=5+Math.random()*3;setHView('front');setFace('normal');
       say(H.litterK==='poop'?'（嗯…專心）':'（專心）',1500);note(`${n}在上廁所，不要盯著〚貓代詞〛看啦`,5)})})}
 function sandPuff(){const R=roomCfg(),rw=room.clientWidth,rh=room.clientHeight,w=hc.offsetWidth,cx=R.litter.x*(rw-w)+w/2;
   for(let i=0;i<6;i++){const c=document.createElement('span');c.className='crumb sand';c.style.left=(cx+(Math.random()-.5)*w*.5)+'px';c.style.top=(rh*.89-w*.2)+'px';c.style.setProperty('--dx',((Math.random()-.5)*50)+'px');room.appendChild(c);setTimeout(()=>c.remove(),800)}}
-function finishLitter(){const n=S.name||'〚貓代詞〛',k=H.litterK||'pee',d=litterDirt();d.push(k);if(d.length>6)d.shift();{const nd=needs();bowelInit(nd);nd[k==='poop'?'poo':'pee']=-Math.random()*.15;nd.toilet=Math.max(nd.pee,nd.poo)}say('（撥沙撥沙）',1200);sandPuff();
+function finishLitter(){const n=S.name||'〚貓代詞〛',k=H.litterK||'pee',d=litterDirt();d.push(k);if(d.length>6)d.shift();{const nd=needs();bowelInit(nd);nd[k==='poop'?'poo':'pee']=-Math.random()*.15;{const o=k==='poop'?'pee':'poo';if(nd[o]>.8)nd[o]=.6}nd.toilet=Math.max(nd.pee,nd.poo)}say('（撥沙撥沙）',1200);sandPuff();
   H.inLitter=false;H.hop=.55;const T=traits(),zoom=k==='poop'&&Math.random()<.45+T.zoom*.08+P01('energy')*.2;
   logAct(zoom?'litterZoom':'litter',k==='poop'?(zoom?'上完大號撥撥沙，突然暴衝跑了一圈':'去貓砂盆上大號，撥沙蓋好'):'去貓砂盆尿尿，撥沙蓋好',true);save();drawLitter();
   if(zoom)setTimeout(()=>{say('喵喵喵！',900);startWalk(zoneEdge(true),false,()=>startWalk(viewX(),false,null,true),true)},500);else sitDown('front')}
