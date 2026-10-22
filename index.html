@@ -2050,7 +2050,7 @@ function apply(dt){
   const wig=st==='ready'?Math.sin(t*22)*w*.012*m:0;if(st==='ready'){sy*=.88;sx*=1.04}
   if(st==='stalk'){sy*=.86;sx*=1.05}
   if(st==='bat'||st==='beg2'){sy*=1.07;y+=w*.04}
-  {const ph=st==='roll'?H.rollPh:((st==='pose'&&H.pose&&H.pose.k==='belly')||(st==='sleep'&&H.sleepPose==='belly')?'flop':null),tg=ph==='flop'?168:ph==='side'?168+Math.sin(t*3.2)*30:0;H.rollRot=(H.rollRot||0)+(tg-(H.rollRot||0))*Math.min(1,dt*(m?5:30));
+  {const ph=st==='roll'?H.rollPh:((st==='pose'&&H.pose&&H.pose.k==='belly')?'flop':null),tg=ph==='flop'?168:ph==='side'?168+Math.sin(t*3.2)*30:0;H.rollRot=(H.rollRot||0)+(tg-(H.rollRot||0))*Math.min(1,dt*(m?5:30));
    const rr=H.rollRot;if(Math.abs(rr)>.5){rot+=rr;y+=w*.273*(1-Math.cos(rr*Math.PI/180))}if(ph==='rub')rot+=Math.sin(t*5)*8*(m||.3)}
   if(st==='birdwatch'){sy*=.95;if(m&&Math.random()<dt*2)H.wag=.4}if(st==='litter'){sy*=.9;sx*=1.04;y+=w*.03}if(st==='treat')sy*=1+Math.sin(t*14)*.015*m;
   if(st==='leap'&&H.leapT>0){const p=1-H.leapT/.7;y+=Math.sin(p*Math.PI)*(H.leapH||.6)*w;sy*=1.08}
@@ -5027,24 +5027,30 @@ function geckoOutcome(B,w){const rh=room.clientHeight,reach=B.y*rh>rh*.89-w*1.6;
 
 /* ===== 睡姿：坐著打盹、香箱、縮成一團、側躺伸長、翻肚子睡 =====
    每次睡著時挑一種：看時間、天氣、心情，也看這隻貓自己的喜好；記憶本裡提到睡姿的話（例如「會翻肚子睡」）會更常出現。 */
-var SLEEP_TXT={sit:'坐著打盹',loaf:'縮成香箱睡著了',curl:'捲成一團睡著了',side:'側躺著睡得好熟',belly:'翻肚子睡得好熟'};
+var SLEEP_TXT={sit:'坐著打盹',loaf:'縮成香箱睡著了',curl:'捲成一團睡著了',side:'側躺著睡得好熟',belly:'伸完懶腰攤平睡得好熟'};
 var SLEEP_KW={belly:/翻肚.*睡|睡.*翻肚|肚子朝上/,loaf:/香箱/,curl:/(捲|縮)成一團|捲起來睡|甜甜圈/,side:/側躺|側睡|伸長.*睡|攤平/};
 function pickSleepPose(){const tod=todNow(),wx=typeof wxNow==='function'?wxNow():'off',cold=tod==='night'||wx==='snow'||wx==='rain',facts=learned().map(f=>f.t).join('／');
   const w={sit:.15,loaf:.25,curl:.15+(cold?.3:0),side:.15+(tod==='day'?.15:0),belly:.06+(H.mood>.7?.2:0)+(P01('affection')>.6?.08:0)};
   let tot=0;Object.keys(w).forEach(k=>{w[k]*=poseLike('sleep_'+k)*(SLEEP_KW[k]&&SLEEP_KW[k].test(facts)?3:1);tot+=w[k]});
   let r=Math.random()*tot;for(const k in w){if((r-=w[k])<=0)return k}return'loaf'}
-function sleepApply(v,t,m,o,w){if(H.state!=='sleep'){if(H.sleepPose)H.sleepPose=null;return o}
-  if(!H.sleepPose){H.sleepPose=pickSleepPose();const sv={curl:'side',side:'side',belly:'side'}[H.sleepPose]||'front';if(H.view!==sv)setHView(sv)}
-  const k=H.sleepPose;
-  if(k==='loaf'&&v==='front'){setT('frontL','translate(0 222) scale(1 .25) translate(0 -222)');setT('frontR','translate(0 222) scale(1 .25) translate(0 -222)');
-    setT('backL','translate(0 236) scale(1 .2) translate(0 -236)');setT('backR','translate(0 236) scale(1 .2) translate(0 -236)');o.sy*=.9/.94;o.sx*=1.02}
-  if(k==='curl'&&v==='side'){['legNF','legFF','legNB','legFB'].forEach(p=>setT(p,'translate(0 228) scale(1 .25) translate(0 -228)'));
-    setT('head','translate(-14 34) rotate(28 200 180)');const tp=TAIL_PIVOT.side;setT('tail',`rotate(122 ${tp[0]} ${tp[1]})`);o.sy*=.8;o.sx*=.96}
-  if(k==='side'&&v==='side'){setT('legNF','rotate(-72 193 232)');setT('legFF','rotate(-78 213 232)');setT('legNB','rotate(72 97 232)');setT('legFB','rotate(78 117 232)');
-    setT('head','translate(0 16) rotate(10 200 180)');o.sy*=.72/.94;o.sx*=1.1/1.04}
-  if(k==='belly'&&v==='side'){setT('legNF','rotate(-35 193 232)');setT('legFF','rotate(-20 213 232)');setT('legNB','rotate(15 97 232)');setT('legFB','rotate(30 117 232)')}
+function sleepApply(v,t,m,o,w){if(H.state!=='sleep'){if(H.sleepPose){H.sleepPose=null;H.sleepRolled=false}return o}
+  if(!H.sleepPose){H.sleepPose=pickSleepPose();H.sleepAt=t;H.sleepRolled=false;const sv={curl:'side',side:'side',belly:'side'}[H.sleepPose]||'front';if(H.view!==sv)setHView(sv)}
+  const k=H.sleepPose,el=t-(H.sleepAt??t),
+    ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)},
+    p=m?ease(el/.9):1,                     // 第一步：慢慢趴下、躺下（約 0.9 秒）
+    L=(a,b2)=>a+(b2-a)*p;
+  if(k==='loaf'&&v==='front'){const s1=L(1,.25),s2=L(1,.2);setT('frontL',`translate(0 222) scale(1 ${s1}) translate(0 -222)`);setT('frontR',`translate(0 222) scale(1 ${s1}) translate(0 -222)`);
+    setT('backL',`translate(0 236) scale(1 ${s2}) translate(0 -236)`);setT('backR',`translate(0 236) scale(1 ${s2}) translate(0 -236)`);o.sy*=L(1,.9/.94);o.sx*=L(1,1.02)}
+  if(k==='curl'&&v==='side'){const s1=L(1,.25);['legNF','legFF','legNB','legFB'].forEach(q=>setT(q,`translate(0 228) scale(1 ${s1}) translate(0 -228)`));
+    setT('head',`translate(${L(0,-14)} ${L(0,34)}) rotate(${L(0,28)} 200 180)`);const tp=TAIL_PIVOT.side;setT('tail',`rotate(${L(0,122)} ${tp[0]} ${tp[1]})`);o.sy*=L(1,.8);o.sx*=L(1,.96)}
+  if((k==='side'||k==='belly')&&v==='side'){
+    // 第二步（只有攤平睡）：躺好停一下，再伸個大懶腰——前腳往前伸、後腳往後蹬、頭往後仰，攤平露出肚子
+    const r=k==='belly'?(m?ease((el-1.4)/.9):1):0,R=(a,b2)=>a+(b2-a)*r;
+    setT('legNF',`rotate(${R(L(0,-72),-100)} 193 232)`);setT('legFF',`rotate(${R(L(0,-78),-62)} 213 232)`);setT('legNB',`rotate(${R(L(0,72),100)} 97 232)`);setT('legFB',`rotate(${R(L(0,78),62)} 117 232)`);
+    setT('head',`translate(${R(0,6)} ${R(L(0,16),20)}) rotate(${R(L(0,10),-16)} 200 180)`);
+    if(r>0){const tp=TAIL_PIVOT.side;setT('tail',`rotate(${R(0,-40)} ${tp[0]} ${tp[1]})`)}
+    o.sy*=R(L(1,.72/.94),.7/.94);o.sx*=R(L(1,1.1/1.04),1.12/1.04)}
   return o}
-
 $('howBtn').onclick=()=>{const h=document.querySelector('#viewHome .homehint.small'),on=!h.classList.contains('show');h.classList.toggle('show',on);$('howBtn').setAttribute('aria-expanded',String(on))};
 
 /* 房間畫面大小 */
