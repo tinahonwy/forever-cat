@@ -1342,9 +1342,9 @@ function sideEar(t,which){const[B1,B2,T]=SIDE_EARS[which],M=[(B1[0]+B2[0])/2,(B1
   else if(t==='curl')d=`M${pt(B1)} L${pt(T)} Q${T[0]-14},${T[1]-6} ${T[0]-12},${T[1]+8} L${pt(B2)} Z`;
   else if(t==='fold'){const F=at(.5);d=`M${pt(B1)} L${(F[0]+14).toFixed(1)},${(F[1]+8).toFixed(1)} L${pt(B2)} Z`}
   return{d,a:at(.55)}}
-function geo(){const hf=1+(S.fat-1)*.35;return{hf,brx:62*S.fat,tw:{none:12,short:16,medium:22,long:28}[S.fur],fr:{medium:7,long:11}[S.fur]||0,
-  sbrx:78*(1+(S.fat-1)*.3),sbry:44*(1+(S.fat-1)*.6)}}
-function catOutline(){const b=S.base||'#f6efe3';return lum(b)<.3?mix(b,'#000000',.32):mix(b,'#8a5a40',.32)}
+function geo(){const hf=.84+(S.fat-1)*.4;return{hf,ex:Math.max(0,88*(1-hf)*.8),brx:47*S.fat,shf:1+(S.fat-1)*.35,tw:{none:12,short:16,medium:22,long:28}[S.fur],fr:{medium:7,long:11}[S.fur]||0,
+  sbrx:76*(1+(S.fat-1)*.3),sbry:39*(1+(S.fat-1)*.6)}}
+function catOutline(){return'#2d2724'}
 /* ===== 繪本水彩：每塊身體各自有亮面與邊緣積色，外加紙張顆粒 ===== */
 let wcGrainURL='';
 function wcGrain(){if(wcGrainURL)return wcGrainURL;try{const c=document.createElement('canvas');c.width=c.height=160;const x=c.getContext('2d');
@@ -1353,10 +1353,10 @@ function wcGrain(){if(wcGrainURL)return wcGrainURL;try{const c=document.createEl
   for(let i=0;i<d.length;i+=4){const n=r();if(n<.05){d[i]=130;d[i+1]=90;d[i+2]=65;d[i+3]=Math.max(d[i+3],10+r()*14)}else if(n>.94){d[i]=d[i+1]=d[i+2]=255;d[i+3]=Math.max(d[i+3],14+r()*18)}}
   x.putImageData(id,0,0);wcGrainURL=c.toDataURL('image/png')}catch(e){wcGrainURL=''}return wcGrainURL}
 function wcDefs(px){const b=S.base||'#f6efe3',dk=lum(b)<.3,sh=dk?mix(b,'#000000',.55):mix(b,'#7a4a34',.55),g=wcGrain();
-  return`<radialGradient id="${px}wash" cx=".4" cy=".34" r=".64"><stop offset="0" stop-color="#ffffff" stop-opacity="${dk?.16:.34}"/><stop offset=".42" stop-color="#ffffff" stop-opacity="0"/><stop offset=".7" stop-color="${sh}" stop-opacity="0"/><stop offset="1" stop-color="${sh}" stop-opacity="${dk?.32:.24}"/></radialGradient>`+
+  return`<radialGradient id="${px}wash" cx=".42" cy=".3" r=".85"><stop offset="0" stop-color="#ffffff" stop-opacity="${dk?.14:.3}"/><stop offset=".45" stop-color="#ffffff" stop-opacity="0"/><stop offset=".78" stop-color="${sh}" stop-opacity="0"/><stop offset="1" stop-color="${sh}" stop-opacity="${dk?.22:.16}"/></radialGradient>`+
     (g?`<pattern id="${px}grain" patternUnits="userSpaceOnUse" width="80" height="80"><image href="${g}" x="-.6" y="-.6" width="81.2" height="81.2"/></pattern>`:'')}
 /* 捏貓畫面：花紋畫布在中間，所以明暗疊在最上層；每塊用「自己減掉蓋在上面的部位」當遮罩，重疊處才不會透出底下的邊 */
-function wcMakerOverlay(v){v=GV(v);const px='wcm-',W=partShapes('#fff',v),K=partShapes('#000',v),L=partShapes(`url(#${px}wash)`,v),ord=ORDERS[v];
+function wcMakerOverlay(v){v=GV(v);const px='wcm-',W=partShapes('#fff',v),K=partShapes('#000',v),L=partShapes(`url(#${px}wash)`,v,false,true),ord=ORDERS[v];
   let defs=wcDefs(px),body='';
   ord.forEach((k,i)=>{if(!W[k])return;defs+=`<mask id="${px}m-${k}" maskUnits="userSpaceOnUse" x="-20" y="-20" width="340" height="340">${W[k]}${ord.slice(i+1).map(j=>K[j]).join('')}</mask>`;
     body+=`<g mask="url(#${px}m-${k})">${L[k]}</g>`});
@@ -1364,14 +1364,14 @@ function wcMakerOverlay(v){v=GV(v);const px='wcm-',W=partShapes('#fff',v),K=part
   if(wcGrain())body+=`<rect x="-20" y="-20" width="340" height="340" fill="url(#${px}grain)" mask="url(#${px}all)"/>`;
   return`<defs>${defs}</defs>${body}`}
 
-function partShapes(fill,v='front',outline=false){
+function partShapes(fill,v='front',outline=false,noEars=false){
   const g=geo(),P={};ORDERS[v].forEach(k=>{P[k]=''});
   const leg=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w/2}" fill="${fill}"/>`;
   const circ=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}"/>`;
   const tail=TAILS[v][S.tail];
   if(tail)P.tail=`<path d="${tail}" stroke="${fill}" stroke-width="${g.tw}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
   const frontHead=()=>{let s='';
-    [['L',S.earL],['R',S.earR]].forEach(([side,t])=>{if(EAR[t]&&t!=='fold')s+=`<path d="${EAR[t].d}" fill="${fill}" stroke="${fill}" stroke-width="8" stroke-linejoin="round"${side==='R'?` transform="${MIRROR}"`:''}/>`});
+    [['L',S.earL],['R',S.earR]].forEach(([side,t])=>{if(!noEars&&EAR[t]&&t!=='fold')s+=`<path d="${EAR[t].d}" fill="${fill}" stroke="${fill}" stroke-width="8" stroke-linejoin="round" transform="${side==='R'?MIRROR:''} translate(${g.ex.toFixed(1)},0)"/>`});
     s+=`<ellipse cx="150" cy="122" rx="${88*g.hf}" ry="70" fill="${fill}"/>`;
     if(g.fr){[14,34,54].forEach(a=>{const r=a*Math.PI/180,x=88*g.hf*Math.cos(r),y=122+70*Math.sin(r);s+=circ(150+x,y,g.fr+1)+circ(150-x,y,g.fr+1)});
       if(S.fur==='long'&&v==='front')[-26,-9,9,26].forEach(dx=>{s+=circ(150+dx,190,12)})}
@@ -1379,60 +1379,59 @@ function partShapes(fill,v='front',outline=false){
   const frontBody=()=>{let s=`<ellipse cx="150" cy="208" rx="${g.brx}" ry="54" fill="${fill}"/>`;
     if(g.fr)[-40,-18,4,26].forEach(a=>{const r=a*Math.PI/180,x=g.brx*Math.cos(r),y=208+54*Math.sin(r);s+=circ(150+x,y,g.fr)+circ(150-x,y,g.fr)});
     return s};
-  if(v==='front'){P.backL=leg(98,234,26,32);P.backR=leg(176,234,26,32);P.body=frontBody();P.frontL=leg(128,220,21,48);P.frontR=leg(151,220,21,48);P.head=frontHead()}
-  if(v==='back'){P.feetL=leg(100,236,28,32);P.feetR=leg(172,236,28,32);P.head=frontHead();P.body=frontBody()}
+  if(v==='front'){P.backL=leg(150-g.brx*.63,234,26,32);P.backR=leg(150+g.brx*.63-26,234,26,32);P.body=frontBody();P.frontL=leg(128,220,21,48);P.frontR=leg(151,220,21,48);P.head=frontHead()}
+  if(v==='back'){P.feetL=leg(150-g.brx*.63,236,28,32);P.feetR=leg(150+g.brx*.63-28,236,28,32);P.head=frontHead();P.body=frontBody()}
   if(v==='side'){
     P.legFB=leg(108,226,18,44);P.legFF=leg(204,226,18,44);P.legNB=leg(88,226,18,44);P.legNF=leg(184,226,18,44);
     P.body=`<ellipse cx="148" cy="208" rx="${g.sbrx}" ry="${g.sbry}" fill="${fill}"/>`;
     if(g.fr){[70,90,110].forEach(a=>{const r=a*Math.PI/180;P.body+=circ(148+g.sbrx*Math.cos(r),208+g.sbry*Math.sin(r),g.fr)});P.body+=circ(212,200,g.fr+2)+circ(204,218,g.fr+1)}
-    const ear=(t,w)=>(EAR[t]&&t!=='fold')?`<path d="${sideEar(t,w).d}" fill="${fill}" stroke="${fill}" stroke-width="6" stroke-linejoin="round"/>`:'';
-    P.head=ear(S.earR,'far')+ear(S.earL,'near')+`<ellipse cx="220" cy="140" rx="${64*g.hf}" ry="56" fill="${fill}"/>`;
-    if(g.fr)[40,70,100,130].forEach(a=>{const r=a*Math.PI/180;P.head+=circ(220+64*g.hf*Math.cos(r),140+56*Math.sin(r),g.fr+1)});
+    const ear=(t,w)=>(!noEars&&EAR[t]&&t!=='fold')?`<path d="${sideEar(t,w).d}" fill="${fill}" stroke="${fill}" stroke-width="6" stroke-linejoin="round"/>`:'';
+    P.head=ear(S.earR,'far')+ear(S.earL,'near')+`<ellipse cx="220" cy="140" rx="${64*g.shf}" ry="56" fill="${fill}"/>`;
+    if(g.fr)[40,70,100,130].forEach(a=>{const r=a*Math.PI/180;P.head+=circ(220+64*g.shf*Math.cos(r),140+56*Math.sin(r),g.fr+1)});
   }
-  if(outline){const O=partShapes('__OC__',v,false),oc=catOutline(),OW=3;
+  if(outline){const O=partShapes('__OC__',v,false),oc=catOutline(),OW=11;
     Object.keys(P).forEach(k=>{if(!P[k])return;
       const o=O[k].replace(/stroke-width="([\d.]+)"/g,(m,w)=>`stroke-width="${+w+OW}"`)
         .replace(/fill="__OC__"(?! stroke)/g,`fill="__OC__" stroke="__OC__" stroke-width="${OW}" stroke-linejoin="round"`)
         .split('__OC__').join(oc);
-      P[k]=`<g class="ol" opacity=".7">${o}</g>`+P[k]})}
+      P[k]=`<g class="ol">${o}</g>`+P[k]})}
   return P;
 }
 function shapes(fill,v=mview,outline=false){v=GV(v);const P=partShapes(fill,v,outline);return ORDERS[v].map(k=>P[k]).join('')}
 function featureParts(v='front',opt={}){
-  const g=geo(),dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#5b4239',shade=mix(S.base,dark?'#ffffff':'#7a4a34',.16);
+  const g=geo(),dark=lum(S.base)<.38,ink=dark?'#f1e6e6':'#2d2724',shade=mix(S.base,dark?'#ffffff':'#2d2724',.22);
   const F={head:'',face:'',frontL:'',frontR:''};
   const r={S:6,M:8.5,L:11}[S.eyeSize],L={short:24,mid:36,long:50}[S.whLen],wR=S.whLink?S.whL:S.whR;
   const whisk=(sx,y,side,n,len)=>{let p='';for(let i=0;i<n;i++){const ang=(n===1?0:-14+28*i/(n-1))*Math.PI/180,y0=y+(i-(n-1)/2)*6,ex=sx+side*len*Math.cos(ang),ey=y0+len*Math.sin(ang);
     if(S.whCurl){const mx=(sx+ex)/2,my=(y0+ey)/2-9;p+=`M${sx},${y0} Q${mx},${my} ${ex},${ey+3} `}else p+=`M${sx},${y0} L${ex},${ey} `}return p};
-  const wpath=d=>d?`<path d="${d}" stroke="${S.whColor}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".8"/>`:'';
+  const wpath=d=>d?`<path d="${d}" stroke="${S.whColor}" stroke-width="3.2" fill="none" stroke-linecap="round"/>`:'';
   const inner=(t,pre)=>{const e=EAR[t];if(!e)return'';
     if(t==='fold')return`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round" transform="${pre}"/>`;
-    return`<path d="${e.d}" fill="#f2a1aa" stroke="#f2a1aa" stroke-width="3" stroke-linejoin="round" opacity=".7" transform="${pre} translate(${e.a[0]},${e.a[1]}) scale(.5) translate(${-e.a[0]},${-e.a[1]})"/>`};
-  const fc=opt.face||(opt.closed?'closed':'normal'),ln=d=>`<path d="${d}" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
-  const openEye=(cx,cy,col)=>{const lit=lum(col)>.22,rim=mix(col,'#000000',.4);let e=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}"${lit?` stroke="${rim}" stroke-width="1.3"`:''}/>`;
-    if(lit)e+=`<ellipse cx="${cx}" cy="${cy+r*.05}" rx="${(r*.42).toFixed(2)}" ry="${(r*.78).toFixed(2)}" fill="#1f1a1a"/>`;
-    else e+=`<circle cx="${cx}" cy="${cy+r*.25}" r="${(r*.62).toFixed(2)}" fill="${mix(col,'#ffffff',.14)}" opacity=".55"/>`;
-    return e+`<circle cx="${(cx+r*.34).toFixed(2)}" cy="${(cy-r*.36).toFixed(2)}" r="${(r*.33).toFixed(2)}" fill="#ffffff"/><circle cx="${(cx-r*.32).toFixed(2)}" cy="${(cy+r*.38).toFixed(2)}" r="${(r*.14).toFixed(2)}" fill="#ffffff" opacity=".85"/>`};
+    return`<path d="${e.d}" fill="#f6a3ab" stroke="#f6a3ab" stroke-width="3" stroke-linejoin="round" transform="${pre} translate(${e.a[0]},${e.a[1]}) scale(.5) translate(${-e.a[0]},${-e.a[1]})"/>`};
+  const fc=opt.face||(opt.closed?'closed':'normal'),ln=d=>`<path d="${d}" stroke="${ink}" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const openEye=(cx,cy,col)=>{const lit=lum(col)>.22;let e=`<ellipse cx="${cx}" cy="${cy}" rx="${(r*.78).toFixed(2)}" ry="${(r*1.02).toFixed(2)}" fill="${col}"${lit?` stroke="${ink}" stroke-width="2.4"`:''}/>`;
+    if(lit)e+=`<ellipse cx="${cx}" cy="${cy}" rx="${(r*.34).toFixed(2)}" ry="${(r*.72).toFixed(2)}" fill="#2d2724"/>`;
+    return e};
   const eye=(cx,cy,col)=>(fc==='closed'||fc==='yawn')?ln(`M${cx-r},${cy-1} q${r},${r} ${2*r},0`):fc==='happy'?ln(`M${cx-r},${cy+2} q${r},${-r*1.3} ${2*r},0`):fc==='annoyed'?ln(`M${cx-r},${cy-(cx<150?2:-2)} L${cx+r},${cy+(cx<150?2:-2)}`):openEye(cx,cy,col);
   if(v==='front'){
-    F.head=inner(S.earL,'')+inner(S.earR,MIRROR);
+    F.head=inner(S.earL,`translate(${g.ex.toFixed(1)},0)`)+inner(S.earR,`${MIRROR} translate(${g.ex.toFixed(1)},0)`);
     if(S.fur==='none')F.head+=`<path d="M132,72 q18,-7 36,0 M138,82 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-    F.frontL=`<path d="M130,232 L130,256" stroke="${shade}" stroke-width="3" stroke-linecap="round"/><path d="M135.5,261 v4.5 M142,261 v4.5" stroke="${shade}" stroke-width="2.2" stroke-linecap="round"/>`;
-    F.frontR=`<path d="M170,232 L170,256" stroke="${shade}" stroke-width="3" stroke-linecap="round"/><path d="M158,261 v4.5 M164.5,261 v4.5" stroke="${shade}" stroke-width="2.2" stroke-linecap="round"/>`;
-    F.face=S.blush===false?'':[104,196].map(x=>`<ellipse cx="${x}" cy="149" rx="17" ry="10.5" fill="#f19aa2" opacity=".28"/><ellipse cx="${x+1}" cy="149.5" rx="11" ry="6.5" fill="#ee8f99" opacity=".38"/>`).join('');
+    F.frontL=`<path d="M135.5,260 v5 M142,260 v5" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>`;
+    F.frontR=`<path d="M158,260 v5 M164.5,260 v5" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>`;
+    F.face=S.blush===false?'':[106,194].map(x=>`<ellipse cx="${x}" cy="150" rx="11" ry="6.5" fill="#f6a3ab"/>`).join('');
     F.face+=`<g class="eyes">${eye(120,130,S.eyeL)}${eye(180,130,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
-    F.face+=`<path d="M143.6,139.4 Q150,136.4 156.4,139.4 Q156.2,142.6 150,146.4 Q143.8,142.6 143.6,139.4Z" fill="${S.nose}"/><ellipse cx="148.4" cy="139.4" rx="1.9" ry="1" fill="#ffffff" opacity=".55"/><path d="M150,146.4 v1.8" stroke="${ink}" stroke-width="2.2" stroke-linecap="round"/>`;
+    F.face+=`<path d="M145.8,140.2 Q150,138.4 154.2,140.2 Q153.6,142.8 150,145 Q146.4,142.8 145.8,140.2Z" fill="${S.nose}"/>`;
     F.face+=`<path class="tongueF" d="M145,151 q5,10 10,0Z" fill="#f08a96" opacity="0"/>`;
-    F.face+=fc==='yawn'?`<ellipse cx="150" cy="158" rx="9" ry="11" fill="#7a3b46"/><ellipse cx="150" cy="164" rx="6" ry="4" fill="#f08a96"/>`:`<path d="M138,148 q6,8 12,0 q6,8 12,0" stroke="${ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    F.face+=fc==='yawn'?`<ellipse cx="150" cy="158" rx="9" ry="11" fill="#7a3b46"/><ellipse cx="150" cy="164" rx="6" ry="4" fill="#f08a96"/>`:`<path d="M139,147 q5.5,8 11,0 q5.5,8 11,0" stroke="${ink}" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
     F.face+=wpath(whisk(150-74*g.hf,140,-1,S.whL,L)+whisk(150+74*g.hf,140,1,wR,L));
   }
   if(v==='side'){
     if(EAR[S.earL]){const e=sideEar(S.earL,'near');F.head=S.earL==='fold'?`<path d="${e.d}" fill="${shade}" stroke="${shade}" stroke-width="4" stroke-linejoin="round"/>`:`<path d="${e.d}" fill="#f6b3b8" stroke="#f6b3b8" stroke-width="3" stroke-linejoin="round" transform="translate(${e.a[0]},${e.a[1]}) scale(.45) translate(${-e.a[0]},${-e.a[1]})"/>`}
     if(S.fur==='none')F.head+=`<path d="M196,104 q12,-5 24,0" stroke="${shade}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-    F.face=S.blush===false?'':`<ellipse cx="246" cy="156" rx="14" ry="9" fill="#f19aa2" opacity=".28"/><ellipse cx="246" cy="156.5" rx="9" ry="5.5" fill="#ee8f99" opacity=".38"/>`;
+    F.face=S.blush===false?'':`<ellipse cx="246" cy="156" rx="9" ry="5.5" fill="#f6a3ab"/>`;
     F.face+=`<g class="eyes">${eye(250,132,S.eyeLink?S.eyeL:S.eyeR)}</g>`;
-    F.face+=`<ellipse cx="281" cy="146" rx="4.5" ry="3.5" fill="${S.nose}"/><ellipse cx="280" cy="144.6" rx="1.5" ry=".8" fill="#ffffff" opacity=".55"/>`;
-    F.face+=`<path d="M279,152 q-3,6 -10,3" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    F.face+=`<ellipse cx="281" cy="146" rx="3.6" ry="2.8" fill="${S.nose}"/>`;
+    F.face+=`<path d="M279,152 q-3,6 -10,3" stroke="${ink}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
     F.face+=`<path class="tongue" d="M272,154 q5,1 5,8 q-1,5 -5,4 q-3,-5 0,-12Z" fill="#f08a96" opacity="0"/>`;
     F.face+=wpath(whisk(264,150,1,wR,L));
   }
@@ -1445,7 +1444,7 @@ function topLayer(opt={},v=mview){const F=featureParts(GV(v),opt);return F.head+
 function maskURL(v=mview){return`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">${shapes('#000',v)}</svg>`)}")`}
 
 function render(){
-  base.innerHTML=shapes(S.base,mview,true);topL.innerHTML=wcMakerOverlay(mview)+topLayer();
+  base.innerHTML=shapes(S.base,mview,true);topL.innerHTML=topLayer();
   const m=maskURL();
   cv.style.webkitMaskImage=m;cv.style.maskImage=m;
   if(view==='home')drawHomeCat();
@@ -1893,10 +1892,10 @@ function drawHomeCat(){
   PAINTS.forEach(v=>{s+=`<image id="hpat-${v}" href="${CV[v].toDataURL()}" x="0" y="0" width="300" height="300"/>`});
   VIEWS.forEach(v=>{
     const M=partShapes('#fff',v);ORDERS[v].forEach(k=>{s+=`<mask id="hm-${v}-${k}" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="300">${M[k]}</mask>`})});
-  s+=wcDefs('wch-')+'</defs>';const hasGrain=!!wcGrain();
-  VIEWS.forEach(v=>{const P=partShapes(S.base,v,true),F=featureParts(v,{face:H.face}),WA=partShapes('url(#wch-wash)',v),GR=hasGrain?partShapes('url(#wch-grain)',v):{};
+  s+='</defs>';
+  VIEWS.forEach(v=>{const P=partShapes(S.base,v,true),F=featureParts(v,{face:H.face});
     s+=`<g id="hv-${v}" display="${v===H.view?'inline':'none'}">`;
-    ORDERS[v].forEach(k=>{s+=`<g id="hp-${v}-${k}">${P[k]}<use href="#hpat-${v}" mask="url(#hm-${v}-${k})"/>${WA[k]||''}${GR[k]||''}`;
+    ORDERS[v].forEach(k=>{s+=`<g id="hp-${v}-${k}">${P[k]}<use href="#hpat-${v}" mask="url(#hm-${v}-${k})"/>`;
       s+=k==='head'?F.head+`<g id="hp-${v}-face">${F.face}</g>`:(F[k]||'');s+='</g>'});
     s+='</g>'});
   hCat.innerHTML=s;hFlipPat=false;
@@ -2060,7 +2059,7 @@ function zoneAt(e){
   if(hCat.dataset.flip==='1')x=300-x;
   const v=H.view,g=geo();
   if(v==='side'){
-    if(inEll(x,y,220,140,64*g.hf+6,60))return x>250&&y>152?'chin':'head';
+    if(inEll(x,y,220,140,64*g.shf+6,60))return x>250&&y>152?'chin':'head';
     if(x<82&&y<215)return'tail';if(y>250)return'paw';if(x<104)return'butt';return y>215?'belly':'back';
   }
   if(inEll(x,y,150,122,88*g.hf+6,74)||y<100)return v==='back'?'head':(y<104?'head':(y>150&&Math.abs(x-150)<46)?'chin':'cheek');
@@ -3448,7 +3447,7 @@ function projectView(src,o,v){const gv=GV(v),g=geo(),W=src.width,Hh=src.height;
     x.setTransform(kx,0,0,ky,cx-rx-sx*kx,cy-ry-sy*ky);x.drawImage(img,0,0);x.restore()};
   if(gv==='side'){
     if(okBox(o.bodyBox))put(o.bodyBox,148,208,g.sbrx,g.sbry,()=>x.ellipse(148,208,g.sbrx+4,g.sbry+4,0,0,Math.PI*2));
-    if(okBox(o.headBox))put(o.headBox,220,140,64*g.hf,56,()=>{x.ellipse(220,140,64*g.hf+4,60,0,0,Math.PI*2);x.rect(176,30,96,70)});
+    if(okBox(o.headBox))put(o.headBox,220,140,64*g.shf,56,()=>{x.ellipse(220,140,64*g.shf+4,60,0,0,Math.PI*2);x.rect(176,30,96,70)});
   }else{
     if(okBox(o.bodyBox))put(o.bodyBox,150,208,g.brx,54,()=>x.ellipse(150,208,g.brx+4,58,0,0,Math.PI*2));
     if(okBox(o.headBox))put(o.headBox,150,122,88*g.hf,70,()=>{x.ellipse(150,122,88*g.hf+6,74,0,0,Math.PI*2);x.rect(46,0,208,96)});
