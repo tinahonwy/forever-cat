@@ -1712,13 +1712,18 @@ var SID=Math.random().toString(36).slice(2,10),syncPaused=false,presUnsub=null,p
 const status=t=>{$('saved').textContent=t};
 function save(){clearTimeout(saveT);saveT=setTimeout(doSave,user?1200:400)}
 let sentPaint={};
-async function doSave(){
+/* 省雲端額度：這台裝置照樣隨時存；雲端最多每 3 分鐘寫一次，離開頁面、剛登入、還原備份時一定立刻寫 */
+const CLOUD_GAP=180000;let lastCloudAt=0,cloudTimer=0;
+async function doSave(force){
   if(booting)return;
   S.savedAt=Date.now();try{S.eatingNow=H.state==='eat'?{it:H.eatSrc||'bowl',at:Date.now()}:null}catch(e){}
   if(!user)guestDirty=true;
   const data={S,owner,paint:CV.front.toDataURL(),paintSide:CV.side.toDataURL(),paintSideL:CV.sideL.toDataURL(),paintBack:CV.back.toDataURL()};
   try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
   if(user&&db&&!loading&&!syncPaused&&owner===user.uid&&cloudOk===user.uid){
+    const wait=CLOUD_GAP-(Date.now()-lastCloudAt);
+    if(force!==true&&wait>0){clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>doSave(true),wait);status('已存在這台裝置，稍後同步到雲端');return}
+    clearTimeout(cloudTimer);lastCloudAt=Date.now();
     if(data.paint.length+data.paintSide.length+data.paintSideL.length+data.paintBack.length>950000){status('花紋太複雜，超過雲端單筆上限，請清掉一些');return}
     const clean=JSON.parse(JSON.stringify(S));if(Array.isArray(clean.guideAns))clean.guideAns=clean.guideAns.map(a=>Array.isArray(a)?a.join(','):String(a??''));
     const payload={settings:clean,updatedAt:serverTimestamp()};['paint','paintSide','paintSideL','paintBack'].forEach(k=>{if(sentPaint[k]!==data[k])payload[k]=data[k]});
@@ -1782,9 +1787,9 @@ async function loadCloud(u){
     await applyData(use,pp);if(stale())return;owner=u.uid;autoBak(u.uid,d)}
   if(typeof loadVoice==='function')loadVoice(u.uid);
   else{if(owner!=='guest'&&owner!==u.uid){booting=true;await applyData({...DEF},{});booting=false}owner=u.uid}
-  try{const ps=await getDoc(presRef(u.uid)),pd=ps.exists()?ps.data():null;if(pd&&pd.sid!==SID&&pd.ms&&Date.now()-pd.ms<150000&&note)note(`提醒：這隻貓也在「${pd.dev||'另一台裝置'}」開著，那邊會先暫停同步，以這台為主`,6)}catch(e){}
+  try{const ps=await getDoc(presRef(u.uid)),pd=ps.exists()?ps.data():null;if(pd&&pd.sid!==SID&&pd.ms&&Date.now()-pd.ms<240000&&note)note(`提醒：這隻貓也在「${pd.dev||'另一台裝置'}」開著，那邊會先暫停同步，以這台為主`,6)}catch(e){}
   if(stale())return;
-  cloudOk=u.uid;loading=false;setTimeout(()=>{if(typeof ensurePlan==='function')ensurePlan()},2000);if(view==='home'){drawHomeCat();drawPhrases();memLabel()}doSave();presClaim();if(!presUnsub)presStart(u.uid)}
+  cloudOk=u.uid;loading=false;setTimeout(()=>{if(typeof ensurePlan==='function')ensurePlan()},2000);if(view==='home'){drawHomeCat();drawPhrases();memLabel()}doSave(true);presClaim();if(!presUnsub)presStart(u.uid)}
 /* 每天第一次登入，把讀到的雲端資料另存一份（保留兩天份），出事可以拿回來 */
 async function autoBak(uid,d){try{if(ls.get('neko-bak-day-'+uid)===today())return;
   const b1=await getDoc(doc(db,'users',uid,'cats','bak1'));
@@ -1797,10 +1802,10 @@ function presClaim(){if(!user||!db||syncPaused||cloudOk!==user.uid||document.hid
 function presStart(uid){presStop();let first=true;
   try{presUnsub=onSnapshot(presRef(uid),sn=>{const d=sn.exists()?sn.data():null,wasFirst=first;first=false;
     if(!user||user.uid!==uid||!d||d.sid===SID||!d.sid)return;
-    if(wasFirst&&Date.now()-(d.ms||0)>150000)return; // 很久沒動的舊紀錄（例如上次關掉沒清到）不算
+    if(wasFirst&&Date.now()-(d.ms||0)>240000)return; // 很久沒動的舊紀錄（例如上次關掉沒清到）不算
     if(!d.ms)return; // 對方已經關掉了
     presOther=d.dev||'另一台裝置';pauseSync()},()=>{})}catch(e){}
-  presTimer=setInterval(presClaim,60000)}
+  presTimer=setInterval(presClaim,120000)}
 function presStop(){if(presUnsub){try{presUnsub()}catch(e){}presUnsub=null}clearInterval(presTimer);presTimer=null}
 function pauseSync(){syncPaused=true;clearTimeout(saveT);$('useHereBtn').hidden=false;status('已暫停同步（另一台裝置開著），先只存在這台');
   const same=presOther===devName();$('devWarnText').textContent=same?`你在另一個分頁或另一台${presOther}也開著這隻貓。`:`你在「${presOther}」上也開著這隻貓。`;$('devWarn').hidden=false}
@@ -1809,7 +1814,7 @@ $('devUseHere').onclick=useHere;$('useHereBtn').onclick=useHere;
 $('devLater').onclick=()=>{$('devWarn').hidden=true};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)return;if(syncPaused&&user)$('devWarn').hidden=false;else presClaim()});
 /* 關掉、重新整理或切走頁面時，馬上存檔（不等延遲），剛做的事才不會不見 */
-function flushSave(){if(booting)return;clearTimeout(saveT);doSave()}
+function flushSave(){if(booting)return;clearTimeout(saveT);doSave(true)}
 window.addEventListener('pagehide',flushSave);document.addEventListener('visibilitychange',()=>{if(document.hidden)flushSave()});
 window.addEventListener('pagehide',()=>{if(user&&db&&!syncPaused&&cloudOk===user.uid)setDoc(presRef(user.uid),{sid:SID,ms:0,dev:devName()}).catch(()=>{})});
 $('cloudBakBtn').onclick=async()=>{const box=$('cloudBakList');if(!user||!db)return;if(!box.hidden){box.hidden=true;return}
@@ -1821,7 +1826,7 @@ $('cloudBakBtn').onclick=async()=>{const box=$('cloudBakList');if(!user||!db)ret
     b.textContent=`${x.day||''}「${st.name||'貓'}」・記憶 ${(st.learned||[]).length} 則`;let arm=false;
     b.onclick=async()=>{if(!arm){arm=true;b.textContent='再按一次確認還原';setTimeout(()=>{arm=false;b.textContent=`${x.day||''}「${st.name||'貓'}」・記憶 ${(st.learned||[]).length} 則`},4000);return}
       if(!user||cloudOk!==user.uid){box.textContent='還沒讀到雲端，請先按「重新讀取雲端」';return}
-      await applyData(st,x);if(view==='home'){drawHomeCat();drawPhrases();memLabel()}doSave();box.hidden=true;$('backupMsg').textContent=`已還原成 ${x.day||''} 的「${st.name||'貓'}」`};
+      await applyData(st,x);if(view==='home'){drawHomeCat();drawPhrases();memLabel()}doSave(true);box.hidden=true;$('backupMsg').textContent=`已還原成 ${x.day||''} 的「${st.name||'貓'}」`};
     box.appendChild(b)})};
 
 /* 訪客模式提醒 */
