@@ -4164,7 +4164,7 @@ $('admAnnDel').onclick=async()=>{const m=$('admAnnMsg');try{await setDoc(doc(db,
 
 /* ===== 慢眨眼：貓說「我信任你」的方式 ===== */
 var blinkAt=0;
-function catSlowBlink(){if(H.view!=='front'&&!H.hug)setHView('front');setFace('closed',1.1);setTimeout(()=>{if(H.state!=='sleep')setFace('happy',1.8)},1150)}
+function catSlowBlink(){if(H.state==='walk'){sitDown('front');H.timer=Math.max(H.timer,4)}if(H.view!=='front'&&!H.hug)setHView('front');setFace('closed',1.1);setTimeout(()=>{if(H.state!=='sleep')setFace('happy',1.8)},1150)}
 function blinkInvite(){const n=S.name||'〚貓代詞〛';if(H.hug||H.state==='sleep'||H.y>.05)return;sitDown('front');H.timer=7;catSlowBlink();H.blinkInvite=Date.now();
   note(`${n}對你慢慢眨了眨眼，按「慢眨眼」回〚貓代詞〛吧`,6)}
 $('blinkBtn').onclick=()=>{const n=S.name||'〚貓代詞〛',now=Date.now();lastInteract=now;idleFired=false;if(now-blinkAt<2500)return;blinkAt=now;
