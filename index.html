@@ -101,7 +101,7 @@ header p{margin:2px 0 14px;color:var(--muted);font-size:14px}
 .hbed{position:absolute;left:40%;bottom:9%;width:48%;height:24%}
 .lamp{position:absolute;left:90%;bottom:9%;width:6%;height:34%}
 .lampglow{position:absolute;left:72.9%;top:28%;width:16%;height:50%;transform:translateX(-50%);z-index:41;pointer-events:none;opacity:0;transition:opacity 2s;background:radial-gradient(closest-side,rgba(255,214,150,.35),transparent)}
-.room[data-tod=night] .lampglow,.room[data-tod=dusk] .lampglow{opacity:1}
+.room[data-tod=night] .lampglow,.room[data-tod=dusk] .lampglow{opacity:1}.room.lamp-on .lampglow{opacity:1}.room.lamp-off .lampglow{opacity:0}.lamp path:first-child{transition:fill .4s}.room.lamp-on .lamp path:first-child,.room:not(.lamp-off)[data-tod=night] .lamp path:first-child,.room:not(.lamp-off)[data-tod=dusk] .lamp path:first-child{fill:#ffe7a6}
 .rail{position:absolute;left:0;width:100%;bottom:30%;height:24%}
 .plant{position:absolute;bottom:9%;width:9%;height:16%}.plant.p1{left:3%}.plant.p2{left:30%}
 .sunpatch{position:absolute;left:12%;bottom:5%;width:48%;height:12%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,236,160,.75),transparent);opacity:0;transition:opacity 2s}.room[data-tod=day] .sunpatch{opacity:1}
@@ -725,19 +725,19 @@ input[type=range]{accent-color:var(--accent)}
 .tab{flex:1 0 auto;padding:7px 10px;white-space:nowrap}
 
 /* 可以點的新家具 */
-.deco.tap{pointer-events:auto;cursor:pointer;transition:filter .15s}
+.deco.tap,.hbed.tap,.lamp.tap{pointer-events:auto;cursor:pointer;transition:filter .15s}
 /* 所有能互動的東西，滑鼠移上去（手機按下去）都有同樣的發光邊緣 */
 :root{--hoverglow:brightness(1.06) drop-shadow(0 0 4px rgba(255,255,255,.75)) drop-shadow(0 0 1.5px rgba(255,255,255,.9))}
 .deco.tap,#it-tree,#it-scratch,#it-boxback,#it-boxfront,#it-plate,#it-fountain,#it-bowl,#it-litterback,#it-litterfront,.bed,#fridge,#cup,#orn,.gift,.cake,#bird,.niptoy,.ftreat,.bug,.gecko{transition:filter .15s}
 @media (hover:hover){
-  .room:not(.editing):not(.wand):not(.tooling) :is(.deco.tap,#it-tree,#it-scratch,#it-plate,#it-fountain,#it-bowl,.bed,#fridge,#cup,#orn,.gift,.cake,#bird,.niptoy,.ftreat,.bug,.gecko):hover,
+  .room:not(.editing):not(.wand):not(.tooling) :is(.deco.tap,.hbed.tap,.lamp.tap,#it-tree,#it-scratch,#it-plate,#it-fountain,#it-bowl,.bed,#fridge,#cup,#orn,.gift,.cake,#bird,.niptoy,.ftreat,.bug,.gecko):hover,
   .room:not(.editing):not(.wand):not(.tooling):has(#it-boxback:hover,#it-boxfront:hover) :is(#it-boxback,#it-boxfront),
   .room:not(.editing):not(.wand):not(.tooling):has(#it-litterback:hover,#it-litterfront:hover) :is(#it-litterback,#it-litterfront){filter:var(--hoverglow)}}
 @media (hover:none){
-  .room:not(.editing):not(.wand):not(.tooling) :is(.deco.tap,#it-tree,#it-scratch,#it-plate,#it-fountain,#it-bowl,.bed,#fridge,#cup,#orn,.gift,.cake,#bird,.niptoy,.ftreat,.bug,.gecko):active,
+  .room:not(.editing):not(.wand):not(.tooling) :is(.deco.tap,.hbed.tap,.lamp.tap,#it-tree,#it-scratch,#it-plate,#it-fountain,#it-bowl,.bed,#fridge,#cup,#orn,.gift,.cake,#bird,.niptoy,.ftreat,.bug,.gecko):active,
   .room:not(.editing):not(.wand):not(.tooling):has(#it-boxback:active,#it-boxfront:active) :is(#it-boxback,#it-boxfront),
   .room:not(.editing):not(.wand):not(.tooling):has(#it-litterback:active,#it-litterfront:active) :is(#it-litterback,#it-litterfront){filter:var(--hoverglow)}}
-.room.editing .deco.tap{pointer-events:none}
+.room.editing :is(.deco.tap,.hbed.tap,.lamp.tap){pointer-events:none}
 .kclock{transform-origin:50% 10%}.kclock.ring{animation:clockring .7s ease-in-out}
 @keyframes clockring{20%{transform:rotate(-9deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(3deg)}}
 .frame.f2.wiggle{animation:framewig .6s ease-in-out}@keyframes framewig{30%{transform:rotate(-3deg)}70%{transform:rotate(2deg)}}
@@ -1140,8 +1140,8 @@ input[type=range]{accent-color:var(--accent)}
       </div>
       <div class="zone zb"><div class="zwall"></div><div class="zfloor"></div>
         <i class="deco rug rug-b"></i><svg class="deco frame f4" viewBox="0 0 48 32" aria-hidden="true"><rect x="0" y="0" width="48" height="32" rx="2" fill="#fbf6ee"/><rect x="0" y="0" width="48" height="32" rx="2" fill="none" stroke="#8e7bb5" stroke-width="2"/><rect x="4" y="4" width="40" height="24" fill="#2f3f6b"/><circle cx="34" cy="11" r="4.2" fill="#f6e3a1"/><circle cx="35.6" cy="9.8" r="3.6" fill="#2f3f6b"/><g fill="#fff"><circle cx="10" cy="9" r=".9"/><circle cx="18" cy="13" r=".7"/><circle cx="25" cy="8" r=".8"/><circle cx="40" cy="20" r=".6"/></g><path d="M4,28 q10,-9 20,-4 q10,-6 20,-1 V28z" fill="#55648f"/><path d="M14,23 l1.6,-3.4 l1.6,2 h2.4 l1.6,-2 l1.6,3.4 q-4.4,3 -8.8,0z" fill="#1d2747"/></svg><div class="window bwin"><i class="stars"></i><i class="moon"></i><span></span></div>
-        <svg class="hbed" viewBox="0 0 100 50" preserveAspectRatio="none"><path d="M89,50 V7 q0,-7 5,-7 q5,0 5,7 V50z" fill="#b2835b"/><rect x="91.2" y="7" width="5.6" height="38" rx="2" fill="#c69a70"/><rect x="2" y="30" width="90" height="12" rx="1.5" fill="#c0906a"/><rect x="2" y="30" width="90" height="2.2" fill="#d4a881"/><rect x="4" y="42" width="5" height="8" rx="1" fill="#94693f"/><rect x="83" y="42" width="5" height="8" rx="1" fill="#94693f"/><rect x="2" y="14" width="90" height="17" rx="4" fill="#fbf7f1"/><ellipse cx="78" cy="13" rx="12" ry="5.6" fill="#ffffff"/><path d="M67,13.6 q11,3 22,0" stroke="#e8dfd3" stroke-width=".9" fill="none"/><path d="M2,18 h62 a4,4 0 0 1 4,4 v10 h-66 z" fill="#ef9fa2"/><path d="M2,18 h62 a4,4 0 0 1 4,4 v2.2 h-66z" fill="#f7c6c4"/><g fill="#fde4e2"><circle cx="11" cy="27.5" r="1.3"/><circle cx="22" cy="25.4" r="1.3"/><circle cx="33" cy="28" r="1.3"/><circle cx="44" cy="25.6" r="1.3"/><circle cx="55" cy="28" r="1.3"/></g><path d="M6,23.2 h56" stroke="#e98f92" stroke-width=".8" stroke-dasharray="2.4 2.4"/></svg>
-        <svg class="lamp" viewBox="0 0 30 100" preserveAspectRatio="none"><path d="M6,1 h18 l5,21 h-28 z" fill="#f6dfa8"/><path d="M6,1 h18 l1.2,5 h-20.4z" fill="#fbeccb"/><path d="M1,21.4 h28" stroke="#e5bf76" stroke-width="1.8"/><rect x="13.8" y="22" width="2.4" height="70" rx="1" fill="#76563c"/><ellipse cx="15" cy="96" rx="10" ry="3.5" fill="#76563c"/><ellipse cx="15" cy="95" rx="7" ry="1.6" fill="#92704f"/></svg>
+        <svg class="hbed tap" id="decoBed" role="button" aria-label="床，點一下叫〚貓代詞〛上床" viewBox="0 0 100 50" preserveAspectRatio="none"><path d="M89,50 V7 q0,-7 5,-7 q5,0 5,7 V50z" fill="#b2835b"/><rect x="91.2" y="7" width="5.6" height="38" rx="2" fill="#c69a70"/><rect x="2" y="30" width="90" height="12" rx="1.5" fill="#c0906a"/><rect x="2" y="30" width="90" height="2.2" fill="#d4a881"/><rect x="4" y="42" width="5" height="8" rx="1" fill="#94693f"/><rect x="83" y="42" width="5" height="8" rx="1" fill="#94693f"/><rect x="2" y="14" width="90" height="17" rx="4" fill="#fbf7f1"/><ellipse cx="78" cy="13" rx="12" ry="5.6" fill="#ffffff"/><path d="M67,13.6 q11,3 22,0" stroke="#e8dfd3" stroke-width=".9" fill="none"/><path d="M2,18 h62 a4,4 0 0 1 4,4 v10 h-66 z" fill="#ef9fa2"/><path d="M2,18 h62 a4,4 0 0 1 4,4 v2.2 h-66z" fill="#f7c6c4"/><g fill="#fde4e2"><circle cx="11" cy="27.5" r="1.3"/><circle cx="22" cy="25.4" r="1.3"/><circle cx="33" cy="28" r="1.3"/><circle cx="44" cy="25.6" r="1.3"/><circle cx="55" cy="28" r="1.3"/></g><path d="M6,23.2 h56" stroke="#e98f92" stroke-width=".8" stroke-dasharray="2.4 2.4"/></svg>
+        <svg class="lamp tap" id="decoLamp" role="button" aria-label="落地燈，點一下開關" viewBox="0 0 30 100" preserveAspectRatio="none"><path d="M6,1 h18 l5,21 h-28 z" fill="#f6dfa8"/><path d="M6,1 h18 l1.2,5 h-20.4z" fill="#fbeccb"/><path d="M1,21.4 h28" stroke="#e5bf76" stroke-width="1.8"/><rect x="13.8" y="22" width="2.4" height="70" rx="1" fill="#76563c"/><ellipse cx="15" cy="96" rx="10" ry="3.5" fill="#76563c"/><ellipse cx="15" cy="95" rx="7" ry="1.6" fill="#92704f"/></svg>
       </div>
       <div class="zone zc"><div class="zsky"><i class="stars"></i><i class="moon"></i><i class="sunball"></i><i class="cloud"></i></div><div class="zfloor"></div>
         <div class="sunpatch"></div><svg class="deco lights tap" id="decoLights" role="button" aria-label="陽台小燈，點一下開關" viewBox="0 0 100 14" preserveAspectRatio="none" aria-hidden="true"><path d="M0,2 Q50,16 100,2" stroke="#6b5b4c" stroke-width=".4" fill="none"/><ellipse cx="6" cy="5.18" rx=".9" ry="1.9" fill="#f6d36b"/><ellipse cx="14" cy="6.970000000000001" rx=".9" ry="1.9" fill="#f2a7ad"/><ellipse cx="22" cy="8.4" rx=".9" ry="1.9" fill="#9fd3ef"/><ellipse cx="30" cy="9.48" rx=".9" ry="1.9" fill="#c8e2a8"/><ellipse cx="38" cy="10.2" rx=".9" ry="1.9" fill="#f6d36b"/><ellipse cx="46" cy="10.56" rx=".9" ry="1.9" fill="#f2a7ad"/><ellipse cx="54" cy="10.56" rx=".9" ry="1.9" fill="#9fd3ef"/><ellipse cx="62" cy="10.2" rx=".9" ry="1.9" fill="#c8e2a8"/><ellipse cx="70" cy="9.48" rx=".9" ry="1.9" fill="#f6d36b"/><ellipse cx="78" cy="8.4" rx=".9" ry="1.9" fill="#f2a7ad"/><ellipse cx="86" cy="6.970000000000001" rx=".9" ry="1.9" fill="#9fd3ef"/><ellipse cx="94" cy="5.18" rx=".9" ry="1.9" fill="#c8e2a8"/></svg>
@@ -3993,6 +3993,16 @@ $('decoClock').addEventListener('click',e=>{e.stopPropagation();if(roomEdit)retu
   note(`現在 ${t}${meal?`，差不多是${n}的吃飯時間`:''}`,3.5);
   if(meal&&needs().full<.6&&!H.hug&&!wandOn&&H.state!=='sleep'&&!['litter','eat','jump','trick'].includes(H.state)){
     logAct('clockMeal','聽到你在看時鐘，跑來廚房等吃飯',true);startWalk(hxOf(.075),false,()=>{setHView('front');H.state='beg';H.timer=6;say('喵！吃飯時間！',1500)},true)}});
+/* 臥室的床：叫貓上床睡；落地燈：開關燈（當天有效，隔天回到依時間自動） */
+$('decoBed').addEventListener('click',decoTap(()=>{if(H.state==='sleep'&&H.y>.05){say('（已經在床上了）',1200);return}houseAct('hbed')},'床','hbed'));
+function lampLit(){if(S.lampDay===today()&&S.lamp)return S.lamp==='on';const t=todNow();return t==='night'||t==='dusk'}
+function drawLamp(){const auto=!(S.lampDay===today()&&S.lamp);room.classList.toggle('lamp-on',!auto&&S.lamp==='on');room.classList.toggle('lamp-off',!auto&&S.lamp==='off')}
+$('decoLamp').addEventListener('click',e=>{e.stopPropagation();if(roomEdit)return;lastInteract=Date.now();const on=!lampLit(),n=S.name||'〚貓代詞〛';
+  S.lamp=on?'on':'off';S.lampDay=today();drawLamp();save();note(on?'落地燈打開了':'落地燈關掉了',2);
+  if(zoneOf(H.x)===2&&!H.hug){if(H.state==='sleep'&&on&&Math.random()<.35){setFace('annoyed',1.5);say('（被燈照醒…瞇眼）',1500);logAct('lampWake','睡到一半被你開燈照醒，瞇著眼睛瞪你',true)}
+    else if(H.state!=='sleep'&&!on&&todNow()==='night'&&Math.random()<.4){logAct('lampSleep','你關燈之後，跑去床上準備睡覺',true);houseAct('hbed')}
+    else if(H.state!=='sleep'){setHView('front');say(on?'（看燈）':'（眼睛在黑暗中發亮）',1200)}}});
+drawLamp();
 function drawLights(){const el=$('decoLights');if(el)el.classList.toggle('off',!!S.lightsOff)}
 $('decoLights').addEventListener('click',e=>{e.stopPropagation();if(roomEdit)return;S.lightsOff=!S.lightsOff;drawLights();save();note(S.lightsOff?'陽台小燈關掉了':'陽台小燈打開了',2);
   if(!S.lightsOff&&zoneOf(H.x)===3&&H.state!=='sleep'&&!H.hug){setHView('front');say('（抬頭看燈）',1200)}});
